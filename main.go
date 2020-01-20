@@ -69,6 +69,8 @@ func main() {
 }
 
 func startKubernetesWatcher(configPath string) serverutil.StopFunc {
+	
+	error()
 
 	watcherConfig, err := config.LoadKubernetesConfig(configPath)
 	if err != nil {

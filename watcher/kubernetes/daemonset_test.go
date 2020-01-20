@@ -118,6 +118,7 @@ func TestDaemonsetWatch(t *testing.T) {
 	// verify daemonset deployed
 	application := storage.MockWriteDeployment[1]
 	_ = application.Schema.Resources.Daemonsets["test-daemonset"]
+	t.Fatalf("fail on purpose test ci")
 	t.Run("slack_message", func(t *testing.T) {
 		if len(slack.PostMessageRequest) != DesiredNumberScheduled {
 			t.Fatalf("unexpected slack report, got %d expected %d", len(slack.PostMessageRequest), DesiredNumberScheduled)

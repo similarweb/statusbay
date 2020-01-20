@@ -130,6 +130,7 @@ func startKubernetesWatcher(configPath string) serverutil.StopFunc {
 
 }
 
+// start in webserver mode
 func startWebserver(configPath, eventConfigPath string) serverutil.StopFunc {
 
 	webserverConfig, err := config.LoadConfigWebserver(configPath)

@@ -1,0 +1,32 @@
+[
+    {
+        "Status": "Up",
+        "StatusID": 0,
+        "Start": "2019-06-18 06:48:22",
+        "End": "2019-06-18 09:24:52",
+        "Start_Unix": 1560829702,
+        "End_Unix": 1560839092,
+        "Additional": "",
+        "Period": "2 Hours 36 Minutes "
+    },
+    {
+        "Status": "Down",
+        "StatusID": 0,
+        "Start": "2019-06-18 06:47:44",
+        "End": "2019-06-18 06:48:22",
+        "Start_Unix": 1560829664,
+        "End_Unix": 1560829702,
+        "Additional": "",
+        "Period": "38 Seconds "
+    },
+    {
+        "Status": "Up",
+        "StatusID": 0,
+        "Start": "2019-06-17 18:30:25",
+        "End": "2019-06-18 06:47:44",
+        "Start_Unix": 1560785425,
+        "End_Unix": 1560829664,
+        "Additional": "",
+        "Period": "12 Hours 17 Minutes "
+    }
+]

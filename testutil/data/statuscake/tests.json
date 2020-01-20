@@ -1,0 +1,43 @@
+[
+    {
+        "TestID": 5004771,
+        "Paused": false,
+        "WebsiteName": "https://google.com",
+        "CustomHeader": "",
+        "UserAgent": "",
+        "WebsiteURL": "https://google.com",
+        "Port": 0,
+        "ContactID": 0,
+        "ContactGroup": [
+            ""
+        ],
+        "Status": "Up",
+        "Uptime": 99.93,
+        "NodeLocations": null,
+        "Timeout": 0,
+        "PingURL": "",
+        "Confirmation": "0",
+        "CheckRate": 30,
+        "BasicUser": "",
+        "BasicPass": "",
+        "Public": 0,
+        "LogoImage": "",
+        "Branding": 0,
+        "WebsiteHost": "",
+        "Virus": 0,
+        "FindString": "",
+        "DoNotFind": false,
+        "TestType": "HTTP",
+        "RealBrowser": 0,
+        "TriggerRate": 0,
+        "TestTags": [
+            "test"
+        ],
+        "StatusCodes": "",
+        "UseJar": 0,
+        "PostRaw": "",
+        "FinalEndpoint": "",
+        "EnableSSLAlert": false,
+        "FollowRedirect": false
+    }
+]

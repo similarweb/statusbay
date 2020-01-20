@@ -1,0 +1,34 @@
+[
+    {
+        "metric": "sw.haproxy.backend.response.2xx",
+        "display_name": "sw.haproxy.backend.response.2xx",
+        "pointlist": [
+            [
+                1557941880000,
+                6.366666716833909
+            ],
+            [
+                1557941910000,
+                5.966666765511036
+            ]
+        ],
+        "start": 1557941880000,
+        "end": 1557945479000,
+        "interval": 30,
+        "aggr": "sum",
+        "length": 120,
+        "scope": "dc:op-us-east-1,service:be_web-api-nginx-production,worker_group:web",
+        "expression": "sum:sw.haproxy.backend.response.2xx{dc:op-us-east-1,service:be_web-api-nginx-production,worker_group:web}",
+        "unit": [
+            {
+                "family": "network",
+                "scale_factor": 1,
+                "name": "response",
+                "short_name": "rsp",
+                "plural": "responses",
+                "id": 28
+            },
+            null
+        ]
+    }
+]

@@ -1,0 +1,31 @@
+{
+  "summary": {
+    "states": [
+      {
+        "status": "up",
+        "timefrom": 1577899865,
+        "timeto": 1577900645
+      },
+      {
+        "status": "down",
+        "timefrom": 1577900645,
+        "timeto": 1577901065
+      },
+      {
+        "status": "up",
+        "timefrom": 1577901065,
+        "timeto": 1578127565
+      },
+      {
+        "status": "down",
+        "timefrom": 1578127565,
+        "timeto": 1578129065
+      },
+      {
+        "status": "up",
+        "timefrom": 1578129065,
+        "timeto": 1578129185
+      }
+    ]
+  }
+}

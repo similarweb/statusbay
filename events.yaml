@@ -1,0 +1,42 @@
+pod:
+- pattern: "Readiness probe failed"
+  descriptions:
+    - >-
+      The pod not pass the hatcheck:
+      <ul>
+        <li>Indicates whether the Container is ready to service requests. If the readiness probe fails, the endpoints controller removes the Pod’s IP address from the endpoints of all Services that match the Pod. </li>
+        <li><a href="https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-readiness-gate" target="_blank">Read more on Readiness details</a></li>
+      </ul>
+- pattern: "OOMKilled"
+  descriptions:
+    - >-
+      Whether this container has been killed because it ran out of memory.:
+      <ul>
+        <li><TODO.../li>
+      </ul>
+- pattern: "ExitCode"
+  descriptions:
+    - >-
+      The last exit code of this container.:
+      <ul>
+        <li>TODO..</li>
+      </ul>
+- pattern: "CrashLoopBackOff"
+  descriptions:
+  - >-
+    Container Terminated and Kubelet is backing off the restart:
+    <ul>
+        <li>TODO....</li>
+    </ul>
+
+replicaset:
+- pattern: "some pod error event"
+  descriptions:
+  - >-
+    
+    
+deployment:
+- pattern: "some pod error event"
+  descriptions:
+  - >-
+    pod description error event

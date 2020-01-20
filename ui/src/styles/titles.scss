@@ -1,0 +1,30 @@
+.page-title {
+    font-weight: 300;
+    text-align: center;
+    
+    padding: 20px 0;
+    h1{
+        font-size: 24px;
+    }
+}
+
+.sub-title{
+    font-size: 16px;
+    font-weight: 500;
+    color: rgba(42,62,82,0.8);
+    margin-bottom: 8px;
+}
+
+.section-title {
+    width: 100%;
+    font-size: 24px;
+    letter-spacing: 0.1px;
+    text-align: left;
+    color: $color-title;
+    margin-bottom: 16px;
+    padding: 5px;
+    border-bottom: 1px solid $color-box-title-border;
+    span {
+        font-size: 18px;
+    }
+}

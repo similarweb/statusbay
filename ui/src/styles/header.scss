@@ -1,0 +1,25 @@
+#header-login{
+    background: $color-header-bg;
+    height: 65px;
+    line-height: 65px;
+    z-index: 10;
+    top: 0;
+    width: 100%;
+    padding: 0 30px;
+    a {
+        text-decoration: none;
+        svg{
+            vertical-align: baseline;
+            width: 44px;
+            height: 44px;
+            position: relative;
+            top: 7px;
+        }
+        span{
+            color: $color-header-dark-blue;
+            font-size: 30px;
+            margin-left: 5px;
+        }
+    }
+}
+

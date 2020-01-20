@@ -1,0 +1,51 @@
+svg{
+    &.success{ // successful status
+        color: $success;
+    }
+    &.danger{ // failed status
+        color: $red;
+    }
+    &.primary{ // running status
+        color: $primary;
+    }
+    &.secondary{ // paused status
+        color: $secondary;
+    }
+    &.warning { // cancelled status
+        color: $warning;
+    }
+}
+
+.alert{
+    > p {
+        font-weight: bold;
+        margin: 0;
+    }
+    svg.status-icon{
+        width: 18px;
+        height: 18px;
+        margin-right: 10px;
+    }
+}
+
+.circle-red{
+    height: 8px;
+    width: 8px;
+    background-color: $color-circle-alert;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+svg.status-icon{
+    width: 24px;
+    height: 24px;
+    
+}
+
+.thumbs-up {
+    font-size: 20px;
+    padding: 30px;
+    svg {
+        color: $success
+    }
+}

@@ -12,18 +12,9 @@ jobs:
       with:
         go-version: 1.13
       id: go
-
     - name: Check out code into the Go module directory
       uses: actions/checkout@v1
-
-    - name: Get dependencies
+    - name: Run tests
       run: |
-        go get -v -t -d ./...
-        make test
-        if [ -f Gopkg.toml ]; then
-            curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-            dep ensure
-        fi
+        make test 
 
-    - name: Build
-      run: go build -v .

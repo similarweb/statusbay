@@ -12,11 +12,9 @@ jobs:
       with:
         go-version: 1.13
       id: go
-
     - name: Check out code into the Go module directory
       uses: actions/checkout@v1
-#        go get -v -t -d ./...
     - name: Run tests
       run: |
-        echo "hello world"
         make test 
+

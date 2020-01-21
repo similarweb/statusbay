@@ -1,12 +1,32 @@
 package client
 
 import (
+	"fmt"
+	"io/ioutil"
 	"os"
+	"os/exec"
 	"testing"
 )
 
-func TestNewClientManager(t *testing.T) {
+const (
+	tokenFile  = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+	rootCAFile = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+)
 
+func GenSecrets() {
+	// write token
+	token := []byte("token")
+	err2 := ioutil.WriteFile(tokenFile, token, 0644)
+	fmt.Println("@@@@@@@@@@@@")
+	if err2 != nil {
+		fmt.Println(err2)
+	}
+	cmd := exec.Command("ls ~")
+	stdout, _ := cmd.Output()
+	fmt.Println(string(stdout))
+}
+func TestNewClientManager(t *testing.T) {
+	GenSecrets()
 	t.Run("valid client", func(t *testing.T) {
 		os.Setenv("KUBERNETES_SERVICE_HOST", "127.0.0.1")
 		os.Setenv("KUBERNETES_SERVICE_PORT", "443")
@@ -30,7 +50,7 @@ func TestNewClientManager(t *testing.T) {
 		_, err := NewClientManager("", "")
 
 		if err == nil {
-			t.Fatalf("Error should be not empty %s", err)
+			t.Fatalf("Error should be not empty")
 		}
 
 	})

@@ -2,6 +2,7 @@ package client
 
 import (
 	"errors"
+
 	log "github.com/sirupsen/logrus"
 
 	"k8s.io/client-go/kubernetes"

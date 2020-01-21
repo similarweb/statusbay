@@ -3,7 +3,6 @@ package prometheus
 import (
 	"context"
 	"strconv"
-	"sync"
 	"time"
 
 	"statusbay/serverutil"
@@ -23,7 +22,6 @@ type ClientDescriber interface {
 // Prometheus is responsible for communicate with datadog and cache storage save/cleanup
 type Prometheus struct {
 	api ClientDescriber
-	mu  *sync.RWMutex
 }
 
 // NewPrometheusManager creates a new NewDatadog
@@ -42,7 +40,6 @@ func NewPrometheusManager(address string, v1api ClientDescriber) *Prometheus {
 	}
 	return &Prometheus{
 		api: v1api,
-		mu:  &sync.RWMutex{},
 	}
 
 }
@@ -97,7 +94,7 @@ func (pm *Prometheus) GetMetric(query string, from, to time.Time) ([]httprespons
 	if val == nil {
 		return nil, nil
 	}
-	
+
 	response := []httpresponse.MetricsQuery{}
 	for _, metric := range val.(model.Matrix) {
 		metricData := httpresponse.MetricsQuery{}

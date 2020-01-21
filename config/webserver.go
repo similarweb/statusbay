@@ -7,10 +7,13 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// MetricsProvider struct
 type MetricsProvider struct {
-	DataDog *DatadogConfig `yaml:"datadog"`
+	DataDog    *DatadogConfig    `yaml:"datadog"`
+	Prometheus *PrometheusConfig `yaml:"prometheus"`
 }
 
+// AlertProvider struct
 type AlertProvider struct {
 	Statuscake *Statuscake `yaml:"statuscake"`
 	Pingdom    *Pingdom    `yaml:"pingdom"`
@@ -22,6 +25,11 @@ type DatadogConfig struct {
 	AppKey               string        `yaml:"app_key"`
 	CacheCleanupInterval time.Duration `yaml:"cache_cleanup_interval"`
 	CacheExpiration      time.Duration `yaml:"cache_expiration"`
+}
+
+// PrometheusConfig configuration
+type PrometheusConfig struct {
+	Address string `yaml:"address"`
 }
 
 // Pingdom configuration

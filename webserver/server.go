@@ -28,12 +28,12 @@ type Server struct {
 
 	kubernetesStorage        kubernetes.Storage
 	kubernetesMarkEventsPath string
-	metricClient             metrics.MetricManagerDescriber
+	metricClientProviders    map[string]metrics.MetricManagerDescriber
 	alertClientProviders     map[string]alerts.AlertsManagerDescriber
 }
 
 // NewServer returns a new Server
-func NewServer(kubernetesStorage kubernetes.Storage, port string, kubernetesMarkEventsPath string, metricClient metrics.MetricManagerDescriber, alertClientProviders map[string]alerts.AlertsManagerDescriber) *Server {
+func NewServer(kubernetesStorage kubernetes.Storage, port string, kubernetesMarkEventsPath string, metricClientProviders map[string]metrics.MetricManagerDescriber, alertClientProviders map[string]alerts.AlertsManagerDescriber) *Server {
 
 	router := mux.NewRouter()
 	corsObj := handlers.AllowedOrigins([]string{"*"})
@@ -41,7 +41,7 @@ func NewServer(kubernetesStorage kubernetes.Storage, port string, kubernetesMark
 		router:                   router,
 		kubernetesStorage:        kubernetesStorage,
 		kubernetesMarkEventsPath: kubernetesMarkEventsPath,
-		metricClient:             metricClient,
+		metricClientProviders:    metricClientProviders,
 		alertClientProviders:     alertClientProviders,
 		httpserver: &http.Server{
 			Handler: handlers.CORS(corsObj)(router),
@@ -54,7 +54,7 @@ func NewServer(kubernetesStorage kubernetes.Storage, port string, kubernetesMark
 func (server *Server) Serve() serverutil.StopFunc {
 	ctx, cancelFn := context.WithCancel(context.Background())
 	server.BindEndpoints()
-	log.WithField("bind_address", server.httpserver.Addr).Info("Staring statusbay server")
+	log.WithField("bind_address", server.httpserver.Addr).Info("Starting statusbay server")
 	stopped := make(chan bool)
 	go func() {
 		<-ctx.Done()

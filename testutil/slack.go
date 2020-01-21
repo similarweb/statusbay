@@ -33,8 +33,8 @@ func (m *MockSlack) GetUsers() ([]slackApi.User, error) {
 	if err != nil {
 		return []slackApi.User{}, err
 	}
-	usersResponse := []slackApi.User{}
-	users := []slackApi.User{}
+	var usersResponse []slackApi.User
+	var users []slackApi.User
 	err = json.Unmarshal(reader, &users)
 	if err != nil {
 		return nil, err

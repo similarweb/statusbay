@@ -1,0 +1,9 @@
+config_webserver.yaml
+config_kubernetes.yaml
+./k8s
+.vscode
+.DS_Store
+cover.out
+cov.txt
+node_modules
+.idea/

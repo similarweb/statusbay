@@ -5,6 +5,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
+	"github.com/zorkian/go-datadog-api"
 	"sync"
 	"time"
 
@@ -12,7 +13,6 @@ import (
 	"statusbay/webserver/httpresponse"
 
 	log "github.com/sirupsen/logrus"
-	"github.com/zorkian/go-datadog-api"
 )
 
 // ClientDescriber is a interface for using function in DataDog package
@@ -103,11 +103,11 @@ func (dd *Datadog) GetMetric(query string, from, to time.Time) ([]httpresponse.M
 		return nil, err
 	}
 
-	response := []httpresponse.MetricsQuery{}
+	var response []httpresponse.MetricsQuery
 	for _, metric := range metrics {
 		metricData := httpresponse.MetricsQuery{}
 		metricData.Metric = metric.GetDisplayName()
-		points := []httpresponse.DataPoint{}
+		var points []httpresponse.DataPoint
 		for _, point := range metric.Points {
 			points = append(points, [2]float64{*point[0], *point[1]})
 		}

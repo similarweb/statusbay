@@ -2,13 +2,15 @@ package testutil
 
 import (
 	kuberneteswatcher "statusbay/watcher/kubernetes"
+	"statusbay/watcher/kubernetes/common"
 )
 
 type MockStorageDeployment struct {
 	ID     uint
-	Status kuberneteswatcher.DeploymentStatus
+	Status common.DeploymentStatus
 	Schema kuberneteswatcher.DBSchema
 }
+
 type MockStorage struct {
 	MockUpdateDeployment  map[uint]MockStorageDeployment
 	MockWriteDeployment   map[uint]MockStorageDeployment
@@ -23,7 +25,7 @@ func NewMockStorage() *MockStorage {
 		MockDeploymentHistory: map[string]uint64{},
 	}
 }
-func (m *MockStorage) CreateApply(data *kuberneteswatcher.RegistryRow, status kuberneteswatcher.DeploymentStatus) (uint, error) {
+func (m *MockStorage) CreateApply(data *kuberneteswatcher.RegistryRow, status common.DeploymentStatus) (uint, error) {
 
 	id := uint(len(m.MockWriteDeployment) + 1)
 	m.MockWriteDeployment[id] = MockStorageDeployment{
@@ -35,7 +37,7 @@ func (m *MockStorage) CreateApply(data *kuberneteswatcher.RegistryRow, status ku
 	return id, nil
 }
 
-func (m *MockStorage) UpdateApply(id uint, data *kuberneteswatcher.RegistryRow, status kuberneteswatcher.DeploymentStatus) (bool, error) {
+func (m *MockStorage) UpdateApply(id uint, data *kuberneteswatcher.RegistryRow, status common.DeploymentStatus) (bool, error) {
 
 	m.MockWriteDeployment[id] = MockStorageDeployment{
 		ID:     id,
@@ -46,7 +48,7 @@ func (m *MockStorage) UpdateApply(id uint, data *kuberneteswatcher.RegistryRow, 
 	return true, nil
 }
 
-func (m *MockStorage) GetAppliesByStatus(status kuberneteswatcher.DeploymentStatus) (map[uint]kuberneteswatcher.DBSchema, error) {
+func (m *MockStorage) GetAppliesByStatus(status common.DeploymentStatus) (map[uint]kuberneteswatcher.DBSchema, error) {
 
 	return map[uint]kuberneteswatcher.DBSchema{}, nil
 

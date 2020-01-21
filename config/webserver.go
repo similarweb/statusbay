@@ -2,6 +2,7 @@ package config
 
 import (
 	"io/ioutil"
+	"statusbay/state"
 	"time"
 
 	"gopkg.in/yaml.v2"
@@ -39,10 +40,10 @@ type Statuscake struct {
 
 // Webserver is holds all application configuration
 type Webserver struct {
-	LogLevel        string           `yaml:"log_level"`
-	MySQL           *MySQLConfig     `yaml:"mysql"`
-	MetricsProvider *MetricsProvider `yaml:"metrics"`
-	AlertProvider   *AlertProvider   `yaml:"alerts"`
+	LogLevel        string             `yaml:"log_level"`
+	MySQL           *state.MySQLConfig `yaml:"mysql"`
+	MetricsProvider *MetricsProvider   `yaml:"metrics"`
+	AlertProvider   *AlertProvider     `yaml:"alerts"`
 }
 
 // LoadConfigWebserver will load all yaml configuration file to struct

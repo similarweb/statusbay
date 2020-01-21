@@ -16,7 +16,7 @@ func MarkApplicationDeploymentEvents(appDeployment *ResponseDeploymentData, even
 
 		for _, rs := range application.Replicaset {
 			for i, event := range rs.Events {
-				eventDescription := eventmark.MarkEvent(event.Message, eventMarksConfig.Replicaset)
+				eventDescription := eventmark.MarkEvent(event.Message, eventMarksConfig.ReplicaSet)
 				rs.Events[i].MarkDescriptions = eventDescription
 			}
 		}

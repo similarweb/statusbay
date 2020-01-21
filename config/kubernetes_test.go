@@ -18,7 +18,7 @@ func TestKubernetes(t *testing.T) {
 		config, err := config.LoadKubernetesConfig(fmt.Sprintf("%s/testutil/mock/test-config.yaml", currentFolderPath))
 
 		if err != nil {
-			t.Fatalf("unexpected not error")
+			t.Fatalf("unexpected error ")
 		}
 
 		if reflect.TypeOf(config).String() != "config.Kubernetes" {

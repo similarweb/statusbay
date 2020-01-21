@@ -1,7 +1,6 @@
 package kuberneteswatcher_test
 
 import (
-	gtestutil "statusbay/testutil"
 	kuberneteswatcher "statusbay/watcher/kubernetes"
 	"statusbay/watcher/kubernetes/testutil"
 
@@ -72,24 +71,24 @@ func GetFakeDeployment(progressDeadlineSeconds int32) *appsV1.Deployment {
 
 }
 
-func NewDeploymentManagerMock(client *fake.Clientset) (*kuberneteswatcher.DeploymentManager, *testutil.MockStorage, *gtestutil.MockSlack) {
+func NewDeploymentManagerMock(client *fake.Clientset) (*kuberneteswatcher.DeploymentManager, *testutil.MockStorage) {
 
 	maxDeploymentTime, _ := time.ParseDuration("10m")
 
 	eventManager := NewEventsMock(client)
-	registryManager, storage, slack := NewRegistryMock()
+	registryManager, storage := NewRegistryMock()
 	replicasetManager := NewReplicasetMock(client)
 	serviceManager := NewServiceManagerMockMock(client)
 	deploymentManager := kuberneteswatcher.NewDeploymentManager(client, eventManager, registryManager, replicasetManager, serviceManager, maxDeploymentTime)
 	deploymentManager.Serve()
 	serviceManager.Serve()
 	replicasetManager.Serve()
-	return deploymentManager, storage, slack
+	return deploymentManager, storage
 
 }
 func TestDeploymentsWatch(t *testing.T) {
 	client := fake.NewSimpleClientset()
-	_, storage, slack := NewDeploymentManagerMock(client)
+	_, storage := NewDeploymentManagerMock(client)
 
 	labels := map[string]string{
 		"app.kubernetes.io/name": "custom-application-name",
@@ -130,11 +129,12 @@ func TestDeploymentsWatch(t *testing.T) {
 	application := storage.MockWriteDeployment[1]
 
 	deployment := application.Schema.Resources.Deployments["test-deployment"]
-	t.Run("slack_message", func(t *testing.T) {
-		if len(slack.PostMessageRequest) != 2 {
-			t.Fatalf("unexpected slack report, got %d expected %d", len(slack.PostMessageRequest), 2)
-		}
-	})
+	// TODO ask elad to explain
+	//t.Run("slack_message", func(t *testing.T) {
+	//	if len(slack.PostMessageRequest) != 2 {
+	//		t.Fatalf("unexpected slack report, got %d expected %d", len(slack.PostMessageRequest), 2)
+	//	}
+	//})
 
 	t.Run("deployment_schema_data", func(t *testing.T) {
 

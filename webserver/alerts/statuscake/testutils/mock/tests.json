@@ -1,40 +1,40 @@
 [
-    {
-        "TestID": 5348897,
-        "Paused": false,
-        "TestType": "HTTP",
-        "WebsiteName": "foo",
-        "WebsiteURL": "foo.com",
-        "CheckRate": 30,
-        "ContactGroup": [
-            ""
-        ],
-        "Public": 0,
-        "Status": "Up",
-        "TestTags": [
-            "foo-tag"
-        ],
-        "WebsiteHost": "",
-        "NormalisedResponse": 0,
-        "Uptime": 100
-    },
-    {
-        "TestID": 5013433,
-        "Paused": false,
-        "TestType": "HTTP",
-        "WebsiteName": "foo2",
-        "WebsiteURL": "https://foo.com",
-        "CheckRate": 30,
-        "ContactGroup": [
-            ""
-        ],
-        "Public": 0,
-        "Status": "Up",
-        "TestTags": [
-            "foo-tag"
-        ],
-        "WebsiteHost": "",
-        "NormalisedResponse": 0,
-        "Uptime": 100
-    }
+  {
+    "TestID": 5348897,
+    "Paused": false,
+    "TestType": "HTTP",
+    "WebsiteName": "foo",
+    "WebsiteURL": "foo.com",
+    "CheckRate": 30,
+    "ContactGroup": [
+      ""
+    ],
+    "Public": 0,
+    "Status": "Up",
+    "TestTags": [
+      "foo-tag"
+    ],
+    "WebsiteHost": "",
+    "NormalisedResponse": 0,
+    "Uptime": 100
+  },
+  {
+    "TestID": 5013433,
+    "Paused": false,
+    "TestType": "HTTP",
+    "WebsiteName": "foo2",
+    "WebsiteURL": "https://foo.com",
+    "CheckRate": 30,
+    "ContactGroup": [
+      ""
+    ],
+    "Public": 0,
+    "Status": "Up",
+    "TestTags": [
+      "foo-tag"
+    ],
+    "WebsiteHost": "",
+    "NormalisedResponse": 0,
+    "Uptime": 100
+  }
 ]

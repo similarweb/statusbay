@@ -21,13 +21,13 @@ func TestMarkApplicationDeploymentEvents(t *testing.T) {
 
 	appDeployment := ResponseDeploymentData{
 		map[string]DeploymentDataResponse{
-			"deployment": DeploymentDataResponse{
+			"deployment": {
 				DeploymentEvents: []ResponseEventMessages{
 					{Message: "Scaled"},
 					{Message: "foo"},
 				},
 				Pods: map[string]ResponseDeploymenPod{
-					"pod": ResponseDeploymenPod{
+					"pod": {
 						Events: []ResponseEventMessages{
 							{Message: "OOMKilled"},
 							{Message: "CrashLoopBackOff"},
@@ -36,7 +36,7 @@ func TestMarkApplicationDeploymentEvents(t *testing.T) {
 					},
 				},
 				Replicaset: map[string]ResponseReplicaset{
-					"rs": ResponseReplicaset{
+					"rs": {
 						Events: []ResponseEventMessages{
 							{Message: "Created"},
 							{Message: "foo"},
@@ -48,7 +48,7 @@ func TestMarkApplicationDeploymentEvents(t *testing.T) {
 	}
 	eventsConfig := config.KubernetesMarksEvents{
 		Pod:        podEvents,
-		Replicaset: replicasetEvents,
+		ReplicaSet: replicasetEvents,
 		Deployment: deploymentEvents,
 	}
 	MarkApplicationDeploymentEvents(&appDeployment, eventsConfig)
@@ -104,7 +104,7 @@ func TestMarkApplicationDeploymentEventContent(t *testing.T) {
 	expectedEventDescriptions := []string{"deployment event1"}
 	appDeployment := ResponseDeploymentData{
 		map[string]DeploymentDataResponse{
-			"deployment": DeploymentDataResponse{
+			"deployment": {
 				DeploymentEvents: []ResponseEventMessages{
 					{Message: "Scaled"},
 					{Message: "foo"},

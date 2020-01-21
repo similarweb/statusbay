@@ -19,8 +19,6 @@ import (
 	"statusbay/webserver/metrics/datadog"
 	"time"
 
-	"github.com/nlopes/slack"
-
 	log "github.com/sirupsen/logrus"
 )
 
@@ -92,10 +90,8 @@ func startKubernetesWatcher(configPath, kubeconfig, apiserverHost string) server
 	mysqlManager.Migration()
 	mysql := kuberneteswatcher.NewMysql(mysqlManager)
 
-	//Slack
-	api := slack.New(watcherConfig.Slack.Token)
-	slack := state.NewSlack(api)
-	reporter := kuberneteswatcher.NewReporter(slack, watcherConfig.Slack.DefaultChannels, watcherConfig.UI.BaseURL)
+	// Init Reporter
+	reporter := kuberneteswatcher.NewReporter(watcherConfig.GetNotifiers())
 
 	//Replicaset manager
 	registryManager := kuberneteswatcher.NewRegistryManager(watcherConfig.KubernetesConfig.Deployment.SaveInterval, watcherConfig.KubernetesConfig.Deployment.SaveDeploymentHistoryDuration, watcherConfig.KubernetesConfig.Deployment.CheckFinishDelay, watcherConfig.KubernetesConfig.Deployment.CollectDataAfterDeploymentFinish, mysql, reporter)

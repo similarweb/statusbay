@@ -1,38 +1,38 @@
 [
-    {
-        "metric": "foo.metric.response.4xx",
-        "display_name": "foo.metric.response.4xx",
-        "pointlist": [
-            [
-                1557941880000,
-                1
-            ],
-            [
-                1557941910000,
-                2
-            ],
-            [
-                1557942010000,
-                2
-            ]
-        ],
-        "scope": "service:foo-production",
-        "expression": "sum:sw.foo.metric.response.4xx{service:foo-production}"
-    },
-    {
-        "metric": "foo.metric.response.5xx",
-        "display_name": "foo.metric.response.5xx",
-        "pointlist": [
-            [
-                1557941880000,
-                1
-            ],
-            [
-                1557941910000,
-                2
-            ]
-        ],
-        "scope": "service:foo-production",
-        "expression": "sum:sw.foo.metric.response.5xx{service:foo-production}"
-    }
+  {
+    "metric": "foo.metric.response.4xx",
+    "display_name": "foo.metric.response.4xx",
+    "pointlist": [
+      [
+        1557941880000,
+        1
+      ],
+      [
+        1557941910000,
+        2
+      ],
+      [
+        1557942010000,
+        2
+      ]
+    ],
+    "scope": "service:foo-production",
+    "expression": "sum:sw.foo.metric.response.4xx{service:foo-production}"
+  },
+  {
+    "metric": "foo.metric.response.5xx",
+    "display_name": "foo.metric.response.5xx",
+    "pointlist": [
+      [
+        1557941880000,
+        1
+      ],
+      [
+        1557941910000,
+        2
+      ]
+    ],
+    "scope": "service:foo-production",
+    "expression": "sum:sw.foo.metric.response.5xx{service:foo-production}"
+  }
 ]

@@ -2,10 +2,8 @@ package state
 
 import (
 	"fmt"
-	"statusbay/config"
-	"strings"
-
 	log "github.com/sirupsen/logrus"
+	"strings"
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
@@ -46,7 +44,7 @@ func (u *TableDeploymentsHash) TableName() string {
 }
 
 // NewMysqlClient create new MyySQL client
-func NewMysqlClient(config *config.MySQLConfig) *MySQLManager {
+func NewMysqlClient(config *MySQLConfig) *MySQLManager {
 
 	var err error
 	db, err := gorm.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8&parseTime=True&loc=Local", config.Username, config.Password, config.DNS, config.Schema))
@@ -67,4 +65,12 @@ func NewMysqlClient(config *config.MySQLConfig) *MySQLManager {
 func (my *MySQLManager) Migration() {
 	my.DB.AutoMigrate(&TableKubernetes{})
 	my.DB.AutoMigrate(&TableDeploymentsHash{})
+}
+
+// MySQLConfig client configuration
+type MySQLConfig struct {
+	DNS      string `yaml:"dns"`
+	Username string `yaml:"username"`
+	Password string `yaml:"password"`
+	Schema   string `yaml:"schema"`
 }

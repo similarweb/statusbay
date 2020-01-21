@@ -3,6 +3,7 @@ package kuberneteswatcher_test
 import (
 	"context"
 	kuberneteswatcher "statusbay/watcher/kubernetes"
+	"statusbay/watcher/kubernetes/common"
 	"testing"
 	"time"
 
@@ -43,9 +44,9 @@ func NewReplicasetMock(client *fake.Clientset) *kuberneteswatcher.ReplicaSetMana
 
 func TestReplicasetWatch(t *testing.T) {
 
-	registry, storageMock, _ := NewRegistryMock()
+	registory, storageMock := NewRegistryMock()
 
-	registryDeploymentData := createMockDeploymentData(registry, kuberneteswatcher.DeploymentStatusRunning)
+	registryDeploymentData := createMockDeploymentData(registory, common.DeploymentStatusRunning)
 
 	ctx := context.Background()
 
@@ -94,6 +95,7 @@ func TestReplicasetWatch(t *testing.T) {
 	})
 
 	t.Run("event_count", func(t *testing.T) {
+
 		if len(*deployment.Replicaset["replicaset-1"].Events) != 1 {
 			t.Fatalf("unexpected replicaset watch event count, got %d expected %d", len(*deployment.Replicaset["replicaset-1"].Events), 1)
 		}
@@ -103,9 +105,9 @@ func TestReplicasetWatch(t *testing.T) {
 
 func TestInvalidSelector(t *testing.T) {
 
-	registry, storageMock, _ := NewRegistryMock()
+	registory, storageMock := NewRegistryMock()
 
-	registryDeploymentData := createMockDeploymentData(registry, kuberneteswatcher.DeploymentStatusRunning)
+	registryDeploymentData := createMockDeploymentData(registory, common.DeploymentStatusRunning)
 
 	ctx := context.Background()
 

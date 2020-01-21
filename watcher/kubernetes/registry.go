@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"statusbay/serverutil"
+	"statusbay/watcher/kubernetes/common"
 	"sync"
 	"time"
 
@@ -36,7 +37,7 @@ type RegistryRow struct {
 	// registory
 	id                               uint
 	finish                           bool
-	status                           DeploymentStatus
+	status                           common.DeploymentStatus
 	ctx                              context.Context
 	cancelFn                         context.CancelFunc
 	collectDataAfterDeploymentFinish time.Duration
@@ -110,7 +111,7 @@ func (dr *RegistryManager) Serve() serverutil.StopFunc {
 func (dr *RegistryManager) LoadRunningApplies() []*RegistryRow {
 
 	rows := []*RegistryRow{}
-	apps, _ := dr.storage.GetAppliesByStatus(DeploymentStatusRunning)
+	apps, _ := dr.storage.GetAppliesByStatus(common.DeploymentStatusRunning)
 	log.WithField("count", len(apps)).Info("Loading running job from DB")
 
 	for id, appSchema := range apps {
@@ -123,7 +124,7 @@ func (dr *RegistryManager) LoadRunningApplies() []*RegistryRow {
 			ctx:      ctx,
 			cancelFn: cancelFn,
 			finish:   false,
-			status:   DeploymentStatusRunning,
+			status:   common.DeploymentStatusRunning,
 			DBSchema: appSchema,
 		}
 		go row.isFinish(dr.checkFinishDelay)
@@ -144,7 +145,7 @@ func (dr *RegistryManager) NewApplication(
 	namespace string,
 	clusterName string,
 	annotations map[string]string,
-	status DeploymentStatus) *RegistryRow {
+	status common.DeploymentStatus) *RegistryRow {
 	dr.newAppLock.Lock()
 	defer dr.newAppLock.Unlock()
 
@@ -178,16 +179,16 @@ func (dr *RegistryManager) NewApplication(
 
 	dr.registryData[encodedID] = &row
 	switch status {
-	case DeploymentStatusRunning:
-		dr.reporter.DeploymentStarted <- DeploymentReporter{
+	case common.DeploymentStatusRunning:
+		dr.reporter.DeploymentStarted <- common.DeploymentReporter{
 			To:       reportTo,
 			DeployBy: deployBy,
 			Name:     appName,
 			URI:      row.GetURI(),
 			Status:   status,
 		}
-	case DeploymentStatusDeleted:
-		dr.reporter.DeploymentDeleted <- DeploymentReporter{
+	case common.DeploymentStatusDeleted:
+		dr.reporter.DeploymentDeleted <- common.DeploymentReporter{
 			To:       reportTo,
 			DeployBy: deployBy,
 			Name:     appName,
@@ -317,7 +318,7 @@ func (wbr *RegistryRow) isDeploymentFinish() (bool, error) {
 		"count_deployments":    len(wbr.DBSchema.Resources.Deployments),
 	}).Info("Deployment status")
 	deploymentsNum := len(wbr.DBSchema.Resources.Deployments)
-	if deploymentsNum == countOfRunningReplicas && desiredStateCount == readyReplicasCount || wbr.status == DeploymentStatusDeleted {
+	if deploymentsNum == countOfRunningReplicas && desiredStateCount == readyReplicasCount || wbr.status == common.DeploymentStatusDeleted {
 		log.WithFields(log.Fields{
 			"application":          wbr.DBSchema.Application,
 			"namespace":            wbr.DBSchema.Namespace,
@@ -367,7 +368,7 @@ func (wbr *RegistryRow) isDaemonSetFinish() (bool, error) {
 		"current_pods_count":            totalCurrentPods,
 		"total_daemonsets":              len(wbr.DBSchema.Resources.Daemonsets),
 	}).Debug("DaemonSet status")
-	if totalDesiredPods == totalCurrentPods && totalDesiredPods == totalUpdatedPodsOnNodes || wbr.status == DeploymentStatusDeleted {
+	if totalDesiredPods == totalCurrentPods && totalDesiredPods == totalUpdatedPodsOnNodes || wbr.status == common.DeploymentStatusDeleted {
 		log.WithFields(log.Fields{
 			"application":                   wbr.DBSchema.Application,
 			"namespace":                     wbr.DBSchema.Namespace,
@@ -394,8 +395,8 @@ func (wbr *RegistryRow) isFinish(checkFinishDelay time.Duration) {
 	}).Info("starting to watch on registry row")
 	time.Sleep(checkFinishDelay)
 
-	if wbr.status == DeploymentStatusDeleted {
-		wbr.Stop(DeploymentStatusDeleted, DeploymentStatusDescriptionSuccessful)
+	if wbr.status == common.DeploymentStatusDeleted {
+		wbr.Stop(common.DeploymentStatusDeleted, DeploymentStatusDescriptionSuccessful)
 		wbr.cancelFn()
 		return
 	}
@@ -408,7 +409,7 @@ func (wbr *RegistryRow) isFinish(checkFinishDelay time.Duration) {
 			isDepFinished, depErr := wbr.isDeploymentFinish()
 			isDsFinished, dsErr := wbr.isDaemonSetFinish()
 			if dsErr != nil || depErr != nil {
-				wbr.Stop(DeploymentStatusFailed, DeploymentStatusDescriptionProgressDeadline)
+				wbr.Stop(common.DeploymentStatusFailed, DeploymentStatusDescriptionProgressDeadline)
 				wbr.cancelFn()
 				log.WithFields(log.Fields{
 					"application":      wbr.DBSchema.Application,
@@ -418,7 +419,7 @@ func (wbr *RegistryRow) isFinish(checkFinishDelay time.Duration) {
 				}).Error("isFinish function watch was errored")
 				return
 			} else if isDepFinished && isDsFinished {
-				wbr.Stop(DeploymentSuccessful, DeploymentStatusDescriptionSuccessful)
+				wbr.Stop(common.DeploymentSuccessful, DeploymentStatusDescriptionSuccessful)
 				wbr.cancelFn()
 			}
 		case <-wbr.ctx.Done():
@@ -433,7 +434,7 @@ func (wbr *RegistryRow) isFinish(checkFinishDelay time.Duration) {
 }
 
 // Stop will marked the row as finish
-func (wbr *RegistryRow) Stop(status DeploymentStatus, message DeploymentStatusDescription) {
+func (wbr *RegistryRow) Stop(status common.DeploymentStatus, message DeploymentStatusDescription) {
 	log.WithFields(log.Fields{
 		"Name":   wbr.DBSchema.Application,
 		"status": status,
@@ -605,8 +606,8 @@ func (dr *RegistryManager) save() {
 
 			if data.finish {
 
-				if data.status != DeploymentStatusDeleted {
-					dr.reporter.DeploymentFinished <- DeploymentReporter{
+				if data.status != common.DeploymentStatusDeleted {
+					dr.reporter.DeploymentFinished <- common.DeploymentReporter{
 						To:       data.DBSchema.ReportTo,
 						DeployBy: data.DBSchema.DeployBy,
 						Name:     data.DBSchema.Application,

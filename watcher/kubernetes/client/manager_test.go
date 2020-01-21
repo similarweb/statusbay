@@ -30,7 +30,7 @@ func TestNewClientManager(t *testing.T) {
 		_, err := NewClientManager("", "")
 
 		if err == nil {
-			t.Fatalf("Error should be not empty")
+			t.Fatalf("Error should be not empty %s", err)
 		}
 
 	})

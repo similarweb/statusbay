@@ -17,7 +17,7 @@ type testServer struct {
 	webserver *webserver.Server
 }
 
-func MockServer(t *testing.T, storageMockFile string, metrics metrics.MetricManagerDescriber, alertsClient map[string]alerts.AlertsManagerDescriber) testServer {
+func MockServer(t *testing.T, storageMockFile string, metrics map[string]metrics.MetricManagerDescriber, alertsClient map[string]alerts.AlertsManagerDescriber) testServer {
 
 	storage := testutil.NewMockStorage()
 	return testServer{
@@ -26,13 +26,14 @@ func MockServer(t *testing.T, storageMockFile string, metrics metrics.MetricMana
 }
 
 func TestApplicationMetricsEndpoint(t *testing.T) {
-	metrics := testutil.NewMockMetrics()
+	metrics := make(map[string]metrics.MetricManagerDescriber)
+	metrics["dummy"] = testutil.NewMockMetrics()
 	ms := MockServer(t, "", metrics, nil)
 	ms.webserver.BindEndpoints()
 	ms.webserver.Serve()
 
 	rr := httptest.NewRecorder()
-	req, err := http.NewRequest("GET", "/api/v1/application/metric?query=foo.2xx&from=1&to=1", nil)
+	req, err := http.NewRequest("GET", "/api/v1/application/metric?provider=dummy&query=foo.2xx&from=1&to=1", nil)
 	if err != nil {
 		t.Fatalf("Http request returned with error")
 	}
@@ -61,7 +62,8 @@ func TestApplicationMetricsEndpoint(t *testing.T) {
 }
 
 func TestApplicationMetricsEndpointWithInvalidQueryParameters(t *testing.T) {
-	metrics := testutil.NewMockMetrics()
+	metrics := make(map[string]metrics.MetricManagerDescriber)
+	metrics["dummy"] = testutil.NewMockMetrics()
 	ms := MockServer(t, "", metrics, nil)
 	ms.webserver.BindEndpoints()
 	ms.webserver.Serve()
@@ -71,12 +73,13 @@ func TestApplicationMetricsEndpointWithInvalidQueryParameters(t *testing.T) {
 		expectedStatusCode      int
 		expectedValidationCount int
 	}{
-		{"/api/v1/application/metric", http.StatusBadRequest, 3},
-		{"/api/v1/application/metric?query=2xx", http.StatusBadRequest, 2},
-		{"/api/v1/application/metric?query=2xx&from=1", http.StatusBadRequest, 1},
-		{"/api/v1/application/metric?query=2xx&from=2&to=1", http.StatusBadRequest, 1},
-		{"/api/v1/application/metric?query=2xx&from=a&to=b", http.StatusBadRequest, 2},
-		{"/api/v1/application/metric?query=2xx&from=1&to=123", http.StatusOK, 0},
+		{"/api/v1/application/metric", http.StatusBadRequest, 4},
+		{"/api/v1/application/metric?query=2xx", http.StatusBadRequest, 3},
+		{"/api/v1/application/metric?query=2xx&from=1", http.StatusBadRequest, 2},
+		{"/api/v1/application/metric?query=2xx&from=2&to=1", http.StatusBadRequest, 2},
+		{"/api/v1/application/metric?query=2xx&from=a&to=b", http.StatusBadRequest, 3},
+		{"/api/v1/application/metric?query=2xx&from=1&to=123", http.StatusBadRequest, 1},
+		{"/api/v1/application/metric?query=2xx&from=1&to=123&provider=dummy", http.StatusOK, 0},
 	}
 
 	for _, test := range testCases {

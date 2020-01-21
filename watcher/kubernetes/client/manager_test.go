@@ -13,7 +13,7 @@ func TestNewClientManager(t *testing.T) {
 		kubernetesClientManager, err := NewClientManager("", "")
 
 		if err != nil {
-			t.Fatalf("unexpected error message, error should be empty")
+			t.Errorf("unexpected error message: %v", err)
 		}
 
 		kubernetesClient := kubernetesClientManager.GetInsecureClient()

@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"statusbay/config"
 	"statusbay/serverutil"
 	"statusbay/state"
 	"statusbay/visibility"
 
 	kuberneteswatcher "statusbay/watcher/kubernetes"
+	"statusbay/watcher/kubernetes/client"
 	"statusbay/webserver"
 	"statusbay/webserver/alerts"
 	webserverKubernetes "statusbay/webserver/kubernetes"
@@ -19,8 +19,6 @@ import (
 	"time"
 
 	"github.com/nlopes/slack"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -30,7 +28,7 @@ const (
 	DefaultGracefulShutDown = time.Second * 10
 
 	// DefaultConfigPath is the default configuration file path
-	DefaultConfigPath = "/etc/config.yaml"
+	DefaultConfigPath = "/etc/statusbay/config.yaml"
 
 	//ModeWebserver will upload a server for client Website UI
 	ModeWebserver = "webserver"
@@ -45,6 +43,11 @@ func main() {
 	// parsing flags
 	flag.StringVar(&mode, "mode", "", fmt.Sprintf("Server mode to start. Must be either \"%s\" or \"%s\".", ModeWebserver, KubernetesWatcher))
 	flag.StringVar(&configPath, "config", DefaultConfigPath, "Path to configuration file")
+
+	// Only for kubernetes
+	var kubeconfig, apiserverHost string
+	flag.StringVar(&kubeconfig, "kubeconfig", "", "Path to kubeconfig file with authorization and master location information.")
+	flag.StringVar(&apiserverHost, "apiserverhost", "", "Path to kubeconfig file with authorization and master location information.")
 	flag.Parse()
 
 	var stopper serverutil.StopFunc
@@ -52,7 +55,7 @@ func main() {
 	case ModeWebserver:
 		stopper = startWebserver(configPath, "./events.yaml")
 	case KubernetesWatcher:
-		stopper = startKubernetesWatcher(configPath)
+		stopper = startKubernetesWatcher(configPath, kubeconfig, apiserverHost)
 	default:
 		flag.Usage()
 		os.Exit(1)
@@ -67,7 +70,7 @@ func main() {
 
 }
 
-func startKubernetesWatcher(configPath string) serverutil.StopFunc {
+func startKubernetesWatcher(configPath, kubeconfig, apiserverHost string) serverutil.StopFunc {
 
 	watcherConfig, err := config.LoadKubernetesConfig(configPath)
 	if err != nil {
@@ -75,23 +78,15 @@ func startKubernetesWatcher(configPath string) serverutil.StopFunc {
 		os.Exit(1)
 	}
 
-	//Setup logging
-	visibility.SetupLogging(watcherConfig.LogLevel, "watcher-kubernetes")
-
-	kubeconfig := filepath.Join(os.Getenv("HOME"), ".kube", "config")
-
-	kubernetesConfigContext, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
-
+	// Init kubernetes client
+	kubernetesClientManager, err := client.NewClientManager(kubeconfig, apiserverHost)
 	if err != nil {
-		log.WithError(err).WithField("kubeconfig_path", kubeconfig).Panic("could not get kubernetes configuration")
+		log.WithError(err).Panic("could not init kubernetes client")
+		os.Exit(1)
 	}
+	kubernetesClientset := kubernetesClientManager.GetInsecureClient()
 
-	kubernetesClientset, err := kubernetes.NewForConfig(kubernetesConfigContext)
-
-	if err != nil {
-		log.WithError(err).Panic("Could not setup kubernetes client")
-	}
-
+	// Init mysql storage
 	mysqlManager := state.NewMysqlClient(watcherConfig.MySQL)
 	mysqlManager.Migration()
 	mysql := kuberneteswatcher.NewMysql(mysqlManager)

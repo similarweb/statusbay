@@ -15,13 +15,13 @@ func TestKubernetes(t *testing.T) {
 	currentFolderPath := filepath.Dir(filename)
 
 	t.Run("valid", func(t *testing.T) {
-		config, err := config.LoadKubernetesConfig(fmt.Sprintf("%s/testutil/mock/test-config.yaml", currentFolderPath))
+		cfg, err := config.LoadKubernetesConfig(fmt.Sprintf("%s/testutil/mock/test-config.yaml", currentFolderPath))
 
 		if err != nil {
 			t.Fatalf("unexpected error ")
 		}
 
-		if reflect.TypeOf(config).String() != "config.Kubernetes" {
+		if reflect.TypeOf(cfg).String() != "config.Kubernetes" {
 			t.Fatalf("unexpected configuration data")
 		}
 

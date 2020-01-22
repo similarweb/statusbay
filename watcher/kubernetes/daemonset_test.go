@@ -117,12 +117,6 @@ func TestDaemonsetWatch(t *testing.T) {
 	// verify daemonset deployed
 	application := storage.MockWriteDeployment[1]
 	_ = application.Schema.Resources.Daemonsets["test-daemonset"]
-	// TODO ask elad to explain
-	//t.Run("slack_message", func(t *testing.T) {
-	//	if len(slack.PostMessageRequest) != DesiredNumberScheduled {
-	//		t.Fatalf("unexpected slack report, got %d expected %d", len(slack.PostMessageRequest), DesiredNumberScheduled)
-	//	}
-	//})
 	t.Run("daemonset_schema_data", func(t *testing.T) {
 		if application.Status != "running" {
 			t.Fatalf("unexpected apply status, got %s expected %s", application.Status, "running")

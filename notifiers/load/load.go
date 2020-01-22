@@ -8,8 +8,16 @@ import (
 	"statusbay/notifiers/slack"
 )
 
+var (
+	GetDefaultConfigReaderFunc = getDefaultConfigReader
+)
+
 func RegisterNotifiers() {
 	notifiers.Register("slack", slack.NewSlack)
+}
+
+func getDefaultConfigReader(basePath string, notifierName common.NotifierName) (*os.File, error) {
+	return os.Open(fmt.Sprintf("%s/notifiers/%s/defaults.yaml", basePath, notifierName))
 }
 
 func Load(rawNotifiersConfig common.ConfigByName, basePath, baseKubernetesUrl string) (notifierInstances []common.Notifier, err error) {
@@ -24,7 +32,7 @@ func Load(rawNotifiersConfig common.ConfigByName, basePath, baseKubernetesUrl st
 			return
 		}
 
-		if defaultNotifierConfig, err = os.Open(fmt.Sprintf("%s/notifiers/%s/defaults.yaml", basePath, notifierName)); err != nil {
+		if defaultNotifierConfig, err = GetDefaultConfigReaderFunc(basePath, notifierName); err != nil {
 			return
 		}
 

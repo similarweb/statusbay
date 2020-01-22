@@ -25,7 +25,6 @@ type WatchData struct {
 	Ctx          context.Context
 }
 
-// MessageDeploy struct  TODO ::
 type MessageDeploy struct {
 	UID               string            `json:"ID"`
 	Kind              string            `json:"Kind"`

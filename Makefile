@@ -3,7 +3,8 @@ GOCMD=go
 GOBUILD=$(GOCMD) build
 GOCLEAN=$(GOCMD) clean
 GOTOOL=$(GOCMD) tool
-GOTEST=$(GOCMD) test 
+GOTEST=$(GOCMD) test
+GOTESTRACE=$(GOTEST) -race
 GOGET=$(GOCMD) get
 
 
@@ -22,7 +23,10 @@ build: ## Download dependecies and Build the default binary
 
 test: ## Run tests for the project
 		$(GOTEST) -count=1 -coverprofile=cover.out -short -cover -failfast ./...
-		
+
+test-race: ## Run tests for the project (while detecting race conditions)
+		$(GOTESTRACE) -coverprofile=cover.out -short -cover -failfast ./...
+
 test-html: test ## Run tests with HTML for the project
 		$(GOTOOL) cover -html=cover.out
 		

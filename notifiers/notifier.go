@@ -17,6 +17,10 @@ func Register(name common.NotifierName, newFunc NotifierMaker) {
 	registeredNotifiers[name] = newFunc
 }
 
+func Deregister(name common.NotifierName) {
+	delete(registeredNotifiers, name)
+}
+
 func GetNotifierMaker(name common.NotifierName) (notifierMaker NotifierMaker, err error) {
 	var implemented bool
 

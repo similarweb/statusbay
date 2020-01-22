@@ -129,12 +129,6 @@ func TestDeploymentsWatch(t *testing.T) {
 	application := storage.MockWriteDeployment[1]
 
 	deployment := application.Schema.Resources.Deployments["test-deployment"]
-	// TODO ask elad to explain
-	//t.Run("slack_message", func(t *testing.T) {
-	//	if len(slack.PostMessageRequest) != 2 {
-	//		t.Fatalf("unexpected slack report, got %d expected %d", len(slack.PostMessageRequest), 2)
-	//	}
-	//})
 
 	t.Run("deployment_schema_data", func(t *testing.T) {
 

@@ -10,12 +10,12 @@ import (
 	"statusbay/state"
 	"statusbay/visibility"
 
+	"statusbay/api"
+	"statusbay/api/alerts"
+	apiKubernetes "statusbay/api/kubernetes"
+	"statusbay/api/metrics"
 	kuberneteswatcher "statusbay/watcher/kubernetes"
 	"statusbay/watcher/kubernetes/client"
-	"statusbay/webserver"
-	"statusbay/webserver/alerts"
-	webserverKubernetes "statusbay/webserver/kubernetes"
-	"statusbay/webserver/metrics"
 	"time"
 
 	"github.com/nlopes/slack"
@@ -30,8 +30,8 @@ const (
 	// DefaultConfigPath is the default configuration file path
 	DefaultConfigPath = "/etc/statusbay/config.yaml"
 
-	//ModeWebserver will upload a server for client Website UI
-	ModeWebserver = "webserver"
+	//ModeAPI will upload a server for client Website UI
+	ModeAPI = "api"
 
 	//KubernetesWatcher start watch on kubernetes deployments
 	KubernetesWatcher = "kubernetes"
@@ -41,7 +41,7 @@ func main() {
 
 	var configPath, mode string
 	// parsing flags
-	flag.StringVar(&mode, "mode", "", fmt.Sprintf("Server mode to start. Must be either \"%s\" or \"%s\".", ModeWebserver, KubernetesWatcher))
+	flag.StringVar(&mode, "mode", "", fmt.Sprintf("Server mode to start. Must be either \"%s\" or \"%s\".", ModeAPI, KubernetesWatcher))
 	flag.StringVar(&configPath, "config", DefaultConfigPath, "Path to configuration file")
 
 	// Only for kubernetes
@@ -52,8 +52,8 @@ func main() {
 
 	var stopper serverutil.StopFunc
 	switch mode {
-	case ModeWebserver:
-		stopper = startWebserver(configPath, "./events.yaml")
+	case ModeAPI:
+		stopper = startAPIServer(configPath, "./events.yaml")
 	case KubernetesWatcher:
 		stopper = startKubernetesWatcher(configPath, kubeconfig, apiserverHost)
 	default:
@@ -124,31 +124,31 @@ func startKubernetesWatcher(configPath, kubeconfig, apiserverHost string) server
 
 }
 
-func startWebserver(configPath, eventConfigPath string) serverutil.StopFunc {
+func startAPIServer(configPath, eventConfigPath string) serverutil.StopFunc {
 
-	webserverConfig, err := config.LoadConfigWebserver(configPath)
+	apiConfig, err := config.LoadConfigAPI(configPath)
 	if err != nil {
 		log.WithError(err).Panic("could not load configuration file")
 		os.Exit(1)
 	}
 
 	//Setup logging
-	visibility.SetupLogging(webserverConfig.LogLevel, "webserver")
+	visibility.SetupLogging(apiConfig.LogLevel, "api")
 
-	mysqlManager := state.NewMysqlClient(webserverConfig.MySQL)
+	mysqlManager := state.NewMysqlClient(apiConfig.MySQL)
 	mysqlManager.Migration()
 
 	// TODO:: should be more generic solution, we can start with this solution when we use only one orchestration
-	kubernetesStorage := webserverKubernetes.NewMysql(mysqlManager)
+	kubernetesStorage := apiKubernetes.NewMysql(mysqlManager)
 
 	var metricClient metrics.MetricManagerDescriber
 
-	metricsProviders := metrics.Load(webserverConfig.MetricsProvider)
+	metricsProviders := metrics.Load(apiConfig.MetricsProvider)
 
-	alertsProviders := alerts.Load(webserverConfig.AlertProvider)
+	alertsProviders := alerts.Load(apiConfig.AlertProvider)
 
 	//Start the server
-	server := webserver.NewServer(kubernetesStorage, "8080", eventConfigPath, metricsProviders, alertsProviders)
+	server := api.NewServer(kubernetesStorage, "8080", eventConfigPath, metricsProviders, alertsProviders)
 
 	//run lis of backround proccess for the server
 	return serverutil.RunAll(server, metricClient).StopFunc

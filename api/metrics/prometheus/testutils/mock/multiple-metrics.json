@@ -1,0 +1,251 @@
+{
+  "status": "success",
+  "data": {
+    "resultType": "matrix",
+    "result": [
+      {
+        "metric": {
+          "__name__": "prometheus_http_requests_total",
+          "code": "200",
+          "handler": "/alerts",
+          "instance": "localhost:9090",
+          "job": "prometheus"
+        },
+        "values": [
+          [
+            1579526280,
+            "1"
+          ],
+          [
+            1579526283,
+            "1"
+          ],
+          [
+            1579526286,
+            "1"
+          ],
+          [
+            1579526289,
+            "1"
+          ]
+        ]
+      },
+      {
+        "metric": {
+          "__name__": "prometheus_http_requests_total",
+          "code": "200",
+          "handler": "/api/v1/label/:name/values",
+          "instance": "localhost:9090",
+          "job": "prometheus"
+        },
+        "values": [
+          [
+            1579526280,
+            "5"
+          ],
+          [
+            1579526283,
+            "5"
+          ],
+          [
+            1579526286,
+            "5"
+          ],
+          [
+            1579526289,
+            "5"
+          ]
+        ]
+      },
+      {
+        "metric": {
+          "__name__": "prometheus_http_requests_total",
+          "code": "200",
+          "handler": "/api/v1/query",
+          "instance": "localhost:9090",
+          "job": "prometheus"
+        },
+        "values": [
+          [
+            1579526280,
+            "16"
+          ],
+          [
+            1579526283,
+            "16"
+          ],
+          [
+            1579526286,
+            "16"
+          ],
+          [
+            1579526289,
+            "16"
+          ]
+        ]
+      },
+      {
+        "metric": {
+          "__name__": "prometheus_http_requests_total",
+          "code": "200",
+          "handler": "/api/v1/query_range",
+          "instance": "localhost:9090",
+          "job": "prometheus"
+        },
+        "values": [
+          [
+            1579526280,
+            "1"
+          ],
+          [
+            1579526283,
+            "1"
+          ],
+          [
+            1579526286,
+            "1"
+          ],
+          [
+            1579526289,
+            "1"
+          ]
+        ]
+      },
+      {
+        "metric": {
+          "__name__": "prometheus_http_requests_total",
+          "code": "200",
+          "handler": "/api/v1/rules",
+          "instance": "localhost:9090",
+          "job": "prometheus"
+        },
+        "values": [
+          [
+            1579526280,
+            "1"
+          ],
+          [
+            1579526283,
+            "1"
+          ],
+          [
+            1579526286,
+            "1"
+          ],
+          [
+            1579526289,
+            "1"
+          ]
+        ]
+      },
+      {
+        "metric": {
+          "__name__": "prometheus_http_requests_total",
+          "code": "200",
+          "handler": "/graph",
+          "instance": "localhost:9090",
+          "job": "prometheus"
+        },
+        "values": [
+          [
+            1579526280,
+            "2"
+          ],
+          [
+            1579526283,
+            "2"
+          ],
+          [
+            1579526286,
+            "2"
+          ],
+          [
+            1579526289,
+            "2"
+          ]
+        ]
+      },
+      {
+        "metric": {
+          "__name__": "prometheus_http_requests_total",
+          "code": "200",
+          "handler": "/metrics",
+          "instance": "localhost:9090",
+          "job": "prometheus"
+        },
+        "values": [
+          [
+            1579526280,
+            "87"
+          ],
+          [
+            1579526283,
+            "87"
+          ],
+          [
+            1579526286,
+            "87"
+          ],
+          [
+            1579526289,
+            "88"
+          ]
+        ]
+      },
+      {
+        "metric": {
+          "__name__": "prometheus_http_requests_total",
+          "code": "200",
+          "handler": "/new/*filepath",
+          "instance": "localhost:9090",
+          "job": "prometheus"
+        },
+        "values": [
+          [
+            1579526280,
+            "7"
+          ],
+          [
+            1579526283,
+            "7"
+          ],
+          [
+            1579526286,
+            "7"
+          ],
+          [
+            1579526289,
+            "7"
+          ]
+        ]
+      },
+      {
+        "metric": {
+          "__name__": "prometheus_http_requests_total",
+          "code": "200",
+          "handler": "/static/*filepath",
+          "instance": "localhost:9090",
+          "job": "prometheus"
+        },
+        "values": [
+          [
+            1579526280,
+            "28"
+          ],
+          [
+            1579526283,
+            "28"
+          ],
+          [
+            1579526286,
+            "28"
+          ],
+          [
+            1579526289,
+            "28"
+          ]
+        ]
+      }
+    ]
+  }
+}

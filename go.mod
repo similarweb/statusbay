@@ -24,6 +24,8 @@ require (
 	github.com/mitchellh/copystructure v1.0.0 // indirect
 	github.com/mitchellh/hashstructure v1.0.0
 	github.com/nlopes/slack v0.5.0
+	github.com/prometheus/client_golang v0.9.3-0.20190127221311-3c4408c8b829
+	github.com/prometheus/common v0.2.0
 	github.com/rs/xid v1.2.1
 	github.com/ryanuber/go-glob v1.0.0 // indirect
 	github.com/satori/go.uuid v1.2.0
@@ -34,6 +36,7 @@ require (
 	github.com/ugorji/go v1.1.7 // indirect
 	github.com/valyala/fasttemplate v1.0.1
 	github.com/zorkian/go-datadog-api v2.20.0+incompatible
+	golang.org/x/sync v0.0.0-20190227155943-e225da77a7e6
 	gopkg.in/gemnasium/logrus-graylog-hook.v2 v2.0.7
 	gopkg.in/yaml.v2 v2.2.4
 	k8s.io/api v0.0.0-20190814101207-0772a1bdf941

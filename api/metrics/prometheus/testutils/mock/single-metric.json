@@ -1,0 +1,35 @@
+{
+  "status": "success",
+  "data": {
+    "resultType": "matrix",
+    "result": [
+      {
+        "metric": {
+          "__name__": "prometheus_http_requests_total",
+          "code": "200",
+          "handler": "/alerts",
+          "instance": "localhost:9090",
+          "job": "prometheus"
+        },
+        "values": [
+          [
+            1579526280,
+            "1"
+          ],
+          [
+            1579526283,
+            "1"
+          ],
+          [
+            1579526286,
+            "1"
+          ],
+          [
+            1579526289,
+            "1"
+          ]
+        ]
+      }
+    ]
+  }
+}

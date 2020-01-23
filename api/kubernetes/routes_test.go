@@ -17,7 +17,7 @@ type testServer struct {
 	api *api.Server
 }
 
-func MockServer(t *testing.T, storageMockFile string, metrics metrics.MetricManagerDescriber, alertsClient map[string]alerts.AlertsManagerDescriber) testServer {
+func MockServer(t *testing.T, storageMockFile string, metrics map[string]metrics.MetricManagerDescriber, alertsClient map[string]alerts.AlertsManagerDescriber) testServer {
 
 	storage := testutil.NewMockStorage()
 	return testServer{

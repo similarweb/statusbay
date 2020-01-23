@@ -13,14 +13,10 @@ import (
 
 // MetricHandler return metrics providers data
 func (server *Server) MetricHandler(resp http.ResponseWriter, req *http.Request) {
-
-	if server.metricClient == nil {
-		httpresponse.JSONError(resp, http.StatusInternalServerError, errors.New("Client metric not enabled"))
-		return
-	}
 	errs := url.Values{}
 
 	// Parse query parameters
+	provider := httpparameters.QueryParamWithDefault(req, "provider", "")
 	query := httpparameters.QueryParamWithDefault(req, "query", "")
 	from := httpparameters.QueryParamWithDefault(req, "from", "")
 	to := httpparameters.QueryParamWithDefault(req, "to", "")
@@ -30,6 +26,10 @@ func (server *Server) MetricHandler(resp http.ResponseWriter, req *http.Request)
 	// Validate query parameters
 	if query == "" {
 		errs.Add("query", "The query field is required")
+	}
+
+	if provider == "" {
+		errs.Add("provider", "The provider field is required")
 	}
 
 	if fromInt == 0 {
@@ -48,7 +48,13 @@ func (server *Server) MetricHandler(resp http.ResponseWriter, req *http.Request)
 		httpresponse.JSONErrorParameters(resp, http.StatusBadRequest, errs)
 		return
 	}
-	metrics, err := server.metricClient.GetMetric(query, time.Unix(fromInt, 0), time.Unix(toInt, 0))
+
+	if server.metricClientProviders[provider] == nil {
+		httpresponse.JSONError(resp, http.StatusBadRequest, errors.New("Client metric not enabled"))
+		return
+	}
+
+	metrics, err := server.metricClientProviders[provider].GetMetric(query, time.Unix(fromInt, 0), time.Unix(toInt, 0))
 	if err != nil {
 		httpresponse.JSONError(resp, http.StatusInternalServerError, err)
 		return

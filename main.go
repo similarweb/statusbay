@@ -14,7 +14,6 @@ import (
 	"statusbay/api/alerts"
 	apiKubernetes "statusbay/api/kubernetes"
 	"statusbay/api/metrics"
-	"statusbay/api/metrics/datadog"
 	kuberneteswatcher "statusbay/watcher/kubernetes"
 	"statusbay/watcher/kubernetes/client"
 	"time"
@@ -144,16 +143,12 @@ func startAPIServer(configPath, eventConfigPath string) serverutil.StopFunc {
 
 	var metricClient metrics.MetricManagerDescriber
 
-	if apiConfig.MetricsProvider != nil {
-		if apiConfig.MetricsProvider.DataDog != nil {
-			metricClient = datadog.NewDatadogManager(apiConfig.MetricsProvider.DataDog.CacheCleanupInterval, apiConfig.MetricsProvider.DataDog.CacheExpiration, apiConfig.MetricsProvider.DataDog.APIKey, apiConfig.MetricsProvider.DataDog.AppKey, nil)
-		}
-	}
+	metricsProviders := metrics.Load(apiConfig.MetricsProvider)
 
 	alertsProviders := alerts.Load(apiConfig.AlertProvider)
 
 	//Start the server
-	server := api.NewServer(kubernetesStorage, "8080", eventConfigPath, metricClient, alertsProviders)
+	server := api.NewServer(kubernetesStorage, "8080", eventConfigPath, metricsProviders, alertsProviders)
 
 	//run lis of backround proccess for the server
 	return serverutil.RunAll(server, metricClient).StopFunc

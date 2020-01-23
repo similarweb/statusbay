@@ -37,17 +37,17 @@ type Statuscake struct {
 	APIKey   string `yaml:"api_key"`
 }
 
-// Webserver is holds all application configuration
-type Webserver struct {
+// API is holds all application configuration
+type API struct {
 	LogLevel        string           `yaml:"log_level"`
 	MySQL           *MySQLConfig     `yaml:"mysql"`
 	MetricsProvider *MetricsProvider `yaml:"metrics"`
 	AlertProvider   *AlertProvider   `yaml:"alerts"`
 }
 
-// LoadConfigWebserver will load all yaml configuration file to struct
-func LoadConfigWebserver(location string) (Webserver, error) {
-	config := Webserver{}
+// LoadConfigAPI will load all yaml configuration file to struct
+func LoadConfigAPI(location string) (API, error) {
+	config := API{}
 	data, err := ioutil.ReadFile(location)
 	if err != nil {
 		return config, err

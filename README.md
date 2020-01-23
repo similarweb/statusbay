@@ -1,21 +1,39 @@
-# statusbay
+# StatusBay
 
+### Example: Failed K8s Deployment
 
-## Contributing to the Docs
+TODO:: Add images of failure screenshot 
 
-### Commit messages
+## Getting Started
 
-Standard prefixes to start a commit message:
+These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
+
+### How To Use
+
+### Prerequisites
+
+### Installing
+
+### Release New Version
+
+### Dynamic parameters
+
+## Running the tests
 
 ```
-   BLD: change related to building 
-   BUG: bug fix
-   DEP: deprecate something, or remove a deprecated object
-   DEV: development tool or utility
-   DOC: documentation
-   ENH: enhancement
-   MAINT: maintenance commit (refactoring, typos, etc)
-   REV: revert an earlier commit
-   TST: addition or modification of tests
-   REL: related to releasing
+$ make test
+
+$ make test-html
 ```
+
+## Use-cases:
+
+## Built With
+
+* [GO](https://golang.org/)
+* [K8S Client Library](https://github.com/kubernetes/client-go/) 
+
+## Contributing
+
+All pull requests and issues are more then welcome! 
+Please see [Contribution guidelines](./CONTRIBUTING.md). 

@@ -80,6 +80,7 @@ func TestApplicationMetricsEndpointWithInvalidQueryParameters(t *testing.T) {
 		{"/api/v1/application/metric?query=2xx&from=a&to=b", http.StatusBadRequest, 3},
 		{"/api/v1/application/metric?query=2xx&from=1&to=123", http.StatusBadRequest, 1},
 		{"/api/v1/application/metric?query=2xx&from=1&to=123&provider=dummy", http.StatusOK, 0},
+		{"/api/v1/application/metric?query=2xx&from=1&to=123&provider=dummy1", http.StatusBadRequest, 0},
 	}
 
 	for _, test := range testCases {

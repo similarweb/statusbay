@@ -50,7 +50,7 @@ func (server *Server) MetricHandler(resp http.ResponseWriter, req *http.Request)
 	}
 
 	if server.metricClientProviders[provider] == nil {
-		httpresponse.JSONError(resp, http.StatusInternalServerError, errors.New("Client metric not enabled"))
+		httpresponse.JSONError(resp, http.StatusBadRequest, errors.New("Client metric not enabled"))
 		return
 	}
 

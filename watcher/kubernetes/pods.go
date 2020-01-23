@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"statusbay/serverutil"
+	"sync"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -16,19 +17,37 @@ import (
 
 // PodsManager defined pods manager struct
 type PodsManager struct {
-	client       kubernetes.Interface
-	eventManager *EventsManager
-	Watch        chan WatchData
+	client        kubernetes.Interface
+	eventManager  *EventsManager
+	Watch         chan WatchData
+	podsFirstInit map[string]bool
+	mutex         *sync.RWMutex
 }
 
 // NewPodsManager create new pods instance
 func NewPodsManager(kubernetesClientset kubernetes.Interface, eventManager *EventsManager) *PodsManager {
 	return &PodsManager{
-		client:       kubernetesClientset,
-		eventManager: eventManager,
-
-		Watch: make(chan WatchData),
+		client:        kubernetesClientset,
+		eventManager:  eventManager,
+		podsFirstInit: map[string]bool{},
+		mutex:         &sync.RWMutex{},
+		Watch:         make(chan WatchData),
 	}
+}
+
+// storePodFirstInit will set if some pod appears for the first time true == first time
+func (pm *PodsManager) storePodFirstInit(key string, val bool) {
+	pm.mutex.Lock()
+	pm.podsFirstInit[key] = val
+	pm.mutex.Unlock()
+}
+
+// loadPodFirstInit will return true if pod exists or false otherwise
+func (pm *PodsManager) loadPodFirstInit(key string) bool {
+	pm.mutex.RLock()
+	exist := pm.podsFirstInit[key]
+	pm.mutex.RUnlock()
+	return exist
 }
 
 // Serve will start listening on pods request
@@ -73,9 +92,6 @@ func (pm *PodsManager) watch(watchData WatchData) {
 			log.WithError(err).WithField("list_option", watchData.ListOptions.String()).Error("Error when trying to start watch on pods")
 			return
 		}
-
-		podsFirstInit := map[string]bool{}
-
 		for {
 			select {
 			case event, watch := <-watcher.ResultChan():
@@ -95,9 +111,8 @@ func (pm *PodsManager) watch(watchData WatchData) {
 				}
 
 				//If it is the first time that we got the pod, we are start watch on pod events & send the pod to registry
-				if _, found := podsFirstInit[pod.Name]; !found {
-					podsFirstInit[pod.Name] = true
-
+				if found := pm.loadPodFirstInit(pod.Name); !found {
+					pm.storePodFirstInit(pod.Name, true)
 					watchData.RegistryData.NewPod(pod)
 					eventListOptions := metaV1.ListOptions{FieldSelector: labels.SelectorFromSet(map[string]string{
 						"involvedObject.name": pod.GetName(),

@@ -49,7 +49,7 @@ func (u *TableDeploymentsHash) TableName() string {
 func NewMysqlClient(config *config.MySQLConfig) *MySQLManager {
 
 	var err error
-	db, err := gorm.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8&parseTime=True&loc=Local", config.Username, config.Password, config.DNS, config.Schema))
+	db, err := gorm.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8&parseTime=True&loc=Local", config.Username, config.Password, config.DNS, config.Port, config.Schema))
 	if strings.ToLower(fmt.Sprintf("%s", log.GetLevel())) == "debug" {
 		db.LogMode(true)
 	}

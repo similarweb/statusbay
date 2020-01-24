@@ -16,19 +16,8 @@ type UIConfig struct {
 	BaseURL string `yaml:"base_url"`
 }
 
-// KubernetesConfig configuration
-type KubernetesConfig struct {
-	Deployment KubernetesDeployment `yaml:"deployment"`
-}
-
-// EventMarksConfig is defind how the mark event will look
-type EventMarksConfig struct {
-	Pattern      string   `yaml:"pattern"`
-	Descriptions []string `yaml:"descriptions"`
-}
-
-// KubernetesDeployment configuration
-type KubernetesDeployment struct {
+// KubernetesApplies configuration
+type KubernetesApplies struct {
 	// SaveInterval storage save interval
 	SaveInterval time.Duration `yaml:"save_interval"`
 
@@ -45,13 +34,19 @@ type KubernetesDeployment struct {
 	CollectDataAfterDeploymentFinish time.Duration `yaml:"collect_data_after_deployment_finish"`
 }
 
+// EventMarksConfig is defind how the mark event will look
+type EventMarksConfig struct {
+	Pattern      string   `yaml:"pattern"`
+	Descriptions []string `yaml:"descriptions"`
+}
+
 // Kubernetes is holds all application configuration
 type Kubernetes struct {
-	LogLevel         string            `yaml:"log_level"`
-	MySQL            *MySQLConfig      `yaml:"mysql"`
-	Slack            *SlackConfig      `yaml:"slack"`
-	UI               *UIConfig         `yaml:"ui"`
-	KubernetesConfig *KubernetesConfig `yaml:"kubernetes_settings"`
+	LogLevel string             `yaml:"log_level"`
+	MySQL    *MySQLConfig       `yaml:"mysql"`
+	Slack    *SlackConfig       `yaml:"slack"`
+	UI       *UIConfig          `yaml:"ui"`
+	Applies  *KubernetesApplies `yaml:"Applies"`
 }
 
 type KubernetesMarksEvents struct {

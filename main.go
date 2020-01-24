@@ -97,7 +97,7 @@ func startKubernetesWatcher(configPath, kubeconfig, apiserverHost string) server
 	reporter := kuberneteswatcher.NewReporter(slack, watcherConfig.Slack.DefaultChannels, watcherConfig.UI.BaseURL)
 
 	//Replicaset manager
-	registryManager := kuberneteswatcher.NewRegistryManager(watcherConfig.KubernetesConfig.Deployment.SaveInterval, watcherConfig.KubernetesConfig.Deployment.SaveDeploymentHistoryDuration, watcherConfig.KubernetesConfig.Deployment.CheckFinishDelay, watcherConfig.KubernetesConfig.Deployment.CollectDataAfterDeploymentFinish, mysql, reporter)
+	registryManager := kuberneteswatcher.NewRegistryManager(watcherConfig.Applies.SaveInterval, watcherConfig.Applies.SaveDeploymentHistoryDuration, watcherConfig.Applies.CheckFinishDelay, watcherConfig.Applies.CollectDataAfterDeploymentFinish, mysql, reporter)
 
 	//Event manager
 	eventManager := kuberneteswatcher.NewEventsManager(kubernetesClientset)
@@ -112,15 +112,14 @@ func startKubernetesWatcher(configPath, kubeconfig, apiserverHost string) server
 	replicasetManager := kuberneteswatcher.NewReplicasetManager(kubernetesClientset, eventManager, podsManager)
 
 	//Deployment manager
-	deploymentManager := kuberneteswatcher.NewDeploymentManager(kubernetesClientset, eventManager, registryManager, replicasetManager, serviceManager, watcherConfig.KubernetesConfig.Deployment.MaxDeploymentTime)
+	deploymentManager := kuberneteswatcher.NewDeploymentManager(kubernetesClientset, eventManager, registryManager, replicasetManager, serviceManager, watcherConfig.Applies.MaxDeploymentTime)
 
 	// ControllerRevision Manager
 	controllerRevisionManager := kuberneteswatcher.NewcontrollerRevisionManager(kubernetesClientset, podsManager)
 	// Daemonset manager
-	daemonsetManager := kuberneteswatcher.NewDaemonsetManager(kubernetesClientset, eventManager, registryManager, serviceManager, controllerRevisionManager, watcherConfig.KubernetesConfig.Deployment.MaxDeploymentTime)
-
+	daemonsetManager := kuberneteswatcher.NewDaemonsetManager(kubernetesClientset, eventManager, registryManager, serviceManager, controllerRevisionManager, watcherConfig.Applies.MaxDeploymentTime)
 	//Statefulset manager
-	statefulsetManager := kuberneteswatcher.NewStatefulsetManager(kubernetesClientset, eventManager, registryManager, serviceManager, controllerRevisionManager, watcherConfig.KubernetesConfig.Deployment.MaxDeploymentTime)
+	statefulsetManager := kuberneteswatcher.NewStatefulsetManager(kubernetesClientset, eventManager, registryManager, serviceManager, controllerRevisionManager, watcherConfig.Applies.MaxDeploymentTime)
 
 	// Run a list of backround process for the server
 	return serverutil.RunAll(eventManager, podsManager, deploymentManager, daemonsetManager, statefulsetManager, replicasetManager, registryManager, serviceManager, reporter).StopFunc

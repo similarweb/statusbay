@@ -21,17 +21,14 @@ type KubernetesApplies struct {
 	// SaveInterval storage save interval
 	SaveInterval time.Duration `yaml:"save_interval"`
 
-	// MaxDeploymentTime default watch deployment time. Can be override by `ProgressDeadlineSeconds`
-	MaxDeploymentTime time.Duration `yaml:"max_deployment_time"`
+	// MaxApplyTime default watch duration time. Can be override by `ProgressDeadlineSeconds`
+	MaxApplyTime time.Duration `yaml:"max_apply_time"`
 
-	// SaveDeploymentHistoryDuration defind period on time to save deployment history in memory
-	SaveDeploymentHistoryDuration time.Duration `yaml:"deployment_history"`
-
-	// CheckFinishDelay defind time to wait until starting check the status of the deployment
+	// CheckFinishDelay defind time to wait until starting check the status of the apply
 	CheckFinishDelay time.Duration `yaml:"check_finish_delay"`
 
-	// CollectDataAfterDeploymentFinish defind how many time to continue collect deployment event after deployment finished
-	CollectDataAfterDeploymentFinish time.Duration `yaml:"collect_data_after_deployment_finish"`
+	// CollectDataAfterApplyFinish defind how many time to continue collect apply events
+	CollectDataAfterApplyFinish time.Duration `yaml:"collect_data_after_apply_finish"`
 }
 
 // EventMarksConfig is defind how the mark event will look

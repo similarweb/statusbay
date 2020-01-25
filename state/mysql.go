@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"statusbay/config"
 	"strings"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 
@@ -45,17 +46,38 @@ func (u *TableDeploymentsHash) TableName() string {
 	return "last_deployment_version"
 }
 
+// open will creates a new DB connection
+func open(username, password, dns, schema string) (*gorm.DB, error) {
+	return gorm.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8&parseTime=True&loc=Local", username, password, dns, schema))
+}
+
 // NewMysqlClient create new MyySQL client
 func NewMysqlClient(config *config.MySQLConfig) *MySQLManager {
 
-	var err error
-	db, err := gorm.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8&parseTime=True&loc=Local", config.Username, config.Password, config.DNS, config.Schema))
-	if strings.ToLower(fmt.Sprintf("%s", log.GetLevel())) == "debug" {
-		db.LogMode(true)
+	var db *gorm.DB
+
+	c := make(chan int, 1)
+	go func() {
+		var err error
+		for {
+			db, err = open(config.Username, config.Password, config.DNS, config.Schema)
+			if err == nil {
+				break
+			}
+			log.Warn("Failed to open DB connection, sleeping for 5 second.")
+			time.Sleep(5 * time.Second)
+		}
+		c <- 1
+	}()
+
+	select {
+	case <-c:
+	case <-time.After(60 * time.Second):
+		log.Fatal("Failed to connect DB after 1 minute, time out.")
 	}
 
-	if err != nil {
-		log.Panic(err)
+	if strings.ToLower(fmt.Sprintf("%s", log.GetLevel())) == "debug" {
+		db.LogMode(true)
 	}
 
 	return &MySQLManager{

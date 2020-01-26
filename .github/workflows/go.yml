@@ -4,6 +4,7 @@ jobs:
 
   setup:
     name: Setup Statusbay project
+    runs-on: ubuntu-latest
     steps:
     - name: Set up Go 1.13
       uses: actions/setup-go@v1

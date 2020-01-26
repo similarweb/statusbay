@@ -2,8 +2,9 @@ name: Go
 on: [push]
 jobs:
 
-  setup:
-    name: Setup Statusbay project
+
+  validator:
+    name: Checks Validators
     runs-on: ubuntu-latest
     steps:
     - name: Set up Go 1.13
@@ -14,12 +15,6 @@ jobs:
     - name: Check out code into the Go module directory
       uses: actions/checkout@v1
 
-
-  validator:
-    name: Checks Validators
-    runs-on: ubuntu-latest
-    needs: [setup]
-    steps:
     - name: Checks validator
       run: |
         make checks-validator
@@ -27,9 +22,15 @@ jobs:
   test:
     name: Code Test
     runs-on: ubuntu-latest
-    needs: [setup]
     steps:
+    - name: Set up Go 1.13
+      uses: actions/setup-go@v1
+      with:
+        go-version: 1.13
+      id: go
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v1
     - name: Run tests
       run: |
-        make test 
+        make test
 

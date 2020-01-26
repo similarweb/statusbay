@@ -1,8 +1,8 @@
 package testutil
 
 import (
-	"statusbay/state"
 	"statusbay/api/kubernetes"
+	"statusbay/state"
 )
 
 var (

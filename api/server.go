@@ -10,10 +10,10 @@ import (
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 
-	"statusbay/serverutil"
 	"statusbay/api/alerts"
 	"statusbay/api/kubernetes"
 	"statusbay/api/metrics"
+	"statusbay/serverutil"
 )
 
 const (

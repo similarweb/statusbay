@@ -44,10 +44,10 @@ func TestGetAlertByTags(t *testing.T) {
 	}
 
 	periodsResponse := map[int][]*Periods{
-		1: []*Periods{
-			&Periods{Status: "up"},
+		1: {
+			{Status: "up"},
 		},
-		2: []*Periods{
+		2: {
 			{Status: "up", StartUnix: 1577836801, EndUnix: 1577923100},
 			{Status: "down", StartUnix: 1577836802, EndUnix: 1577923100},
 			{Status: "down", StartUnix: 1, EndUnix: 2},

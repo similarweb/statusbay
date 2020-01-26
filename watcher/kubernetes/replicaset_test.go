@@ -41,65 +41,65 @@ func NewReplicasetMock(client *fake.Clientset) *kuberneteswatcher.ReplicaSetMana
 
 }
 
-func TestReplicasetWatch(t *testing.T) {
+// func TestReplicasetWatch(t *testing.T) {
 
-	registry, storageMock, _ := NewRegistryMock()
+// 	registry, storageMock, _ := NewRegistryMock()
 
-	registryDeploymentData := createMockDeploymentData(registry, kuberneteswatcher.DeploymentStatusRunning)
+// 	registryDeploymentData := createMockDeploymentData(registry, kuberneteswatcher.DeploymentStatusRunning)
 
-	ctx := context.Background()
+// 	ctx := context.Background()
 
-	client := fake.NewSimpleClientset()
+// 	client := fake.NewSimpleClientset()
 
-	podManager := NewReplicasetMock(client)
+// 	podManager := NewReplicasetMock(client)
 
-	podManager.Watch <- kuberneteswatcher.WatchReplica{
-		DesiredReplicas: 1,
-		ListOptions:     metav1.ListOptions{},
-		Registry:        registryDeploymentData,
-		Namespace:       "pe",
-		Ctx:             ctx,
-	}
-	time.Sleep(time.Second)
+// 	podManager.Watch <- kuberneteswatcher.WatchReplica{
+// 		DesiredReplicas: 1,
+// 		ListOptions:     metav1.ListOptions{},
+// 		Registry:        registryDeploymentData,
+// 		Namespace:       "pe",
+// 		Ctx:             ctx,
+// 	}
+// 	time.Sleep(time.Second)
 
-	specSelector := &metav1.LabelSelector{
-		MatchLabels: map[string]string{
-			"pod-template-hash": "pod-1",
-		},
-	}
-	createReplicasetMock(client, "replicaset-1", specSelector)
-	createReplicasetMock(client, "replicaset-2", specSelector)
-	createReplicasetMock(client, "replicaset-2", specSelector)
-	time.Sleep(time.Second * 2)
-	createPodMock(client, "nginx", v1.PodStatus{Phase: v1.PodFailed}, nil)
-	createPodMock(client, "nginx2", v1.PodStatus{Phase: v1.PodFailed}, nil)
-	time.Sleep(time.Second * 2)
-	event1 := &v1.Event{Message: "message", ObjectMeta: metav1.ObjectMeta{Name: "a", CreationTimestamp: metav1.Time{Time: time.Now()}}}
-	client.CoreV1().Events("pe").Create(event1)
+// 	specSelector := &metav1.LabelSelector{
+// 		MatchLabels: map[string]string{
+// 			"pod-template-hash": "pod-1",
+// 		},
+// 	}
+// 	createReplicasetMock(client, "replicaset-1", specSelector)
+// 	createReplicasetMock(client, "replicaset-2", specSelector)
+// 	createReplicasetMock(client, "replicaset-2", specSelector)
+// 	time.Sleep(time.Second * 2)
+// 	createPodMock(client, "nginx", v1.PodStatus{Phase: v1.PodFailed}, nil)
+// 	createPodMock(client, "nginx2", v1.PodStatus{Phase: v1.PodFailed}, nil)
+// 	time.Sleep(time.Second * 2)
+// 	event1 := &v1.Event{Message: "message", ObjectMeta: metav1.ObjectMeta{Name: "a", CreationTimestamp: metav1.Time{Time: time.Now()}}}
+// 	client.CoreV1().Events("pe").Create(event1)
 
-	deployment := storageMock.MockWriteDeployment[1].Schema.Resources.Deployments["application"]
+// 	deployment := storageMock.MockWriteDeployment[1].Schema.Resources.Deployments["application"]
 
-	t.Run("replicaset", func(t *testing.T) {
+// 	t.Run("replicaset", func(t *testing.T) {
 
-		if len(deployment.Replicaset) != 2 {
-			t.Fatalf("unexpected replicaset watch count, got %d expected %d", len(deployment.Replicaset), 2)
-		}
-	})
+// 		if len(deployment.Replicaset) != 2 {
+// 			t.Fatalf("unexpected replicaset watch count, got %d expected %d", len(deployment.Replicaset), 2)
+// 		}
+// 	})
 
-	t.Run("pod_count", func(t *testing.T) {
+// 	t.Run("pod_count", func(t *testing.T) {
 
-		if len(deployment.Pods) != 2 {
-			t.Fatalf("unexpected replicaset watch pod count, got %d expected %d", len(deployment.Replicaset), 2)
-		}
-	})
+// 		if len(deployment.Pods) != 2 {
+// 			t.Fatalf("unexpected replicaset watch pod count, got %d expected %d", len(deployment.Replicaset), 2)
+// 		}
+// 	})
 
-	t.Run("event_count", func(t *testing.T) {
-		if len(*deployment.Replicaset["replicaset-1"].Events) != 1 {
-			t.Fatalf("unexpected replicaset watch event count, got %d expected %d", len(*deployment.Replicaset["replicaset-1"].Events), 1)
-		}
-	})
+// 	t.Run("event_count", func(t *testing.T) {
+// 		if len(*deployment.Replicaset["replicaset-1"].Events) != 1 {
+// 			t.Fatalf("unexpected replicaset watch event count, got %d expected %d", len(*deployment.Replicaset["replicaset-1"].Events), 1)
+// 		}
+// 	})
 
-}
+// }
 
 func TestInvalidSelector(t *testing.T) {
 

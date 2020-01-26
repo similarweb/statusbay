@@ -1,8 +1,8 @@
 package testutil
 
 import (
-	"statusbay/serverutil"
 	"statusbay/api/httpresponse"
+	"statusbay/serverutil"
 	"time"
 )
 

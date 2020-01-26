@@ -30,15 +30,14 @@ func createMockDeploymentData(registry *kuberneteswatcher.RegistryManager, statu
 func NewRegistryMock() (*kuberneteswatcher.RegistryManager, *testutil.MockStorage, *gtestutil.MockSlack) {
 
 	saveInterval, _ := time.ParseDuration("1s")
-	saveDeploymentHistoryDuration := 10 * time.Microsecond
 	checkFinishDelay := 10 * time.Microsecond
-	collectDataAfterDeploymentFinish := 10 * time.Microsecond
+	collectDataAfterApplyFinish := 10 * time.Microsecond
 
 	storageMock := testutil.NewMockStorage()
 	mockSlack := gtestutil.NewMockSlack()
 	slack := state.NewSlack(mockSlack)
 	reporter := kuberneteswatcher.NewReporter(slack, []string{"#channel"}, "https://127.0.0.1")
-	registry := kuberneteswatcher.NewRegistryManager(saveInterval, saveDeploymentHistoryDuration, checkFinishDelay, collectDataAfterDeploymentFinish, storageMock, reporter)
+	registry := kuberneteswatcher.NewRegistryManager(saveInterval, checkFinishDelay, collectDataAfterApplyFinish, storageMock, reporter)
 	registry.Serve()
 	reporter.Serve()
 	return registry, storageMock, mockSlack

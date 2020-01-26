@@ -43,7 +43,7 @@ type Kubernetes struct {
 	MySQL    *MySQLConfig       `yaml:"mysql"`
 	Slack    *SlackConfig       `yaml:"slack"`
 	UI       *UIConfig          `yaml:"ui"`
-	Applies  *KubernetesApplies `yaml:"Applies"`
+	Applies  *KubernetesApplies `yaml:"applies"`
 }
 
 type KubernetesMarksEvents struct {

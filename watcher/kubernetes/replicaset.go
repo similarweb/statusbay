@@ -126,10 +126,10 @@ func (rm *ReplicaSetManager) watch(replicaData WatchReplica) {
 						}).String()}
 
 						rm.podsManager.Watch <- WatchData{
-							ListOptions:   podListOptions,
+							ListOptions:  podListOptions,
 							RegistryData: replicaData.Registry,
-							Namespace:     replicaData.Namespace,
-							Ctx:           replicaData.Ctx,
+							Namespace:    replicaData.Namespace,
+							Ctx:          replicaData.Ctx,
 						}
 
 					} else {

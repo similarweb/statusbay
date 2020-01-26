@@ -5,6 +5,7 @@ import (
 	"io"
 	"statusbay/notifiers"
 	"statusbay/notifiers/common"
+	"statusbay/serverutil"
 	watcherCommon "statusbay/watcher/kubernetes/common"
 	"strings"
 )
@@ -57,6 +58,10 @@ func (*NotifierMock) ReportDeleted(message watcherCommon.DeploymentReporter) {
 
 func (*NotifierMock) ReportEnded(message watcherCommon.DeploymentReporter) {
 	panic("implement me")
+}
+
+func (*NotifierMock) Serve() (sf serverutil.StopFunc) {
+	return
 }
 
 func NewMockReader(source string, err error) io.Reader {

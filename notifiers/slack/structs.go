@@ -28,17 +28,14 @@ type Message struct {
 }
 
 type Config struct {
-	Token            string   `yaml:"token" mapstructure:"token"`
-	DefaultChannels  []string `yaml:"default_channels" mapstructure:"default_channels"`
-	BeginningMessage *Message `yaml:"beginning_message" mapstructure:"beginning_message"`
-	EndMessage       *Message `yaml:"end_message" mapstructure:"end_message"`
-	DeletedMessage   *Message `yaml:"deleted_message" mapstructure:"deleted_message"`
+	Token            string                   `yaml:"token" mapstructure:"token"`
+	DefaultChannels  []string                 `yaml:"default_channels" mapstructure:"default_channels"`
+	MessageTemplates map[ReportStage]*Message `yaml:"message_templates" mapstructure:"message_templates"`
 }
 
 type Manager struct {
-	client        *slackApi.Client
-	emailToUser   map[string]string
-	messageConfig map[ReportStage]*Message
-	config        Config
-	urlBase       string
+	client      *slackApi.Client
+	emailToUser map[string]string
+	config      Config
+	urlBase     string
 }

@@ -38,8 +38,8 @@ func NewSlack(defaultConfigReader io.Reader, urlBase string) (notifier common.No
 	}
 
 	notifier = &Manager{
-		messageConfig: defaultMessageConfig,
-		urlBase:       urlBase,
+		config:  Config{MessageTemplates: defaultMessageConfig},
+		urlBase: urlBase,
 	}
 
 	return
@@ -58,19 +58,6 @@ func (sl *Manager) LoadConfig(notifierConfig common.NotifierConfig) (err error) 
 
 	// init slack client
 	sl.client = slackApi.New(sl.config.Token)
-
-	// overwrite defaults
-	if sl.config.BeginningMessage != nil {
-		sl.messageConfig[started] = sl.config.BeginningMessage
-	}
-
-	if sl.config.EndMessage != nil {
-		sl.messageConfig[ended] = sl.config.EndMessage
-	}
-
-	if sl.config.DeletedMessage != nil {
-		sl.messageConfig[deleted] = sl.config.DeletedMessage
-	}
 
 	return
 }
@@ -97,9 +84,9 @@ func (sl *Manager) sendToAll(stage ReportStage, message watcherCommon.Deployment
 		toChannel, err := sl.GetChannelID(to)
 		if err == nil {
 			attachment := slackApi.Attachment{
-				Title:   replacePlaceholders(sl.messageConfig[stage].Title, status, link, deployBy),
-				Pretext: replacePlaceholders(sl.messageConfig[stage].Pretext, status, link, deployBy),
-				Text:    replacePlaceholders(sl.messageConfig[stage].Text, status, link, deployBy),
+				Title:   replacePlaceholders(sl.config.MessageTemplates[stage].Title, status, link, deployBy),
+				Pretext: replacePlaceholders(sl.config.MessageTemplates[stage].Pretext, status, link, deployBy),
+				Text:    replacePlaceholders(sl.config.MessageTemplates[stage].Text, status, link, deployBy),
 				Color:   string(color),
 				// TODO:: add cluster + namespace name
 				Fields: []slackApi.AttachmentField{

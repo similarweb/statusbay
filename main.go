@@ -97,7 +97,7 @@ func startKubernetesWatcher(configPath, kubeconfig, apiserverHost string) server
 	reporter := kuberneteswatcher.NewReporter(slack, watcherConfig.Slack.DefaultChannels, watcherConfig.UI.BaseURL)
 
 	//Replicaset manager
-	registryManager := kuberneteswatcher.NewRegistryManager(watcherConfig.KubernetesConfig.Deployment.SaveInterval, watcherConfig.KubernetesConfig.Deployment.SaveDeploymentHistoryDuration, watcherConfig.KubernetesConfig.Deployment.CheckFinishDelay, watcherConfig.KubernetesConfig.Deployment.CollectDataAfterDeploymentFinish, mysql, reporter)
+	registryManager := kuberneteswatcher.NewRegistryManager(watcherConfig.Applies.SaveInterval, watcherConfig.Applies.CheckFinishDelay, watcherConfig.Applies.CollectDataAfterApplyFinish, mysql, reporter)
 
 	//Event manager
 	eventManager := kuberneteswatcher.NewEventsManager(kubernetesClientset)
@@ -112,12 +112,12 @@ func startKubernetesWatcher(configPath, kubeconfig, apiserverHost string) server
 	replicasetManager := kuberneteswatcher.NewReplicasetManager(kubernetesClientset, eventManager, podsManager)
 
 	//Deployment manager
-	deploymentManager := kuberneteswatcher.NewDeploymentManager(kubernetesClientset, eventManager, registryManager, replicasetManager, serviceManager, watcherConfig.KubernetesConfig.Deployment.MaxDeploymentTime)
+	deploymentManager := kuberneteswatcher.NewDeploymentManager(kubernetesClientset, eventManager, registryManager, replicasetManager, serviceManager, watcherConfig.Applies.MaxApplyTime)
 
 	// ControllerRevision Manager
 	controllerRevisionManager := kuberneteswatcher.NewControllerReisionManager(kubernetesClientset, podsManager)
 	// Daemonset manager
-	daemonsetManager := kuberneteswatcher.NewDaemonsetManager(kubernetesClientset, eventManager, registryManager, serviceManager, podsManager, controllerRevisionManager, watcherConfig.KubernetesConfig.Deployment.MaxDeploymentTime)
+	daemonsetManager := kuberneteswatcher.NewDaemonsetManager(kubernetesClientset, eventManager, registryManager, serviceManager, podsManager, controllerRevisionManager, watcherConfig.Applies.MaxApplyTime)
 
 	//run lis of backround proccess for the server
 	return serverutil.RunAll(eventManager, podsManager, deploymentManager, daemonsetManager, replicasetManager, registryManager, serviceManager, reporter).StopFunc

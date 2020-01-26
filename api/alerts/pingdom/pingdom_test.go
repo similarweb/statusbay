@@ -43,20 +43,20 @@ func TestGetAlertByTags(t *testing.T) {
 
 	checkResponse := ChecksResponse{
 		Checks: []Check{
-			Check{ID: 1, Name: "foo", Hostname: "foo.com"},
-			Check{ID: 2, Name: "foo2", Hostname: "foo2.com"},
+			{ID: 1, Name: "foo", Hostname: "foo.com"},
+			{ID: 2, Name: "foo2", Hostname: "foo2.com"},
 		},
 	}
 
 	summaryOutageResponse := map[int]SummaryOutageResponse{
-		1: SummaryOutageResponse{
+		1: {
 			Summary: States{
 				States: []State{
 					{Status: "up"},
 				},
 			},
 		},
-		2: SummaryOutageResponse{
+		2: {
 			Summary: States{
 				States: []State{
 					{Status: "up", TimeFrom: 1, TimeTo: 2},

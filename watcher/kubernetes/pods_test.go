@@ -67,10 +67,10 @@ func TestPodWatch(t *testing.T) {
 	nginxPodStatus := v1.PodStatus{
 		Phase: v1.PodRunning,
 		ContainerStatuses: []v1.ContainerStatus{
-			v1.ContainerStatus{
+			{
 				State: nginxWaitingState,
 			},
-			v1.ContainerStatus{
+			{
 				State: nginxTerminatedtate,
 			},
 		},
@@ -138,9 +138,9 @@ func TestPodWatchEvent(t *testing.T) {
 
 	podManager.Watch <- kuberneteswatcher.WatchData{
 		RegistryData: registryDeploymentData,
-		ListOptions:   metav1.ListOptions{},
-		Namespace:     "pe",
-		Ctx:           ctx,
+		ListOptions:  metav1.ListOptions{},
+		Namespace:    "pe",
+		Ctx:          ctx,
 	}
 	time.Sleep(time.Second)
 

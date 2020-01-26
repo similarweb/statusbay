@@ -1,11 +1,11 @@
 package alerts
 
 import (
-	"statusbay/config"
-	"statusbay/request"
 	"statusbay/api/alerts/pingdom"
 	"statusbay/api/alerts/statuscake"
 	"statusbay/api/httpresponse"
+	"statusbay/config"
+	"statusbay/request"
 	"time"
 )
 

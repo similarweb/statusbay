@@ -115,7 +115,7 @@ func (re *ReporterManager) deploymentStarted(message DeploymentReporter) {
 				Color:   "#3aa3e3",
 				// TODO:: add cluster + namespace name
 				Fields: []slackApi.AttachmentField{
-					slackApi.AttachmentField{
+					{
 						Title: "Application Name:",
 						Value: message.Name,
 						Short: false,
@@ -157,7 +157,7 @@ func (re *ReporterManager) deploymentDeleted(message DeploymentReporter) {
 				Color: "#3aa3e3",
 				// TODO:: add cluster + namespace name
 				Fields: []slackApi.AttachmentField{
-					slackApi.AttachmentField{
+					{
 						Title: "Application Name:",
 						Value: message.Name,
 						Short: false,
@@ -210,7 +210,7 @@ func (re *ReporterManager) deploymentFinish(message DeploymentReporter) {
 				Color:   color,
 				// TODO:: add cluster + namespace name
 				Fields: []slackApi.AttachmentField{
-					slackApi.AttachmentField{
+					{
 						Title: "Application Name:",
 						Value: message.Name,
 						Short: false,

@@ -22,7 +22,7 @@ func GetMetadataByPrefix(annotations map[string]string, search string) []string 
 
 }
 
-// GetMetadataOrDefault get metadata from annotatiuons or return a default value 
+// GetMetadataOrDefault get metadata from annotatiuons or return a default value
 func GetMetadataOrDefault(annotations map[string]string, search string, defaultVal string) string {
 
 	res := GetMetadata(annotations, search)

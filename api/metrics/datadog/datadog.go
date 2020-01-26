@@ -8,8 +8,8 @@ import (
 	"sync"
 	"time"
 
-	"statusbay/serverutil"
 	"statusbay/api/httpresponse"
+	"statusbay/serverutil"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/zorkian/go-datadog-api"

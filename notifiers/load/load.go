@@ -36,7 +36,11 @@ func Load(rawNotifiersConfig common.ConfigByName, basePath, baseKubernetesUrl st
 			return
 		}
 
-		if notifier, err = notifierMaker(defaultNotifierConfig, notifierConfig, baseKubernetesUrl); err != nil {
+		if notifier, err = notifierMaker(defaultNotifierConfig, baseKubernetesUrl); err != nil {
+			return
+		}
+
+		if err = notifier.LoadConfig(notifierConfig); err != nil {
 			return
 		}
 

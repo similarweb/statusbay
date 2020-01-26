@@ -71,6 +71,31 @@ func TestNotifierRegistration(t *testing.T) {
 		}
 	})
 
+	t.Run("Failing to load notifier config", func(t *testing.T) {
+		errorMessage := "load config failed"
+
+		defer delete(notifierConfigs, registeredNotifierName)
+		notifierConfigs[registeredNotifierName] = nil
+
+		defer notifiers.Deregister(registeredNotifierName)
+		notifiers.Register(registeredNotifierName, testutil.GetNotifierMakerMock("mock", errorMessage))
+
+		defer func(preTestFunc func(basePath string, notifierName common.NotifierName) (*os.File, error)) {
+			load.GetDefaultConfigReaderFunc = preTestFunc
+		}(load.GetDefaultConfigReaderFunc)
+
+		load.GetDefaultConfigReaderFunc = func(basePath string, notifierName common.NotifierName) (file *os.File, err error) {
+			file = &os.File{}
+			return
+		}
+
+		if _, err := load.Load(notifierConfigs, "", ""); err == nil {
+			t.Error("Error expected")
+		} else if err.Error() != errorMessage {
+			t.Errorf("Unexpected error message %s != %s", err.Error(), errorMessage)
+		}
+	})
+
 	t.Run("Successfully initialized at least one notifier", func(t *testing.T) {
 		expectedNumberOfNotifiers := 1
 

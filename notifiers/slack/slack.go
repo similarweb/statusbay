@@ -26,6 +26,25 @@ const (
 	UpdateSlackUserInterval = time.Hour
 )
 
+// wraps the manager and returns it as a Notifier
+func NewSlack(defaultConfigReader io.Reader, urlBase string) (notifier common.Notifier, err error) {
+	var data []byte
+	defaultMessageConfig := map[ReportStage]*Message{}
+
+	if data, err = ioutil.ReadAll(defaultConfigReader); err != nil {
+		return
+	} else if err = yaml.Unmarshal(data, &defaultMessageConfig); err != nil {
+		return
+	}
+
+	notifier = &Manager{
+		messageConfig: defaultMessageConfig,
+		urlBase:       urlBase,
+	}
+
+	return
+}
+
 func (sl *Manager) LoadConfig(notifierConfig common.NotifierConfig) (err error) {
 	sl.config = Config{}
 	if err = mapstructure.Decode(notifierConfig, &sl.config); err != nil {
@@ -36,6 +55,9 @@ func (sl *Manager) LoadConfig(notifierConfig common.NotifierConfig) (err error) 
 	if sl.config.Token == "" {
 		return noTokenErr
 	}
+
+	// init slack client
+	sl.client = slackApi.New(sl.config.Token)
 
 	// overwrite defaults
 	if sl.config.BeginningMessage != nil {
@@ -122,32 +144,10 @@ func (sl *Manager) ReportEnded(message watcherCommon.DeploymentReporter) {
 	sl.sendToAll(ended, message, color)
 }
 
-func NewSlack(defaultConfigReader io.Reader, config common.NotifierConfig, urlBase string) (notifier common.Notifier, err error) {
-	var data []byte
-	defaultMessageConfig := map[ReportStage]*Message{}
-
-	if data, err = ioutil.ReadAll(defaultConfigReader); err != nil {
-		return
-	} else if err = yaml.Unmarshal(data, &defaultMessageConfig); err != nil {
-		return
-	}
-
-	slackManager := &Manager{
-		messageConfig: defaultMessageConfig,
-		urlBase:       urlBase,
-	}
-
-	if err = slackManager.LoadConfig(config); err != nil {
-		return
-	} else {
-		slackManager.updateUsers()
-		notifier = slackManager
-		return
-	}
-}
-
 // Serve will loop of slack users
 func (sl *Manager) Serve() serverutil.StopFunc {
+	sl.updateUsers()
+
 	ctx, cancelFn := context.WithCancel(context.Background())
 	stopped := make(chan bool)
 	go func() {
@@ -169,12 +169,12 @@ func (sl *Manager) Serve() serverutil.StopFunc {
 }
 
 // UpdateUsers all users from slack
-func (sl *Manager) updateUsers() bool {
+func (sl *Manager) updateUsers() error {
 	currentUsers := map[string]string{}
 
 	users, err := sl.client.GetUsers()
 	if err != nil {
-		return false
+		return err
 	}
 
 	for _, user := range users {
@@ -187,7 +187,7 @@ func (sl *Manager) updateUsers() bool {
 		log.Info(fmt.Sprintf("Found %d slack users", len(sl.emailToUser)))
 	}
 
-	return true
+	return nil
 }
 
 // getUserIDByEmail return slack user by email

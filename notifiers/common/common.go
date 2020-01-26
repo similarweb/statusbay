@@ -1,6 +1,9 @@
 package common
 
-import "statusbay/watcher/kubernetes/common"
+import (
+	"statusbay/serverutil"
+	"statusbay/watcher/kubernetes/common"
+)
 
 const (
 	StatusPlaceholder     = "{status}"
@@ -17,4 +20,5 @@ type Notifier interface {
 	ReportStarted(message common.DeploymentReporter)
 	ReportDeleted(message common.DeploymentReporter)
 	ReportEnded(message common.DeploymentReporter)
+	Serve() serverutil.StopFunc
 }

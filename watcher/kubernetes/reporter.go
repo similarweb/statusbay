@@ -37,7 +37,18 @@ func NewReporter(availableNotifiers []notifierCommon.Notifier) *ReporterManager 
 // Serve will start to reporter listener
 func (re *ReporterManager) Serve() serverutil.StopFunc {
 
-	ctx, cancelFn := context.WithCancel(context.Background())
+	ctx, ctxCancel := context.WithCancel(context.Background())
+	var notifierStoppers []serverutil.StopFunc
+	for _, notifier := range re.availableNotifiers {
+		notifierStoppers = append(notifierStoppers, notifier.Serve())
+	}
+	cancelFn := func() {
+		ctxCancel()
+		for _, notifierCancelFunc := range notifierStoppers {
+			notifierCancelFunc()
+		}
+	}
+
 	stopped := make(chan bool)
 	go func() {
 		for {

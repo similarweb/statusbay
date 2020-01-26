@@ -36,7 +36,7 @@ type Config struct {
 }
 
 type Manager struct {
-	client        slackApi.Client
+	client        *slackApi.Client
 	emailToUser   map[string]string
 	messageConfig map[ReportStage]*Message
 	config        Config

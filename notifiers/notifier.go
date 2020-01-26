@@ -7,7 +7,7 @@ import (
 	"statusbay/notifiers/common"
 )
 
-type NotifierMaker func(defaultConfigReader io.Reader, config common.NotifierConfig, urlBase string) (common.Notifier, error)
+type NotifierMaker func(defaultConfigReader io.Reader, urlBase string) (common.Notifier, error)
 
 const notRegisteredTemplate = "notifier by the name %s was not registered"
 

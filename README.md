@@ -1,6 +1,6 @@
 # StatusBay
 
-![Go](https://github.com/similarweb/statusbay/workflows/Go/badge.svg?branch=master)
+![Go](https://github.com/similarweb/statusbay/workflows/Go/badge.svg?event=push)
 
 ### Example: Failed K8s Deployment
 

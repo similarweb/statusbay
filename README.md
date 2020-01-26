@@ -1,5 +1,7 @@
 # StatusBay
 
+![Go](https://github.com/similarweb/statusbay/workflows/Go/badge.svg?branch=master)
+
 ### Example: Failed K8s Deployment
 
 TODO:: Add images of failure screenshot

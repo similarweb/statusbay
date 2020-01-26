@@ -3,6 +3,7 @@ package config
 // MySQLConfig client configuration
 type MySQLConfig struct {
 	DNS      string `yaml:"dns"`
+	Port     int    `yaml:"port"`
 	Username string `yaml:"username"`
 	Password string `yaml:"password"`
 	Schema   string `yaml:"schema"`

@@ -1,8 +1,8 @@
 package kubernetes
 
 import (
-	"statusbay/config"
 	"statusbay/api/eventmark"
+	"statusbay/config"
 )
 
 func MarkApplicationDeploymentEvents(appDeployment *ResponseDeploymentData, eventMarksConfig config.KubernetesMarksEvents) {

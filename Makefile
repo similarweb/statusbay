@@ -47,7 +47,7 @@ fmt-validator: ## Validate go format
 		echo Your code formating is according gofmt standards; \
 	fi
 
-checks-validator: fmt-validator ## Run all Statusbay validation
+checks-validator: fmt-validator ## Run all Statusbay validations
 
 help: ## Show Help menu
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'

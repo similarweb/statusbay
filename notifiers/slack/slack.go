@@ -18,10 +18,10 @@ import (
 )
 
 var (
-	noTokenErr = errors.New("slack token is required")
+	NoTokenErr = errors.New("slack token is required")
 )
 
-const (
+var (
 	//UpdateSlackUserInterval interval for update slack user list
 	UpdateSlackUserInterval = time.Hour
 )
@@ -53,7 +53,7 @@ func (sl *Manager) LoadConfig(notifierConfig common.NotifierConfig) (err error) 
 
 	// validate config
 	if sl.config.Token == "" {
-		return noTokenErr
+		return NoTokenErr
 	}
 
 	// init slack client
@@ -68,7 +68,7 @@ func (sl *Manager) sendToAll(stage ReportStage, message watcherCommon.Deployment
 		err      error
 	)
 
-	if deployBy, err = sl.getUserIDByEmail(message.DeployBy); err != nil {
+	if deployBy, err = sl.getUserIdByEmail(message.DeployBy); err != nil {
 		deployBy = message.DeployBy
 	} else {
 		deployBy = fmt.Sprintf("by <@%s>", deployBy)
@@ -81,7 +81,7 @@ func (sl *Manager) sendToAll(stage ReportStage, message watcherCommon.Deployment
 		if to == "" {
 			continue
 		}
-		toChannel, err := sl.GetChannelID(to)
+		toChannel, err := sl.GetChannelId(to)
 		if err == nil {
 			attachment := slackApi.Attachment{
 				Title:   replacePlaceholders(sl.config.MessageTemplates[stage].Title, status, link, deployBy),
@@ -156,12 +156,13 @@ func (sl *Manager) Serve() serverutil.StopFunc {
 }
 
 // UpdateUsers all users from slack
-func (sl *Manager) updateUsers() error {
+func (sl *Manager) updateUsers() {
 	currentUsers := map[string]string{}
 
 	users, err := sl.client.GetUsers()
 	if err != nil {
-		return err
+		log.WithError(err).Error("unable to update user list")
+		return
 	}
 
 	for _, user := range users {
@@ -173,12 +174,10 @@ func (sl *Manager) updateUsers() error {
 		sl.emailToUser = currentUsers
 		log.Info(fmt.Sprintf("Found %d slack users", len(sl.emailToUser)))
 	}
-
-	return nil
 }
 
-// getUserIDByEmail return slack user by email
-func (sl *Manager) getUserIDByEmail(email string) (string, error) {
+// getUserIdByEmail return slack user by email
+func (sl *Manager) getUserIdByEmail(email string) (string, error) {
 	if userId, ok := sl.emailToUser[email]; !ok {
 		//log.WithField("email", email).Warn("Slack user by email not found")
 		return "", errors.New("slack user by email not found")
@@ -187,28 +186,26 @@ func (sl *Manager) getUserIDByEmail(email string) (string, error) {
 	}
 }
 
-// Send will send slack notification to user
-func (sl *Manager) send(channelID string, attachment slackApi.Attachment) bool {
+// send a slack notification to user
+func (sl *Manager) send(channelID string, attachment slackApi.Attachment) {
 	_, _, err := sl.client.PostMessage(channelID, slackApi.MsgOptionAttachments(attachment), slackApi.MsgOptionAsUser(true))
 	if err != nil {
 
 		log.WithError(err).WithFields(log.Fields{
 			"channel_id": channelID,
 		}).Error("Error when trying to send post message")
-		return false
 	}
 	log.WithFields(log.Fields{
 		"channel_id": channelID,
 	}).Debug("Slack message was sent")
-	return true
 }
 
-// GetChannelID returns the channel id. if is it email, search the user channel id by his email
-func (sl *Manager) GetChannelID(to string) (string, error) {
+// GetChannelId returns the channel id. if is it email, search the user channel id by his email
+func (sl *Manager) GetChannelId(to string) (string, error) {
 	if strings.HasPrefix(to, "#") {
 		return to, nil
 	}
-	return sl.getUserIDByEmail(to)
+	return sl.getUserIdByEmail(to)
 }
 
 // return distinct values in slice
@@ -224,6 +221,7 @@ func distinct(inputSlice []string) []string {
 	return list
 }
 
+// replaces Status, Link and DeployedBy placeholders from the templates with the actual values
 func replacePlaceholders(input, status, link, deployedBy string) string {
 	return strings.ReplaceAll(
 		strings.ReplaceAll(

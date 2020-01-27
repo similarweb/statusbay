@@ -21,6 +21,11 @@ const (
 	green  MessageColor = "#25ba81"
 )
 
+type ApiClient interface {
+	PostMessage(channelID string, options ...slackApi.MsgOption) (string, string, error)
+	GetUsers() ([]slackApi.User, error)
+}
+
 type Message struct {
 	Title   string `yaml:"title" mapstructure:"title"`
 	Pretext string `yaml:"pretext" mapstructure:"pretext"`
@@ -34,7 +39,7 @@ type Config struct {
 }
 
 type Manager struct {
-	client      *slackApi.Client
+	client      ApiClient
 	emailToUser map[string]string
 	config      Config
 	urlBase     string

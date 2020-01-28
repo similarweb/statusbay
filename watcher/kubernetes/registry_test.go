@@ -29,13 +29,12 @@ func createMockDeploymentData(registry *kuberneteswatcher.RegistryManager, statu
 func NewRegistryMock() (*kuberneteswatcher.RegistryManager, *testutil.MockStorage) {
 
 	saveInterval, _ := time.ParseDuration("1s")
-	saveDeploymentHistoryDuration := 10 * time.Microsecond
 	checkFinishDelay := 10 * time.Microsecond
-	collectDataAfterDeploymentFinish := 10 * time.Microsecond
+	collectDataAfterApplyFinish := 10 * time.Microsecond
 
 	storageMock := testutil.NewMockStorage()
 	reporter := kuberneteswatcher.NewReporter([]notifierCommon.Notifier{})
-	registry := kuberneteswatcher.NewRegistryManager(saveInterval, saveDeploymentHistoryDuration, checkFinishDelay, collectDataAfterDeploymentFinish, storageMock, reporter)
+	registry := kuberneteswatcher.NewRegistryManager(saveInterval, checkFinishDelay, collectDataAfterApplyFinish, storageMock, reporter)
 	registry.Serve()
 	reporter.Serve()
 	return registry, storageMock

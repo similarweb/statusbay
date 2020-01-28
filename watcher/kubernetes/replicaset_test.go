@@ -3,6 +3,7 @@ package kuberneteswatcher_test
 import (
 	"context"
 	kuberneteswatcher "statusbay/watcher/kubernetes"
+	"statusbay/watcher/kubernetes/common"
 	"testing"
 	"time"
 
@@ -103,9 +104,9 @@ func NewReplicasetMock(client *fake.Clientset) *kuberneteswatcher.ReplicaSetMana
 
 func TestInvalidSelector(t *testing.T) {
 
-	registry, storageMock, _ := NewRegistryMock()
+	registry, storageMock := NewRegistryMock()
 
-	registryDeploymentData := createMockDeploymentData(registry, kuberneteswatcher.DeploymentStatusRunning)
+	registryDeploymentData := createMockDeploymentData(registry, common.DeploymentStatusRunning)
 
 	ctx := context.Background()
 

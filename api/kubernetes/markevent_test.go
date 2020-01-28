@@ -48,7 +48,7 @@ func TestMarkApplicationDeploymentEvents(t *testing.T) {
 	}
 	eventsConfig := config.KubernetesMarksEvents{
 		Pod:        podEvents,
-		ReplicaSet: replicasetEvents,
+		Replicaset: replicasetEvents,
 		Deployment: deploymentEvents,
 	}
 	MarkApplicationDeploymentEvents(&appDeployment, eventsConfig)

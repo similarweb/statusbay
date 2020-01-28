@@ -46,16 +46,15 @@ type RegistryRow struct {
 
 // RegistryManager defined multiple rows data
 type RegistryManager struct {
-	registryData                     map[string]*RegistryRow
-	saveInterval                     time.Duration
-	saveDeploymentHistoryDuration    time.Duration
-	checkFinishDelay                 time.Duration
-	collectDataAfterDeploymentFinish time.Duration
-	saveLock                         *sync.Mutex
-	newAppLock                       *sync.Mutex
-	storage                          Storage
-	reporter                         *ReporterManager
-	lastDeploymentHistory            map[string]time.Time
+	registryData                map[string]*RegistryRow
+	saveInterval                time.Duration
+	checkFinishDelay            time.Duration
+	collectDataAfterApplyFinish time.Duration
+	saveLock                    *sync.Mutex
+	newAppLock                  *sync.Mutex
+	storage                     Storage
+	reporter                    *ReporterManager
+	lastDeploymentHistory       map[string]time.Time
 }
 
 func (dr *RegistryManager) UpdateAppliesVersionHistory(name, namespace string, hash uint64) bool {
@@ -67,14 +66,13 @@ func (dr *RegistryManager) DeleteAppliedVersion(name, namespace string) bool {
 }
 
 // NewRegistryManager create new schema registry instance
-func NewRegistryManager(saveInterval time.Duration, saveDeploymentHistoryDuration time.Duration, checkFinishDelay time.Duration, collectDataAfterDeploymentFinish time.Duration, storage Storage, reporter *ReporterManager) *RegistryManager {
+func NewRegistryManager(saveInterval time.Duration, checkFinishDelay time.Duration, collectDataAfterApplyFinish time.Duration, storage Storage, reporter *ReporterManager) *RegistryManager {
 	return &RegistryManager{
-		saveInterval:                     saveInterval,
-		saveDeploymentHistoryDuration:    saveDeploymentHistoryDuration,
-		checkFinishDelay:                 checkFinishDelay,
-		collectDataAfterDeploymentFinish: collectDataAfterDeploymentFinish,
-		storage:                          storage,
-		reporter:                         reporter,
+		saveInterval:                saveInterval,
+		checkFinishDelay:            checkFinishDelay,
+		collectDataAfterApplyFinish: collectDataAfterApplyFinish,
+		storage:                     storage,
+		reporter:                    reporter,
 
 		registryData:          make(map[string]*RegistryRow),
 		lastDeploymentHistory: make(map[string]time.Time),
@@ -141,7 +139,7 @@ func (dr *RegistryManager) LoadRunningApplies() []*RegistryRow {
 // NewApplication will creates a new deployment row
 func (dr *RegistryManager) NewApplication(
 	appName string,
-	resourceName string,
+	_ string,
 	namespace string,
 	clusterName string,
 	annotations map[string]string,
@@ -161,7 +159,7 @@ func (dr *RegistryManager) NewApplication(
 		cancelFn:                         cancelFn,
 		finish:                           false,
 		status:                           status,
-		collectDataAfterDeploymentFinish: dr.collectDataAfterDeploymentFinish,
+		collectDataAfterDeploymentFinish: dr.collectDataAfterApplyFinish,
 		DBSchema: DBSchema{
 			Application:           appName,
 			Cluster:               clusterName,

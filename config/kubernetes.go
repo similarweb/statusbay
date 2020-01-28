@@ -18,33 +18,25 @@ type UIConfig struct {
 	BaseURL string `yaml:"base_url"`
 }
 
-// KubernetesConfig configuration
-type KubernetesConfig struct {
-	Deployment KubernetesDeployment `yaml:"deployment"`
+// KubernetesApplies configuration
+type KubernetesApplies struct {
+	// SaveInterval storage save interval
+	SaveInterval time.Duration `yaml:"save_interval"`
+
+	// MaxApplyTime default watch duration time. Can be override by `ProgressDeadlineSeconds`
+	MaxApplyTime time.Duration `yaml:"max_apply_time"`
+
+	// CheckFinishDelay defind time to wait until starting check the status of the apply
+	CheckFinishDelay time.Duration `yaml:"check_finish_delay"`
+
+	// CollectDataAfterApplyFinish defind how many time to continue collect apply events
+	CollectDataAfterApplyFinish time.Duration `yaml:"collect_data_after_apply_finish"`
 }
 
 // EventMarksConfig is defined how the mark event will look
 type EventMarksConfig struct {
 	Pattern      string   `yaml:"pattern"`
 	Descriptions []string `yaml:"descriptions"`
-}
-
-// KubernetesDeployment configuration
-type KubernetesDeployment struct {
-	// SaveInterval storage save interval
-	SaveInterval time.Duration `yaml:"save_interval"`
-
-	// MaxDeploymentTime default watch deployment time. Can be override by `ProgressDeadlineSeconds`
-	MaxDeploymentTime time.Duration `yaml:"max_deployment_time"`
-
-	// SaveDeploymentHistoryDuration defined period on time to save deployment history in memory
-	SaveDeploymentHistoryDuration time.Duration `yaml:"deployment_history"`
-
-	// CheckFinishDelay defined time to wait until starting check the status of the deployment
-	CheckFinishDelay time.Duration `yaml:"check_finish_delay"`
-
-	// CollectDataAfterDeploymentFinish defined how many time to continue collect deployment event after deployment finished
-	CollectDataAfterDeploymentFinish time.Duration `yaml:"collect_data_after_deployment_finish"`
 }
 
 // Kubernetes is holds all application configuration
@@ -64,7 +56,7 @@ func (k *Kubernetes) GetNotifiers() []notifierCommon.Notifier {
 
 type KubernetesMarksEvents struct {
 	Pod        []EventMarksConfig `yaml:"pod"`
-	ReplicaSet []EventMarksConfig `yaml:"replicaset"`
+	Replicaset []EventMarksConfig `yaml:"replicaset"`
 	Deployment []EventMarksConfig `yaml:"deployment"`
 }
 

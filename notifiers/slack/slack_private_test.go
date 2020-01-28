@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"github.com/nlopes/slack"
 	"statusbay/notifiers/common"
+	watcherCommon "statusbay/watcher/kubernetes/common"
+
 	"testing"
 )
 
@@ -376,13 +378,133 @@ func TestSend(t *testing.T) {
 
 }
 
-func TestSendToAll(t *testing.T) {
-	t.Run("", func(t *testing.T) {
+func TestReportFuncs(t *testing.T) {
+	t.Run("sending success message from an unknown user", func(t *testing.T) {
 		mockClient := &MockApiClient{}
 		slackManager := Manager{
-			client:      mockClient,
-			emailToUser: map[string]string{},
+			client: mockClient,
+			emailToUser: map[string]string{
+				"test1": "test1",
+			},
+			config: Config{
+				DefaultChannels: []string{"#default_test"},
+				MessageTemplates: map[ReportStage]*Message{
+					started: {},
+					ended:   {},
+					deleted: {},
+				},
+			},
+		}
+
+		expectedMessageTargets := map[string]*struct{}{
+			"test1":         nil,
+			"#default_test": nil,
+		}
+
+		slackManager.ReportStarted(watcherCommon.DeploymentReporter{
+			To:       []string{"test1", "test1", "test2", ""},
+			DeployBy: "unknown",
+		})
+
+		if mockClient.sentMessages == nil {
+			t.Error("expected to send messages, sent none")
+		} else {
+
+			if len(mockClient.sentMessages) != 2 {
+				t.Errorf("expected to send 2 messages, sent %d", len(mockClient.sentMessages))
+			}
+
+			for _, target := range mockClient.sentMessages {
+				if _, exists := expectedMessageTargets[target.channelId]; !exists {
+					t.Errorf("expected %s to be a target of a sent message", target.channelId)
+				}
+			}
 		}
 
 	})
+
+	t.Run("sending end message from a known user", func(t *testing.T) {
+		mockClient := &MockApiClient{}
+		slackManager := Manager{
+			client:      mockClient,
+			emailToUser: map[string]string{"email1": "id2"},
+			config: Config{
+				DefaultChannels: []string{"#default_test"},
+				MessageTemplates: map[ReportStage]*Message{
+					started: {},
+					ended:   {},
+					deleted: {},
+				},
+			},
+		}
+
+		expectedMessageTargets := map[string]*struct{}{
+			"test1":         nil,
+			"#default_test": nil,
+		}
+
+		slackManager.ReportEnded(watcherCommon.DeploymentReporter{
+			To:       []string{"test1", "test1", ""},
+			DeployBy: "email1",
+		})
+
+		if mockClient.sentMessages == nil {
+			t.Error("expected to send messages, sent none")
+		} else {
+
+			if len(mockClient.sentMessages) != 1 {
+				t.Errorf("expected to send 1 message, sent %d", len(mockClient.sentMessages))
+			}
+
+			for _, target := range mockClient.sentMessages {
+				if _, exists := expectedMessageTargets[target.channelId]; !exists {
+					t.Errorf("expected %s to be a target of a sent message", target.channelId)
+				}
+			}
+		}
+
+	})
+
+	t.Run("sending delete message from a known user", func(t *testing.T) {
+		mockClient := &MockApiClient{}
+		slackManager := Manager{
+			client:      mockClient,
+			emailToUser: map[string]string{"email1": "id2"},
+			config: Config{
+				DefaultChannels: []string{"#default_test"},
+				MessageTemplates: map[ReportStage]*Message{
+					started: {},
+					ended:   {},
+					deleted: {},
+				},
+			},
+		}
+
+		expectedMessageTargets := map[string]*struct{}{
+			"test1":         nil,
+			"#default_test": nil,
+		}
+
+		slackManager.ReportDeleted(watcherCommon.DeploymentReporter{
+			To:       []string{"test1", "test1", ""},
+			DeployBy: "email1",
+		})
+
+		if mockClient.sentMessages == nil {
+			t.Error("expected to send messages, sent none")
+		} else {
+
+			if len(mockClient.sentMessages) != 1 {
+				t.Errorf("expected to send 1 message, sent %d", len(mockClient.sentMessages))
+			}
+
+			for _, target := range mockClient.sentMessages {
+				if _, exists := expectedMessageTargets[target.channelId]; !exists {
+					t.Errorf("expected %s to be a target of a sent message", target.channelId)
+				}
+			}
+		}
+
+	})
+
 }

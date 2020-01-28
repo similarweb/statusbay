@@ -10,19 +10,12 @@ import (
 	slackApi "github.com/nlopes/slack"
 )
 
-type MockPostMessageRequest struct {
-	ChannelID string
-	Options   []slackApi.MsgOption
-}
-
 type MockSlack struct {
-	PostMessageRequest []MockPostMessageRequest
+	messagesSent []string
 }
 
 func NewMockSlack() *MockSlack {
-	return &MockSlack{
-		PostMessageRequest: []MockPostMessageRequest{},
-	}
+	return &MockSlack{}
 }
 
 func (m *MockSlack) GetUsers() ([]slackApi.User, error) {
@@ -48,10 +41,6 @@ func (m *MockSlack) GetUsers() ([]slackApi.User, error) {
 }
 
 func (m *MockSlack) PostMessage(channelID string, options ...slackApi.MsgOption) (string, string, error) {
-	request := MockPostMessageRequest{
-		ChannelID: channelID,
-		Options:   options,
-	}
-	m.PostMessageRequest = append(m.PostMessageRequest, request)
+	m.messagesSent = append(m.messagesSent, channelID)
 	return "", "", nil
 }

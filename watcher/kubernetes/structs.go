@@ -76,11 +76,20 @@ type DeploymentData struct {
 	ProgressDeadlineSeconds int64
 }
 
-// Daemonset Data
+// DaemonsetData
 type DaemonsetData struct {
 	Metadata                MetaData                `json:"MetaData"`
 	Status                  appsV1.DaemonSetStatus  `json:"Status"`
 	DaemonsetEvents         []EventMessages         `json:"DaemonsetEvents"`
 	Pods                    map[string]DeploymenPod `json:"Pods"`
+	ProgressDeadlineSeconds int64
+}
+
+// StatefulsetData holds the data of Statefulset for the registry
+type StatefulsetData struct {
+	Statefulset             MetaData                 `json:"MetaData"`
+	Status                  appsV1.StatefulSetStatus `json:"Status"`
+	StatefulsetEvents       []EventMessages          `json:"StatefulsetEvents"`
+	Pods                    map[string]DeploymenPod  `json:"Pods"`
 	ProgressDeadlineSeconds int64
 }

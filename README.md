@@ -33,9 +33,9 @@ $ make test-html
 ## Built With
 
 * [GO](https://golang.org/)
-* [K8S Client Library](https://github.com/kubernetes/client-go/)
+* [K8S Client Library](https://github.com/kubernetes/client-go/) 
 
 ## Contributing
 
-All pull requests and issues are more then welcome!
-Please see [Contribution guidelines](./CONTRIBUTING.md).
+All pull requests and issues are more then welcome! 
+Please see [Contribution guidelines](./CONTRIBUTING.md). 

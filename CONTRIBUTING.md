@@ -3,7 +3,7 @@
 Standard prefixes to start a commit message:
 
 ```
-   BLD: change related to building
+   BLD: change related to building 
    BUG: bug fix
    DEP: deprecate something, or remove a deprecated object
    DEV: development tool or utility

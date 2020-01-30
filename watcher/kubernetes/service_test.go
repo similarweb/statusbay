@@ -46,10 +46,10 @@ func TestServiceWatch(t *testing.T) {
 	createServiceMock(client, "service-1")
 
 	serviceManager.Watch <- kuberneteswatcher.WatchData{
-		ListOptions:   metav1.ListOptions{},
+		ListOptions:  metav1.ListOptions{},
 		RegistryData: registryDeploymentData,
-		Namespace:     "pe",
-		Ctx:           ctx,
+		Namespace:    "pe",
+		Ctx:          ctx,
 	}
 
 	time.Sleep(time.Second * 5)

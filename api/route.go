@@ -4,15 +4,19 @@ import (
 	"errors"
 	"net/http"
 	"net/url"
+	"statusbay/api/alerts"
 	"strconv"
 	"time"
 
 	"statusbay/api/httpparameters"
 	"statusbay/api/httpresponse"
+	"statusbay/api/metrics"
 )
 
-// MetricHandler return metrics providers data
+// MetricHandler returns query metric data points for a specific time window
 func (server *Server) MetricHandler(resp http.ResponseWriter, req *http.Request) {
+	var metricsProvider metrics.MetricManagerDescriber
+	var found bool
 	errs := url.Values{}
 
 	// Parse query parameters
@@ -20,28 +24,35 @@ func (server *Server) MetricHandler(resp http.ResponseWriter, req *http.Request)
 	query := httpparameters.QueryParamWithDefault(req, "query", "")
 	from := httpparameters.QueryParamWithDefault(req, "from", "")
 	to := httpparameters.QueryParamWithDefault(req, "to", "")
+
+	// Convert `from` and `to` query params to integers
 	fromInt, _ := strconv.ParseInt(from, 10, 64)
 	toInt, _ := strconv.ParseInt(to, 10, 64)
 
-	// Validate query parameters
-	if query == "" {
-		errs.Add("query", "The query field is required")
+	// Query parameters validation
+	if provider == "" {
+		errs.Add("provider", "the provider field is mandatory")
+	} else {
+		metricsProvider, found = server.metricClientProviders[provider]
+		if !found {
+			errs.Add("provider-existance", "provider not configured")
+		}
 	}
 
-	if provider == "" {
-		errs.Add("provider", "The provider field is required")
+	if query == "" {
+		errs.Add("query", "the `query` field is mandatory")
 	}
 
 	if fromInt == 0 {
-		errs.Add("from", "The from field is required")
+		errs.Add("from", "the `from` field is mandatory")
 	}
 
 	if toInt == 0 {
-		errs.Add("to", "The to field is required")
+		errs.Add("to", "the `to` field is mandatory")
 	}
 
 	if fromInt != 0 && toInt != 0 && fromInt > toInt {
-		errs.Add("range", "To field should be bigger the from")
+		errs.Add("range", "`to` field has to be bigger than `from` field")
 	}
 
 	if len(errs) > 0 {
@@ -49,44 +60,55 @@ func (server *Server) MetricHandler(resp http.ResponseWriter, req *http.Request)
 		return
 	}
 
-	if server.metricClientProviders[provider] == nil {
-		httpresponse.JSONError(resp, http.StatusBadRequest, errors.New("Client metric not enabled"))
-		return
-	}
-
-	metrics, err := server.metricClientProviders[provider].GetMetric(query, time.Unix(fromInt, 0), time.Unix(toInt, 0))
+	metrics, err := metricsProvider.GetMetric(query, time.Unix(fromInt, 0), time.Unix(toInt, 0))
 	if err != nil {
 		httpresponse.JSONError(resp, http.StatusInternalServerError, err)
 		return
 	}
+
 	httpresponse.JSONWrite(resp, http.StatusOK, metrics)
 }
 
+// AlertsHandler returns triggered data points for alerts filtered by tags
 func (server *Server) AlertsHandler(resp http.ResponseWriter, req *http.Request) {
-
+	var alertsProvider alerts.AlertsManagerDescriber
+	var found bool
 	errs := url.Values{}
-	tags := httpparameters.QueryParamWithDefault(req, "tags", "")
+
+	// Parse query parameters
 	provider := httpparameters.QueryParamWithDefault(req, "provider", "")
+	tags := httpparameters.QueryParamWithDefault(req, "tags", "")
 	from := httpparameters.QueryParamWithDefault(req, "from", "")
 	to := httpparameters.QueryParamWithDefault(req, "to", "")
+
+	// Convert `from` and `to` query params to integers
 	fromInt, _ := strconv.ParseInt(from, 10, 64)
 	toInt, _ := strconv.ParseInt(to, 10, 64)
 
-	// Validate query parameters
-	if tags == "" {
-		errs.Add("query", "The title field is required")
+	// Query parameters validation
+	if provider == "" {
+		errs.Add("provider", "the `provider` field is mandatory")
+	} else {
+		alertsProvider, found = server.alertClientProviders[provider]
+		if !found {
+			errs.Add("provider-existance", "provider not configured")
+		}
 	}
 
-	if provider == "" {
-		errs.Add("provider", "The title field is required")
+	if tags == "" {
+		errs.Add("tags", "the `tags` field is mandatory")
 	}
 
 	if fromInt == 0 {
-		errs.Add("from", "The title field is required")
+		errs.Add("from", "the `from` field is mandatory")
 	}
 
 	if toInt == 0 {
-		errs.Add("to", "The title field is required")
+		errs.Add("to", "the `to` field is mandatory")
+	}
+
+	if fromInt != 0 && toInt != 0 && fromInt > toInt {
+		errs.Add("range", "`to` field has to be bigger than `from` field")
 	}
 
 	if len(errs) > 0 {
@@ -94,30 +116,21 @@ func (server *Server) AlertsHandler(resp http.ResponseWriter, req *http.Request)
 		return
 	}
 
-	clientProvider, found := server.alertClientProviders[provider]
-
-	if !found {
-		httpresponse.JSONError(resp, http.StatusBadRequest, errors.New("Provider not supported"))
-		return
-	}
-
-	alerts, err := clientProvider.GetAlertByTags(tags, time.Unix(fromInt, 0), time.Unix(toInt, 0))
-
+	alerts, err := alertsProvider.GetAlertByTags(tags, time.Unix(fromInt, 0), time.Unix(toInt, 0))
 	if err != nil {
 		httpresponse.JSONError(resp, http.StatusInternalServerError, err)
 		return
 	}
 
 	httpresponse.JSONWrite(resp, http.StatusOK, alerts)
-
 }
 
-//NotFoundRoute return when route not found
+// NotFoundRoute a 404 handler
 func (server *Server) NotFoundRoute(resp http.ResponseWriter, req *http.Request) {
-	httpresponse.JSONError(resp, http.StatusNotFound, errors.New("Path not found"))
+	httpresponse.JSONError(resp, http.StatusNotFound, errors.New("path not found"))
 }
 
-//HealthCheckHandler return ok if server is up
+// HealthCheckHandler application health check
 func (server *Server) HealthCheckHandler(resp http.ResponseWriter, req *http.Request) {
 	httpresponse.JSONWrite(resp, http.StatusOK, httpresponse.HealthResponse{Status: true})
 }

@@ -61,37 +61,17 @@ func NewDaemonSetManagerMock(client *fake.Clientset) (*kuberneteswatcher.Daemons
 	serviceManager := NewServiceManagerMockMock(client)
 	podManager := kuberneteswatcher.NewPodsManager(client, eventManager)
 	controllerRevisionManager := NewControllerRevisionMock(client, podManager)
-	daemonsetManager := kuberneteswatcher.NewDaemonsetManager(client, eventManager, registryManager, serviceManager, podManager, controllerRevisionManager, maxDeploymentTime)
+	daemonsetManager := kuberneteswatcher.NewDaemonsetManager(client, eventManager, registryManager, serviceManager, controllerRevisionManager, maxDeploymentTime)
 	daemonsetManager.Serve()
 	serviceManager.Serve()
 	podManager.Serve()
 	return daemonsetManager, storage, slack
 }
 
-func createRunningPod(client *fake.Clientset, name string, controllerRevisionHash string) *v1.Pod {
-	runningPodStatus := v1.PodStatus{
-		Phase: v1.PodRunning,
-	}
-	event := &v1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
-			Labels: map[string]string{
-				"app":                                 "application",
-				"name":                                name,
-				appsV1.DefaultDaemonSetUniqueLabelKey: controllerRevisionHash,
-			},
-		},
-		Status: runningPodStatus,
-	}
-	client.CoreV1().Pods("pe").Create(event)
-	return event
-}
 func TestDaemonsetWatch(t *testing.T) {
 	client := fake.NewSimpleClientset()
 	_, storage, slack := NewDaemonSetManagerMock(client)
-	labels := map[string]string{
-		"app": "application",
-	}
+	labels := map[string]string{"app": "application"}
 	time.Sleep(time.Second)
 
 	daemonsetObj := createDaemonSetMock(client, "test-daemonset", labels)
@@ -104,7 +84,7 @@ func TestDaemonsetWatch(t *testing.T) {
 				"statusbay.io/application-name":       "custom-application-name",
 				"app":                                 "application",
 				"name":                                daemonsetObj.GetName(),
-				appsV1.DefaultDaemonSetUniqueLabelKey: controllerRevisionHash,
+				appsV1.ControllerRevisionHashLabelKey: controllerRevisionHash,
 			},
 		},
 	}

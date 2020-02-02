@@ -19,6 +19,10 @@ func Load(alertProviders *config.AlertProvider) map[string]AlertsManagerDescribe
 
 	providers := map[string]AlertsManagerDescriber{}
 
+	if alertProviders == nil {
+		return providers
+	}
+
 	if alertProviders.Statuscake != nil {
 		HTTPClient := request.NewHTTPClient()
 		client := statuscake.NewClient(alertProviders.Statuscake.Endpoint, alertProviders.Statuscake.Username, alertProviders.Statuscake.APIKey, HTTPClient)

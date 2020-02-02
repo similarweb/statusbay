@@ -17,7 +17,7 @@ func NewControllerRevisionMock(client *fake.Clientset, podsManager *kuberneteswa
 		podManager = kuberneteswatcher.NewPodsManager(client, eventManager)
 		podManager.Serve()
 	}
-	controllerRevisionManager := kuberneteswatcher.NewcontrollerRevisionManager(client, podManager)
+	controllerRevisionManager := kuberneteswatcher.NewControllerRevisionManager(client, podManager)
 	return controllerRevisionManager
 }
 

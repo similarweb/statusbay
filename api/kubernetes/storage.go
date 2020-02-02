@@ -102,7 +102,7 @@ func (my *MySQLStorage) builderApplications(queryFillter FilterApplications) *go
 	}
 
 	if queryFillter.Distinct {
-		queryBuilder = my.client.DB.Where("time IN (?)", my.client.DB.Select("MAX(time)").Model(&state.TableKubernetes{}).Group("name").QueryExpr())
+		queryBuilder = queryBuilder.Where("time IN (?)", my.client.DB.Select("MAX(time)").Model(&state.TableKubernetes{}).Group("name").QueryExpr())
 	}
 
 	// We only support a case where we have both filter of From and To

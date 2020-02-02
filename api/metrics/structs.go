@@ -20,6 +20,9 @@ func Load(metricsProviders *config.MetricsProvider) map[string]MetricManagerDesc
 
 	providers := map[string]MetricManagerDescriber{}
 
+	if metricsProviders == nil {
+		return providers
+	}
 	if metricsProviders.DataDog != nil {
 		providers["datadog"] = datadog.NewDatadogManager(metricsProviders.DataDog.CacheCleanupInterval, metricsProviders.DataDog.CacheExpiration, metricsProviders.DataDog.APIKey, metricsProviders.DataDog.AppKey, nil)
 	}

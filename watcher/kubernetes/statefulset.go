@@ -2,8 +2,6 @@ package kuberneteswatcher
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"statusbay/serverutil"
 	"strconv"
 	"time"
@@ -229,7 +227,14 @@ func (ssm *StatefulsetManager) watchStatefulset(ctx context.Context, cancelFn co
 				ssm.watchEvents(ctx, registryStatefulset, eventListOptions, namespace)
 
 				// Use the Controller revision to find the pods with specific controller-revision-hash for the statefulset
-				ssm.watchControllerRevision(ctx, registryStatefulset, statefulset, namespace)
+				ssm.controllerRevManager.WatchControllerRevisionPodsRetry(ctx,
+					registryStatefulset,
+					statefulset.ObjectMeta.Generation,
+					statefulset.Spec.Selector.MatchLabels,
+					"controller.kubernetes.io/hash",
+					registryStatefulset.GetName(),
+					namespace,
+					nil)
 
 				// Start watching services of statefulset
 				ssm.serviceManager.Watch <- WatchData{
@@ -249,22 +254,6 @@ func (ssm *StatefulsetManager) watchStatefulset(ctx context.Context, cancelFn co
 			return
 		}
 	}
-}
-
-// watchControllerRevision will trigger a controller revision manager to watch for the related pods of a statefulset name
-func (ssm *StatefulsetManager) watchControllerRevision(ctx context.Context, registryStatefulset *StatefulsetData, statefulset *appsV1.StatefulSet, namespace string) error {
-	resourceGeneration := statefulset.ObjectMeta.Generation
-	controllerRevisionHashlabelKey := "controller.kubernetes.io/hash"
-	controllerRevisionPodLabelValuePerfix := fmt.Sprintf("%s-", registryStatefulset.GetName())
-	controllerRevisionlabels := statefulset.Spec.Template.Labels
-
-	if len(controllerRevisionlabels) == 0 {
-		log.Error("Statefulset watcher will not be able to trigger ControllerRevision Watcher without Spec.Template.Labels")
-		return errors.New("Statefulset watcher will not be able to trigger ControllerRevision Watcher without Spec.Template.Labels")
-	}
-
-	err := ssm.controllerRevManager.WatchControllerRevisionPodsRetry(ctx, registryStatefulset, resourceGeneration, controllerRevisionlabels, controllerRevisionHashlabelKey, controllerRevisionPodLabelValuePerfix, namespace, nil)
-	return err
 }
 
 // watchEvents will watch for events relate d to the Statefulset Resources

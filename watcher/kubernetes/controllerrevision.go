@@ -45,8 +45,8 @@ type ControllerRevisionManager struct {
 	podsManager *PodsManager
 }
 
-// NewcontrollerRevisionManager create new instance of controllerRevision manager
-func NewcontrollerRevisionManager(client kubernetes.Interface, podsManager *PodsManager) *ControllerRevisionManager {
+// NewControllerRevisionManager create new instance of controllerRevision manager
+func NewControllerRevisionManager(client kubernetes.Interface, podsManager *PodsManager) *ControllerRevisionManager {
 	return &ControllerRevisionManager{
 		client:      client,
 		podsManager: podsManager,
@@ -127,8 +127,21 @@ func (cr *ControllerRevisionManager) WatchControllerRevisionPods(ctx context.Con
 				"controller_revision_hash_label_key": controllerRevisionHashlabelKey,
 				"controllerRevisionHash":             controllerRevisionHash,
 			}).Debug("ControllerRevision found controller-revision-hash calling Pods Manager")
-			// Start watching pods with the specific appsV1.ControllerRevisionHashLabelKey (which applies for both Statefulsets and Daemonsets)
-			podLabelSelector := map[string]string{appsV1.ControllerRevisionHashLabelKey: fmt.Sprintf("%s%s", controllerRevisionPodLabelValuePerfix, controllerRevisionHash)}
+
+			log.WithField("controllerRevisionPodLabelValuePerfix", controllerRevisionPodLabelValuePerfix).Debug(
+				"Going to check for ConrollerRevisionPodLabel Value with prefix")
+
+			controllerRevisionPodLabelValue := controllerRevisionHash
+			if controllerRevisionPodLabelValuePerfix != "" {
+				controllerRevisionPodLabelValue = fmt.Sprintf("%s-%s", registryData.GetName(), controllerRevisionHash)
+			}
+
+			log.WithFields(log.Fields{
+				"controller_revision_pod_label_key":   appsV1.ControllerRevisionHashLabelKey,
+				"controller_revision_pod_label_value": controllerRevisionPodLabelValue}).Debug("Going to watch pods with the following fields")
+
+			// Start watching pods with the specific appsV1.ControllerRevisionHashLabelKey
+			podLabelSelector := map[string]string{appsV1.ControllerRevisionHashLabelKey: controllerRevisionPodLabelValue}
 			podListOptions := metaV1.ListOptions{LabelSelector: labels.SelectorFromSet(podLabelSelector).String()}
 			cr.podsManager.Watch <- WatchData{
 				ListOptions:  podListOptions,

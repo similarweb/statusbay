@@ -115,7 +115,7 @@ func startKubernetesWatcher(configPath, kubeconfig, apiserverHost string) server
 	deploymentManager := kuberneteswatcher.NewDeploymentManager(kubernetesClientset, eventManager, registryManager, replicasetManager, serviceManager, watcherConfig.Applies.MaxApplyTime)
 
 	// ControllerRevision Manager
-	controllerRevisionManager := kuberneteswatcher.NewcontrollerRevisionManager(kubernetesClientset, podsManager)
+	controllerRevisionManager := kuberneteswatcher.NewControllerRevisionManager(kubernetesClientset, podsManager)
 	// Daemonset manager
 	daemonsetManager := kuberneteswatcher.NewDaemonsetManager(kubernetesClientset, eventManager, registryManager, serviceManager, controllerRevisionManager, watcherConfig.Applies.MaxApplyTime)
 	//Statefulset manager

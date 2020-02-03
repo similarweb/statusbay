@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"statusbay/api/httpresponse"
 	"statusbay/config"
+	"statusbay/state"
 
 	"strconv"
 
@@ -37,6 +38,7 @@ func NewKubernetesRoutes(storage Storage, router *mux.Router, eventPath string) 
 
 func (kr *RouterKubernetesManager) bindEndpoints() {
 	kr.router.HandleFunc("/api/v1/kubernetes/applications", kr.Applications).Methods("GET")
+	kr.router.HandleFunc("/api/v1/kubernetes/applications/filters/{column}", kr.ApplicationsFilters).Methods("GET")
 	kr.router.HandleFunc("/api/v1/kubernetes/application/{job_id}/{time}", kr.GetDeployment).Methods("GET")
 }
 
@@ -85,6 +87,22 @@ func (route *RouterKubernetesManager) Applications(resp http.ResponseWriter, req
 	}
 
 	httpresponse.JSONWrite(resp, http.StatusOK, r)
+}
+
+func (route *RouterKubernetesManager) ApplicationsFilters(resp http.ResponseWriter, req *http.Request) {
+
+	params := mux.Vars(req)
+	columnName := params["column"]
+
+	var table *state.TableKubernetes
+
+	values, err := route.storage.GetUniqueFieldValues(table.TableName(), columnName)
+	if err != nil {
+		httpresponse.JSONError(resp, http.StatusNotFound, err)
+
+	}
+
+	httpresponse.JSONWrite(resp, http.StatusOK, values)
 }
 
 func (route *RouterKubernetesManager) GetDeployment(resp http.ResponseWriter, req *http.Request) {

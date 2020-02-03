@@ -12,6 +12,7 @@ type Storage interface {
 	Applications(queryFillter FilterApplications) (*[]state.TableKubernetes, error)
 	ApplicationsCount(queryFillter FilterApplications) (int64, error)
 	GetDeployment(name string, time int64) (state.TableKubernetes, error)
+	GetUniqueFieldValues(tableName, columnName string) ([]string, error)
 }
 
 type MySQLStorage struct {
@@ -51,6 +52,32 @@ func (my *MySQLStorage) Applications(queryFillter FilterApplications) (*[]state.
 	}
 	return table, nil
 
+}
+
+//GetUniqueFieldValues return list of unique values by given table name and column name
+func (my *MySQLStorage) GetUniqueFieldValues(tableName, columnName string) ([]string, error) {
+
+	var values []string
+
+	rows, err := my.client.DB.Select(fmt.Sprintf("%s as val, COUNT(*) as count", columnName)).Table(tableName).Group(columnName).Order("count DESC").Rows()
+	defer rows.Close()
+
+	if err != nil {
+		log.WithError(err).WithFields(log.Fields{
+			"table_name":  tableName,
+			"column_name": columnName,
+		}).Error("MYSQL: could not fetch uniq fields value")
+		return values, err
+	}
+
+	for rows.Next() {
+		var val string
+		var count int16
+		rows.Scan(&val, &count)
+		values = append(values, val)
+	}
+
+	return values, nil
 }
 
 func (my *MySQLStorage) GetDeployment(name string, time int64) (state.TableKubernetes, error) {

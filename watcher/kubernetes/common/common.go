@@ -20,8 +20,8 @@ const (
 	DeploymentCanceled DeploymentStatus = "cancelled"
 )
 
-// DeploymentReporter defined deployment reporter message
-type DeploymentReporter struct {
+// DeploymentReport defined deployment reporter message
+type DeploymentReport struct {
 	// List of channels/username to send message to
 	To []string
 

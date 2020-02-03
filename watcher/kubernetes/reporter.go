@@ -11,13 +11,13 @@ import (
 // ReporterManager defined reporter metadata
 type ReporterManager struct {
 	// Received channel when deployment started
-	DeploymentStarted chan common.DeploymentReporter
+	DeploymentStarted chan common.DeploymentReport
 
 	// Received channel when deployment deleted
-	DeploymentDeleted chan common.DeploymentReporter
+	DeploymentDeleted chan common.DeploymentReport
 
 	// Received channel when deployment finish
-	DeploymentFinished chan common.DeploymentReporter
+	DeploymentFinished chan common.DeploymentReport
 
 	// available ways to notify about changes in the deployment stages
 	availableNotifiers []notifierCommon.Notifier
@@ -28,9 +28,9 @@ func NewReporter(availableNotifiers []notifierCommon.Notifier) *ReporterManager 
 	return &ReporterManager{
 		availableNotifiers: availableNotifiers,
 
-		DeploymentStarted:  make(chan common.DeploymentReporter),
-		DeploymentDeleted:  make(chan common.DeploymentReporter),
-		DeploymentFinished: make(chan common.DeploymentReporter),
+		DeploymentStarted:  make(chan common.DeploymentReport),
+		DeploymentDeleted:  make(chan common.DeploymentReport),
+		DeploymentFinished: make(chan common.DeploymentReport),
 	}
 }
 
@@ -74,21 +74,21 @@ func (re *ReporterManager) Serve() serverutil.StopFunc {
 }
 
 // deploymentStarted will send slack message to channel/user when the deployment is started
-func (re *ReporterManager) deploymentStarted(message common.DeploymentReporter) {
+func (re *ReporterManager) deploymentStarted(message common.DeploymentReport) {
 	for _, notifier := range re.availableNotifiers {
 		notifier.ReportStarted(message)
 	}
 }
 
 // deploymentDeleted will send slack message to channel/user when the deployment is deleted
-func (re *ReporterManager) deploymentDeleted(message common.DeploymentReporter) {
+func (re *ReporterManager) deploymentDeleted(message common.DeploymentReport) {
 	for _, notifier := range re.availableNotifiers {
 		notifier.ReportDeleted(message)
 	}
 }
 
 // deploymentFinish will send slack message to channel/user when the deployment is finished
-func (re *ReporterManager) deploymentFinish(message common.DeploymentReporter) {
+func (re *ReporterManager) deploymentFinish(message common.DeploymentReport) {
 	for _, notifier := range re.availableNotifiers {
 		notifier.ReportDeleted(message)
 	}

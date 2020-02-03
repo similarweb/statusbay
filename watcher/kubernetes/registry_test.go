@@ -393,7 +393,7 @@ func TestDeploymentFinishSuccessful(t *testing.T) {
 
 	time.Sleep(time.Second * 10)
 	if storage.MockWriteDeployment[1].Status != common.DeploymentSuccessful {
-		t.Fatalf("unexpected deployment status, got %s expected %s", storage.MockWriteDeployment[1].Status, common.DeploymentSuccessful)
+		t.Errorf("unexpected deployment status, got %s expected %s", storage.MockWriteDeployment[1].Status, common.DeploymentSuccessful)
 	}
 	// TODO ask elad to explain
 	//if len(mockSlack.PostMessageRequest) != 4 {

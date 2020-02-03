@@ -17,8 +17,8 @@ type ConfigByName map[NotifierName]NotifierConfig
 
 type Notifier interface {
 	LoadConfig(notifierConfig NotifierConfig) (err error)
-	ReportStarted(message common.DeploymentReporter)
-	ReportDeleted(message common.DeploymentReporter)
-	ReportEnded(message common.DeploymentReporter)
+	ReportStarted(message common.DeploymentReport)
+	ReportDeleted(message common.DeploymentReport)
+	ReportEnded(message common.DeploymentReport)
 	Serve() serverutil.StopFunc
 }

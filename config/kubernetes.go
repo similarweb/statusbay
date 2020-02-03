@@ -50,7 +50,18 @@ type Kubernetes struct {
 	registeredNotifiers []notifierCommon.Notifier
 }
 
-func (k *Kubernetes) GetNotifiers() []notifierCommon.Notifier {
+func (k *Kubernetes) BuildNotifiers(path string) (registeredNotifiers []notifierCommon.Notifier) {
+	var err error
+	if k.NotifierConfigs != nil {
+		notifierLoader.RegisterNotifiers()
+
+		if registeredNotifiers, err = notifierLoader.Load(k.NotifierConfigs, path, k.UI.BaseURL); err != nil {
+			return
+		}
+		k.registeredNotifiers = registeredNotifiers
+	} else {
+		registeredNotifiers = []notifierCommon.Notifier{}
+	}
 	return k.registeredNotifiers
 }
 
@@ -63,8 +74,7 @@ type KubernetesMarksEvents struct {
 // LoadKubernetesConfig will load all yaml configuration file to struct
 func LoadKubernetesConfig(path string) (config Kubernetes, err error) {
 	var (
-		data                []byte
-		registeredNotifiers []notifierCommon.Notifier
+		data []byte
 	)
 	if data, err = ioutil.ReadFile(path); err != nil {
 		return
@@ -72,17 +82,6 @@ func LoadKubernetesConfig(path string) (config Kubernetes, err error) {
 
 	if err = yaml.Unmarshal(data, &config); err != nil {
 		return
-	}
-
-	if config.NotifierConfigs != nil {
-		notifierLoader.RegisterNotifiers()
-
-		if registeredNotifiers, err = notifierLoader.Load(config.NotifierConfigs, path, config.UI.BaseURL); err != nil {
-			return
-		}
-		config.registeredNotifiers = registeredNotifiers
-	} else {
-		registeredNotifiers = []notifierCommon.Notifier{}
 	}
 
 	return

@@ -48,15 +48,15 @@ func (n *NotifierMock) LoadConfig(common.NotifierConfig) (err error) {
 	return
 }
 
-func (*NotifierMock) ReportStarted(message watcherCommon.DeploymentReporter) {
+func (*NotifierMock) ReportStarted(message watcherCommon.DeploymentReport) {
 	panic("implement me")
 }
 
-func (*NotifierMock) ReportDeleted(message watcherCommon.DeploymentReporter) {
+func (*NotifierMock) ReportDeleted(message watcherCommon.DeploymentReport) {
 	panic("implement me")
 }
 
-func (*NotifierMock) ReportEnded(message watcherCommon.DeploymentReporter) {
+func (*NotifierMock) ReportEnded(message watcherCommon.DeploymentReport) {
 	panic("implement me")
 }
 

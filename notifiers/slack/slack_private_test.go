@@ -401,7 +401,7 @@ func TestReportFuncs(t *testing.T) {
 			"#default_test": nil,
 		}
 
-		slackManager.ReportStarted(watcherCommon.DeploymentReporter{
+		slackManager.ReportStarted(watcherCommon.DeploymentReport{
 			To:       []string{"test1", "test1", "test2", ""},
 			DeployBy: "unknown",
 		})
@@ -443,7 +443,7 @@ func TestReportFuncs(t *testing.T) {
 			"#default_test": nil,
 		}
 
-		slackManager.ReportEnded(watcherCommon.DeploymentReporter{
+		slackManager.ReportEnded(watcherCommon.DeploymentReport{
 			To:       []string{"test1", "test1", ""},
 			DeployBy: "email1",
 		})
@@ -485,7 +485,7 @@ func TestReportFuncs(t *testing.T) {
 			"#default_test": nil,
 		}
 
-		slackManager.ReportDeleted(watcherCommon.DeploymentReporter{
+		slackManager.ReportDeleted(watcherCommon.DeploymentReport{
 			To:       []string{"test1", "test1", ""},
 			DeployBy: "email1",
 		})

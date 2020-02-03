@@ -178,7 +178,7 @@ func (dr *RegistryManager) NewApplication(
 	dr.registryData[encodedID] = &row
 	switch status {
 	case common.DeploymentStatusRunning:
-		dr.reporter.DeploymentStarted <- common.DeploymentReporter{
+		dr.reporter.DeploymentStarted <- common.DeploymentReport{
 			To:       reportTo,
 			DeployBy: deployBy,
 			Name:     appName,
@@ -186,7 +186,7 @@ func (dr *RegistryManager) NewApplication(
 			Status:   status,
 		}
 	case common.DeploymentStatusDeleted:
-		dr.reporter.DeploymentDeleted <- common.DeploymentReporter{
+		dr.reporter.DeploymentDeleted <- common.DeploymentReport{
 			To:       reportTo,
 			DeployBy: deployBy,
 			Name:     appName,
@@ -605,7 +605,7 @@ func (dr *RegistryManager) save() {
 			if data.finish {
 
 				if data.status != common.DeploymentStatusDeleted {
-					dr.reporter.DeploymentFinished <- common.DeploymentReporter{
+					dr.reporter.DeploymentFinished <- common.DeploymentReport{
 						To:       data.DBSchema.ReportTo,
 						DeployBy: data.DBSchema.DeployBy,
 						Name:     data.DBSchema.Application,

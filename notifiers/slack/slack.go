@@ -62,7 +62,7 @@ func (sl *Manager) LoadConfig(notifierConfig common.NotifierConfig) (err error) 
 	return
 }
 
-func (sl *Manager) sendToAll(stage ReportStage, message watcherCommon.DeploymentReporter, color MessageColor) {
+func (sl *Manager) sendToAll(stage ReportStage, message watcherCommon.DeploymentReport, color MessageColor) {
 	var (
 		deployBy string
 		err      error
@@ -108,15 +108,15 @@ func (sl *Manager) sendToAll(stage ReportStage, message watcherCommon.Deployment
 	}
 }
 
-func (sl *Manager) ReportStarted(message watcherCommon.DeploymentReporter) {
+func (sl *Manager) ReportStarted(message watcherCommon.DeploymentReport) {
 	sl.sendToAll(started, message, blue)
 }
 
-func (sl *Manager) ReportDeleted(message watcherCommon.DeploymentReporter) {
+func (sl *Manager) ReportDeleted(message watcherCommon.DeploymentReport) {
 	sl.sendToAll(deleted, message, red)
 }
 
-func (sl *Manager) ReportEnded(message watcherCommon.DeploymentReporter) {
+func (sl *Manager) ReportEnded(message watcherCommon.DeploymentReport) {
 	color := green
 
 	switch message.Status {

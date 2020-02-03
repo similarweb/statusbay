@@ -40,6 +40,7 @@ type DeploymentDataResponse struct {
 	Metrics          []ResponseMetricsQuery          `json:"Metrics"`
 	Pods             map[string]ResponseDeploymenPod `json:"Pods"`
 	Replicaset       map[string]ResponseReplicaset   `json:"Replicaset"`
+	Status           ResponseDeploymentStatus        `json:"Status"`
 }
 
 type ResponseDeploymenPod struct {
@@ -70,6 +71,16 @@ type DaemonsetDataResponse struct {
 	Metadata ResponseMetaData                `json:"MetaData"`
 	Events   []ResponseEventMessages         `json:"DaemonsetEvents"`
 	Pods     map[string]ResponseDeploymenPod `json:"Pods"`
+	Status   ResponseDeploymentStatus        `json:"Status"`
+}
+
+type ResponseDeploymentStatus struct {
+	ObservedGeneration  int64 `json:"ObservedGeneration"`
+	Replicas            int32 `json:"Replicas"`
+	UpdatedReplicas     int32 `json:"UpdatedReplicas"`
+	ReadyReplicas       int32 `json:"ReadyReplicas"`
+	AvailableReplicas   int32 `json:"AvailableReplicas"`
+	UnavailableReplicas int32 `json:"UnavailableReplicas"`
 }
 
 type ResponseResourcesData struct {

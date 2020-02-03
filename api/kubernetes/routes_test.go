@@ -74,7 +74,7 @@ func TestApplicationsFiltersData(t *testing.T) {
 	ms.api.Serve()
 
 	rr := httptest.NewRecorder()
-	req, err := http.NewRequest("GET", "/api/v1/kubernetes/applications/filters/cluster", nil)
+	req, err := http.NewRequest("GET", "/api/v1/kubernetes/applications/values/cluster", nil)
 	if err != nil {
 		t.Fatalf("Http request returned with error")
 	}

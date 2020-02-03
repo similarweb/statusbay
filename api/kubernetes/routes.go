@@ -38,7 +38,7 @@ func NewKubernetesRoutes(storage Storage, router *mux.Router, eventPath string) 
 
 func (kr *RouterKubernetesManager) bindEndpoints() {
 	kr.router.HandleFunc("/api/v1/kubernetes/applications", kr.Applications).Methods("GET")
-	kr.router.HandleFunc("/api/v1/kubernetes/applications/filters/{column}", kr.ApplicationsFilters).Methods("GET")
+	kr.router.HandleFunc("/api/v1/kubernetes/applications/values/{column}", kr.ApplicationsColumnValues).Methods("GET")
 	kr.router.HandleFunc("/api/v1/kubernetes/application/{job_id}/{time}", kr.GetDeployment).Methods("GET")
 }
 
@@ -89,7 +89,7 @@ func (route *RouterKubernetesManager) Applications(resp http.ResponseWriter, req
 	httpresponse.JSONWrite(resp, http.StatusOK, r)
 }
 
-func (route *RouterKubernetesManager) ApplicationsFilters(resp http.ResponseWriter, req *http.Request) {
+func (route *RouterKubernetesManager) ApplicationsColumnValues(resp http.ResponseWriter, req *http.Request) {
 
 	params := mux.Vars(req)
 	columnName := params["column"]

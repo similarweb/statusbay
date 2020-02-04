@@ -25,7 +25,7 @@ type ResponseMessageDeploy struct {
 	CreationTimestamp time.Time         `json:"CreationTimestamp"`
 	Labels            map[string]string `json:"Labels"`
 }
-type ResponseDeployment struct {
+type ResponseMetaData struct {
 	Name         string            `json:"Name"`
 	Namespace    string            `json:"Namespace"`
 	ClusterName  string            `json:"ClusterName"`
@@ -35,11 +35,12 @@ type ResponseDeployment struct {
 }
 
 type DeploymentDataResponse struct {
-	Deployment       ResponseDeployment              `json:"MetaData"`
+	Deployment       ResponseMetaData                `json:"MetaData"`
 	DeploymentEvents []ResponseEventMessages         `json:"DeploymentEvents"`
 	Metrics          []ResponseMetricsQuery          `json:"Metrics"`
 	Pods             map[string]ResponseDeploymenPod `json:"Pods"`
 	Replicaset       map[string]ResponseReplicaset   `json:"Replicaset"`
+	Status           ResponseDeploymentStatus        `json:"Status"`
 }
 
 type ResponseDeploymenPod struct {
@@ -66,8 +67,29 @@ type ResponseMetricsQuery struct {
 	SubTitle string `json:"SubTitle"`
 }
 
-type ResponseDeploymentData struct {
+type DaemonsetDataResponse struct {
+	Metadata ResponseMetaData                `json:"MetaData"`
+	Events   []ResponseEventMessages         `json:"DaemonsetEvents"`
+	Pods     map[string]ResponseDeploymenPod `json:"Pods"`
+	Status   ResponseDeploymentStatus        `json:"Status"`
+}
+
+type ResponseDeploymentStatus struct {
+	ObservedGeneration  int64 `json:"ObservedGeneration"`
+	Replicas            int32 `json:"Replicas"`
+	UpdatedReplicas     int32 `json:"UpdatedReplicas"`
+	ReadyReplicas       int32 `json:"ReadyReplicas"`
+	AvailableReplicas   int32 `json:"AvailableReplicas"`
+	UnavailableReplicas int32 `json:"UnavailableReplicas"`
+}
+
+type ResponseResourcesData struct {
 	Deployment map[string]DeploymentDataResponse `json:"Deployments"`
+	Daemonsets map[string]DaemonsetDataResponse  `json:"Daemonsets"`
+}
+
+type ResponseDeploymentData struct {
+	Resources ResponseResourcesData `json:"Resources"`
 }
 
 type ResponseKubernetesDeployment struct {

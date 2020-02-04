@@ -184,6 +184,7 @@ func (dm *DeploymentManager) watchDeployments(ctx context.Context) {
 					registryDeployment := applicationRegistry.AddDeployment(deployment.GetName(),
 						deployment.GetNamespace(),
 						deployment.GetLabels(),
+						deployment.GetAnnotations(),
 						*deployment.Spec.Replicas,
 						int64(*deployment.Spec.ProgressDeadlineSeconds))
 					deploymentWatchListOptions := metaV1.ListOptions{LabelSelector: labels.SelectorFromSet(deployment.GetLabels()).String()}

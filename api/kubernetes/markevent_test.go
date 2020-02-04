@@ -20,32 +20,35 @@ func TestMarkApplicationDeploymentEvents(t *testing.T) {
 	}
 
 	appDeployment := ResponseDeploymentData{
-		map[string]DeploymentDataResponse{
-			"deployment": {
-				DeploymentEvents: []ResponseEventMessages{
-					{Message: "Scaled"},
-					{Message: "foo"},
-				},
-				Pods: map[string]ResponseDeploymenPod{
-					"pod": {
-						Events: []ResponseEventMessages{
-							{Message: "OOMKilled"},
-							{Message: "CrashLoopBackOff"},
-							{Message: "foo"},
+		Resources: ResponseResourcesData{
+			Deployment: map[string]DeploymentDataResponse{
+				"deployment": {
+					DeploymentEvents: []ResponseEventMessages{
+						{Message: "Scaled"},
+						{Message: "foo"},
+					},
+					Pods: map[string]ResponseDeploymenPod{
+						"pod": {
+							Events: []ResponseEventMessages{
+								{Message: "OOMKilled"},
+								{Message: "CrashLoopBackOff"},
+								{Message: "foo"},
+							},
 						},
 					},
-				},
-				Replicaset: map[string]ResponseReplicaset{
-					"rs": {
-						Events: []ResponseEventMessages{
-							{Message: "Created"},
-							{Message: "foo"},
+					Replicaset: map[string]ResponseReplicaset{
+						"rs": {
+							Events: []ResponseEventMessages{
+								{Message: "Created"},
+								{Message: "foo"},
+							},
 						},
 					},
 				},
 			},
 		},
 	}
+
 	eventsConfig := config.KubernetesMarksEvents{
 		Pod:        podEvents,
 		Replicaset: replicasetEvents,
@@ -61,21 +64,21 @@ func TestMarkApplicationDeploymentEvents(t *testing.T) {
 		{
 			"deployment",
 			func(d ResponseDeploymentData) []ResponseEventMessages {
-				return d.Deployment["deployment"].DeploymentEvents
+				return d.Resources.Deployment["deployment"].DeploymentEvents
 			},
 			1,
 		},
 		{
 			"deployment",
 			func(d ResponseDeploymentData) []ResponseEventMessages {
-				return d.Deployment["deployment"].Pods["pod"].Events
+				return d.Resources.Deployment["deployment"].Pods["pod"].Events
 			},
 			2,
 		},
 		{
 			"deployment",
 			func(d ResponseDeploymentData) []ResponseEventMessages {
-				return d.Deployment["deployment"].Replicaset["rs"].Events
+				return d.Resources.Deployment["deployment"].Replicaset["rs"].Events
 			},
 			1,
 		},
@@ -102,12 +105,15 @@ func TestMarkApplicationDeploymentEvents(t *testing.T) {
 func TestMarkApplicationDeploymentEventContent(t *testing.T) {
 
 	expectedEventDescriptions := []string{"deployment event1"}
+
 	appDeployment := ResponseDeploymentData{
-		map[string]DeploymentDataResponse{
-			"deployment": {
-				DeploymentEvents: []ResponseEventMessages{
-					{Message: "Scaled"},
-					{Message: "foo"},
+		Resources: ResponseResourcesData{
+			Deployment: map[string]DeploymentDataResponse{
+				"deployment": {
+					DeploymentEvents: []ResponseEventMessages{
+						{Message: "Scaled"},
+						{Message: "foo"},
+					},
 				},
 			},
 		},
@@ -121,8 +127,8 @@ func TestMarkApplicationDeploymentEventContent(t *testing.T) {
 
 	MarkApplicationDeploymentEvents(&appDeployment, eventsConfig)
 
-	if !reflect.DeepEqual(appDeployment.Deployment["deployment"].DeploymentEvents[0].MarkDescriptions, expectedEventDescriptions) {
-		t.Fatalf("unexpected mark message count, got %v expected %v", appDeployment.Deployment["deployment"].DeploymentEvents[0].MarkDescriptions, expectedEventDescriptions)
+	if !reflect.DeepEqual(appDeployment.Resources.Deployment["deployment"].DeploymentEvents[0].MarkDescriptions, expectedEventDescriptions) {
+		t.Fatalf("unexpected mark message count, got %v expected %v", appDeployment.Resources.Deployment["deployment"].DeploymentEvents[0].MarkDescriptions, expectedEventDescriptions)
 	}
 
 }

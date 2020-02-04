@@ -26,7 +26,7 @@ var (
 	UpdateSlackUserInterval = time.Hour
 )
 
-// wraps the manager and returns it as a Notifier
+// NewSlack returns a slack notifier
 func NewSlack(defaultConfigReader io.Reader, urlBase string) (notifier common.Notifier, err error) {
 	var data []byte
 	defaultMessageConfig := map[ReportStage]*Message{}
@@ -45,6 +45,7 @@ func NewSlack(defaultConfigReader io.Reader, urlBase string) (notifier common.No
 	return
 }
 
+// LoadConfig maps a generic notifier config (map[string]interface{}) to a concrete type
 func (sl *Manager) LoadConfig(notifierConfig common.NotifierConfig) (err error) {
 	sl.config = Config{}
 	if err = mapstructure.Decode(notifierConfig, &sl.config); err != nil {
@@ -62,6 +63,7 @@ func (sl *Manager) LoadConfig(notifierConfig common.NotifierConfig) (err error) 
 	return
 }
 
+// sendToAll sends the provided message to all valid recipients
 func (sl *Manager) sendToAll(stage ReportStage, message watcherCommon.DeploymentReport, color MessageColor) {
 	var (
 		deployBy string
@@ -108,14 +110,17 @@ func (sl *Manager) sendToAll(stage ReportStage, message watcherCommon.Deployment
 	}
 }
 
+// ReportStarted sends a deployment start report
 func (sl *Manager) ReportStarted(message watcherCommon.DeploymentReport) {
 	sl.sendToAll(started, message, blue)
 }
 
+// ReportDeleted sends a deployment deleted report
 func (sl *Manager) ReportDeleted(message watcherCommon.DeploymentReport) {
 	sl.sendToAll(deleted, message, red)
 }
 
+// ReportEnded sends a deployment end report
 func (sl *Manager) ReportEnded(message watcherCommon.DeploymentReport) {
 	color := green
 
@@ -131,7 +136,7 @@ func (sl *Manager) ReportEnded(message watcherCommon.DeploymentReport) {
 	sl.sendToAll(ended, message, color)
 }
 
-// Serve will loop of slack users
+// Serve will periodically check slack for a change in the list of existing users
 func (sl *Manager) Serve() serverutil.StopFunc {
 	sl.updateUsers()
 
@@ -155,7 +160,7 @@ func (sl *Manager) Serve() serverutil.StopFunc {
 	}
 }
 
-// UpdateUsers all users from slack
+// updateUsers updates the list of users available in slack
 func (sl *Manager) updateUsers() {
 	currentUsers := map[string]string{}
 
@@ -186,7 +191,7 @@ func (sl *Manager) getUserIdByEmail(email string) (string, error) {
 	}
 }
 
-// send a slack notification to user
+// send sends a slack notification to user
 func (sl *Manager) send(channelID string, attachment slackApi.Attachment) {
 	_, _, err := sl.client.PostMessage(channelID, slackApi.MsgOptionAttachments(attachment), slackApi.MsgOptionAsUser(true))
 	if err != nil {
@@ -208,7 +213,7 @@ func (sl *Manager) GetChannelId(to string) (string, error) {
 	return sl.getUserIdByEmail(to)
 }
 
-// return distinct values in slice
+// distinct de-duplicates a slice
 func distinct(inputSlice []string) []string {
 	keys := make(map[string]struct{})
 	var list []string
@@ -221,7 +226,7 @@ func distinct(inputSlice []string) []string {
 	return list
 }
 
-// replaces Status, Link and DeployedBy placeholders from the templates with the actual values
+// replacePlaceholders replaces Status, Link and DeployedBy placeholders from the templates with the actual values
 func replacePlaceholders(input, status, link, deployedBy string) string {
 	return strings.ReplaceAll(
 		strings.ReplaceAll(

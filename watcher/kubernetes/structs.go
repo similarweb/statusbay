@@ -42,6 +42,9 @@ type MetaData struct {
 	ClusterName  string            `json:"ClusterName"`
 	SpecHash     uint64            `json:"SpecHash"`
 	Labels       map[string]string `json:"Labels"`
+	Annotations  map[string]string `json:"Annotations"`
+	Metrics      []Metrics         `json:"Metrics"`
+	Alerts       []Alerts          `json:"Alerts"`
 	DesiredState int32             `json:"DesiredState"`
 }
 
@@ -83,4 +86,16 @@ type DaemonsetData struct {
 	DaemonsetEvents         []EventMessages         `json:"DaemonsetEvents"`
 	Pods                    map[string]DeploymenPod `json:"Pods"`
 	ProgressDeadlineSeconds int64
+}
+
+//Metrics describe the metrics data integration
+type Metrics struct {
+	Name     string `json:"Name"`
+	Provider string `json:"Provider"`
+	Query    string `json:"Query"`
+}
+
+type Alerts struct {
+	Provider string `json:"Provider"`
+	Tags     string `json:"Tags"`
 }

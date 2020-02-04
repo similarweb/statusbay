@@ -66,6 +66,7 @@ func (re *ReporterManager) Serve() serverutil.StopFunc {
 			}
 		}
 	}()
+	log.Info("Reporter started")
 
 	return func() {
 		cancelFn()

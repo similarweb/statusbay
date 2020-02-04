@@ -7,7 +7,7 @@ import (
 
 func MarkApplicationDeploymentEvents(appDeployment *ResponseDeploymentData, eventMarksConfig config.KubernetesMarksEvents) {
 
-	for _, application := range appDeployment.Deployment {
+	for _, application := range appDeployment.Resources.Deployment {
 
 		for i, dep := range application.DeploymentEvents {
 			eventDescription := eventmark.MarkEvent(dep.Message, eventMarksConfig.Deployment)

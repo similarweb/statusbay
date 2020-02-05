@@ -1,7 +1,6 @@
 package visibility
 
 import (
-	"os"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -9,17 +8,14 @@ import (
 )
 
 // ShipLogging configures hooks used to ship logs to ELK.
-func ShipLogging(mode string) {
-	address := os.Getenv("LOGSTASH_ADDR")
-	if address != "" {
-		loggingConfig := make(map[string]interface{})
-		loggingConfig["application"] = "statusbay"
-		loggingConfig["mode"] = mode
-		hook := graylog.NewGraylogHook(address, loggingConfig)
-		log.SetFormatter(&log.TextFormatter{FullTimestamp: true})
+func ShipLogging(mode, address string) {
 
-		log.AddHook(hook)
-	}
+	loggingConfig := make(map[string]interface{})
+	loggingConfig["application"] = "statusbay"
+	loggingConfig["mode"] = mode
+	hook := graylog.NewGraylogHook(address, loggingConfig)
+	log.SetFormatter(&log.TextFormatter{FullTimestamp: true})
+	log.AddHook(hook)
 }
 
 // SetLoggingLevel sets the logging level to the specified string

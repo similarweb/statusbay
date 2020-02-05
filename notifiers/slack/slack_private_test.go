@@ -95,10 +95,12 @@ func TestSlackLoadConfig(t *testing.T) {
 			// new config to override the default one
 			newConfig := common.NotifierConfig{
 				"token": "test_token",
-				string(updatedStage): map[string]string{
-					"title":   "modified_title",
-					"pretext": "modified_pretext",
-					"text":    "modified_text",
+				"message_templates": map[string]interface{}{
+					string(updatedStage): map[string]string{
+						"title":   "modified_title",
+						"pretext": "modified_pretext",
+						"text":    "modified_text",
+					},
 				},
 			}
 
@@ -115,7 +117,7 @@ func TestSlackLoadConfig(t *testing.T) {
 				for stage, message := range slackManager.config.MessageTemplates {
 
 					if stage == updatedStage {
-						expectedStageConfig := newConfig[string(stage)].(map[string]string)
+						expectedStageConfig := newConfig["message_templates"].(map[string]interface{})[string(stage)].(map[string]string)
 						if expectedStageConfig["title"] != message.Title {
 							t.Errorf("Expected to still have %s (updated) for Title in %s. instead got `%s`", expectedStageConfig["title"], stage, message.Title)
 						}
@@ -128,15 +130,15 @@ func TestSlackLoadConfig(t *testing.T) {
 							t.Errorf("Expected to still have %s (updated) for Text in %s. instead got `%s`", expectedStageConfig["text"], stage, message.Text)
 						}
 					} else {
-						if defaultConfig[stage].Title != message.Title {
+						if initialConfig[stage].Title != message.Title {
 							t.Errorf("Expected to still have %s (default) for Title in %s. instead got `%s`", defaultConfig[stage].Title, stage, message.Title)
 						}
 
-						if defaultConfig[stage].Pretext != message.Pretext {
+						if initialConfig[stage].Pretext != message.Pretext {
 							t.Errorf("Expected to still have %s (default) for Pretext in %s. instead got `%s`", defaultConfig[stage].Pretext, stage, message.Pretext)
 						}
 
-						if defaultConfig[stage].Text != message.Text {
+						if initialConfig[stage].Text != message.Text {
 							t.Errorf("Expected to still have %s (default) for Text in %s. instead got `%s`", defaultConfig[stage].Text, stage, message.Text)
 						}
 					}

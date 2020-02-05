@@ -18,7 +18,7 @@ func TestAPI(t *testing.T) {
 		config, err := config.LoadConfigAPI(fmt.Sprintf("%s/testutil/mock/test-config.yaml", currentFolderPath))
 
 		if err != nil {
-			t.Fatalf("unexpected not error")
+			t.Fatalf("unexpected error %s", err.Error())
 		}
 		fmt.Println(reflect.TypeOf(config).String())
 		if reflect.TypeOf(config).String() != "config.API" {

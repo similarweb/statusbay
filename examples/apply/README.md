@@ -1,4 +1,4 @@
-Example helm chart for Statusbay deployments
+# Example helm chart for Statusbay deployments
 
 Example of multiple deployment for debugging Statusbay behavers
 

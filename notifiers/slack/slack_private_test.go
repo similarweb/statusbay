@@ -55,9 +55,9 @@ func TestSlackLoadConfig(t *testing.T) {
 		},
 	}
 
-	initialConfig := map[ReportStage]*Message{}
+	initialConfig := map[ReportStage]Message{}
 	for stage, message := range defaultConfig {
-		initialConfig[stage] = &Message{
+		initialConfig[stage] = Message{
 			Title:   message.Title,
 			Pretext: message.Pretext,
 			Text:    message.Text,
@@ -388,7 +388,7 @@ func TestReportFuncs(t *testing.T) {
 			},
 			config: Config{
 				DefaultChannels: []string{"#default_test"},
-				MessageTemplates: map[ReportStage]*Message{
+				MessageTemplates: map[ReportStage]Message{
 					started: {},
 					ended:   {},
 					deleted: {},
@@ -430,7 +430,7 @@ func TestReportFuncs(t *testing.T) {
 			emailToUser: map[string]string{"email1": "id2"},
 			config: Config{
 				DefaultChannels: []string{"#default_test"},
-				MessageTemplates: map[ReportStage]*Message{
+				MessageTemplates: map[ReportStage]Message{
 					started: {},
 					ended:   {},
 					deleted: {},
@@ -472,7 +472,7 @@ func TestReportFuncs(t *testing.T) {
 			emailToUser: map[string]string{"email1": "id2"},
 			config: Config{
 				DefaultChannels: []string{"#default_test"},
-				MessageTemplates: map[ReportStage]*Message{
+				MessageTemplates: map[ReportStage]Message{
 					started: {},
 					ended:   {},
 					deleted: {},

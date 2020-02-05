@@ -41,11 +41,11 @@ type EventMarksConfig struct {
 
 // Kubernetes is holds all application configuration
 type Kubernetes struct {
-	Log             LogConfig                   `yaml:"log_level"`
+	Log             LogConfig                   `yaml:"log"`
 	MySQL           *state.MySQLConfig          `yaml:"mysql"`
 	NotifierConfigs notifierCommon.ConfigByName `yaml:"notifiers"`
 	UI              *UIConfig                   `yaml:"ui"`
-	Applies         *KubernetesApplies          `yaml:"Applies"`
+	Applies         *KubernetesApplies          `yaml:"applies"`
 
 	registeredNotifiers []notifierCommon.Notifier
 }

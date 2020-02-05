@@ -19,7 +19,7 @@ func MockQueryMetrics(from int64, to int64, query string) ([]datadog.Series, err
 	if err != nil {
 		return nil, err
 	}
-	data := []datadog.Series{}
+	var data []datadog.Series
 	err = json.Unmarshal(reader, &data)
 	if err != nil {
 		return nil, err

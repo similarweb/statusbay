@@ -7,32 +7,13 @@ import (
 
 	"github.com/mitchellh/hashstructure"
 	log "github.com/sirupsen/logrus"
+	"statusbay/watcher/kubernetes/common"
 
 	appsV1 "k8s.io/api/apps/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	eventwatch "k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
-)
-
-//DeploymentStatus defind the status of the deployment
-type DeploymentStatus string
-
-const (
-	// DeploymentSuccessful when deployment finish successfully
-	DeploymentSuccessful DeploymentStatus = "successful"
-
-	// DeploymentStatusFailed when deployment failed
-	DeploymentStatusFailed DeploymentStatus = "failed"
-
-	// DeploymentStatusRunning when deployment still in progress
-	DeploymentStatusRunning DeploymentStatus = "running"
-
-	// DeploymentStatusDeleted when deployment deleted
-	DeploymentStatusDeleted DeploymentStatus = "deleted"
-
-	// DeploymentStatusTimeout when statusbay stop watch
-	DeploymentStatusTimeout DeploymentStatus = "timeout"
 )
 
 // DeploymentStatusDescription are the various descriptions of the states a deployment can be in.
@@ -168,9 +149,9 @@ func (dm *DeploymentManager) watchDeployments(ctx context.Context) {
 					applicationRegistry := dm.registryManager.Get(deploymentName, deployment.GetNamespace())
 					if applicationRegistry == nil {
 
-						deploymentStatus := DeploymentStatusRunning
+						deploymentStatus := common.DeploymentStatusRunning
 						if event.Type == eventwatch.Deleted {
-							deploymentStatus = DeploymentStatusDeleted
+							deploymentStatus = common.DeploymentStatusDeleted
 						}
 
 						applicationRegistry = dm.registryManager.NewApplication(deploymentName,

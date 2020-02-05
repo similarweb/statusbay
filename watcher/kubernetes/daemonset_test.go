@@ -13,7 +13,6 @@ import (
 
 	"k8s.io/client-go/kubernetes/fake"
 
-	gtestutil "statusbay/testutil"
 	"statusbay/watcher/kubernetes/testutil"
 )
 
@@ -54,10 +53,10 @@ func createDaemonSetMock(client *fake.Clientset, name string, labels map[string]
 	client.AppsV1().DaemonSets("pe").Create(daemonset)
 	return daemonset
 }
-func NewDaemonSetManagerMock(client *fake.Clientset) (*kuberneteswatcher.DaemonsetManager, *testutil.MockStorage, *gtestutil.MockSlack) {
+func NewDaemonSetManagerMock(client *fake.Clientset) (*kuberneteswatcher.DaemonsetManager, *testutil.MockStorage) {
 	maxDeploymentTime, _ := time.ParseDuration("10m")
 	eventManager := NewEventsMock(client)
-	registryManager, storage, slack := NewRegistryMock()
+	registryManager, storage := NewRegistryMock()
 	serviceManager := NewServiceManagerMockMock(client)
 	podManager := kuberneteswatcher.NewPodsManager(client, eventManager)
 	controllerRevisionManager := NewControllerRevisionMock(client, podManager)
@@ -65,7 +64,7 @@ func NewDaemonSetManagerMock(client *fake.Clientset) (*kuberneteswatcher.Daemons
 	daemonsetManager.Serve()
 	serviceManager.Serve()
 	podManager.Serve()
-	return daemonsetManager, storage, slack
+	return daemonsetManager, storage
 }
 
 func createRunningPod(client *fake.Clientset, name string, controllerRevisionHash string) *v1.Pod {
@@ -88,7 +87,7 @@ func createRunningPod(client *fake.Clientset, name string, controllerRevisionHas
 }
 func TestDaemonsetWatch(t *testing.T) {
 	client := fake.NewSimpleClientset()
-	_, storage, slack := NewDaemonSetManagerMock(client)
+	_, storage := NewDaemonSetManagerMock(client)
 	labels := map[string]string{
 		"app": "application",
 	}
@@ -118,11 +117,6 @@ func TestDaemonsetWatch(t *testing.T) {
 	// verify daemonset deployed
 	application := storage.MockWriteDeployment[1]
 	_ = application.Schema.Resources.Daemonsets["test-daemonset"]
-	t.Run("slack_message", func(t *testing.T) {
-		if len(slack.PostMessageRequest) != DesiredNumberScheduled {
-			t.Fatalf("unexpected slack report, got %d expected %d", len(slack.PostMessageRequest), DesiredNumberScheduled)
-		}
-	})
 	t.Run("daemonset_schema_data", func(t *testing.T) {
 		if application.Status != "running" {
 			t.Fatalf("unexpected apply status, got %s expected %s", application.Status, "running")

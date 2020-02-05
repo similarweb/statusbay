@@ -2,6 +2,7 @@ package config
 
 import (
 	"io/ioutil"
+	"statusbay/state"
 	"time"
 
 	"gopkg.in/yaml.v2"
@@ -47,10 +48,10 @@ type Statuscake struct {
 
 // API is holds all application configuration
 type API struct {
-	Log             LogConfig        `yaml:"log"`
-	MySQL           *MySQLConfig     `yaml:"mysql"`
-	MetricsProvider *MetricsProvider `yaml:"metrics"`
-	AlertProvider   *AlertProvider   `yaml:"alerts"`
+	Log             LogConfig          `yaml:"level"`
+	MySQL           *state.MySQLConfig `yaml:"mysql"`
+	MetricsProvider *MetricsProvider   `yaml:"metrics"`
+	AlertProvider   *AlertProvider     `yaml:"alerts"`
 }
 
 // LoadConfigAPI will load all yaml configuration file to struct

@@ -4,6 +4,7 @@ package kuberneteswatcher
 import (
 	"context"
 	"statusbay/serverutil"
+	"statusbay/watcher/kubernetes/common"
 	"strconv"
 	"time"
 
@@ -125,12 +126,12 @@ func (dsm *DaemonsetManager) watchDaemonsets(ctx context.Context) {
 				progressDeadLineAnnotations := GetMetadata(daemonset.GetAnnotations(), "statusbay.io/progress-deadline-seconds")
 				progressDeadLine, err := strconv.ParseInt(progressDeadLineAnnotations, 10, 64)
 				if err != nil {
-					progressDeadLine = int64(dsm.maxDeploymentTime)
+					progressDeadLine = dsm.maxDeploymentTime
 				}
 				if event.Type == eventwatch.Modified ||
 					event.Type == eventwatch.Added ||
 					event.Type == eventwatch.Deleted {
-					// handle modiofied update
+					// handle modified update
 					if event.Type == eventwatch.Deleted {
 						dsm.registryManager.DeleteAppliedVersion(daemonset.GetName(), daemonset.GetNamespace())
 					} else {
@@ -144,9 +145,9 @@ func (dsm *DaemonsetManager) watchDaemonsets(ctx context.Context) {
 					}
 					appRegistry := dsm.registryManager.Get(daemonsetName, daemonset.GetNamespace())
 					if appRegistry == nil {
-						daemonsetStatus := DeploymentStatusRunning
+						daemonsetStatus := common.DeploymentStatusRunning
 						if event.Type == eventwatch.Deleted {
-							daemonsetStatus = DeploymentStatusDeleted
+							daemonsetStatus = common.DeploymentStatusDeleted
 						}
 						appRegistry = dsm.registryManager.NewApplication(daemonsetName,
 							daemonset.GetName(),

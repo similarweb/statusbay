@@ -14,3 +14,8 @@ type SlackConfig struct {
 	Token           string   `yaml:"token"`
 	DefaultChannels []string `yaml:"default_channels"`
 }
+
+type LogConfig struct {
+	Level       string `yaml:"level"`
+	GelfAddress string `yaml:"gelf_address"`
+}

@@ -406,7 +406,12 @@ func (wbr *RegistryRow) isDaemonSetFinish() (bool, error) {
 	return isFinished, nil
 }
 
-//isStatefulSetFinish
+// isStatefulSetFinish defines when a deployment of Statefulset id done.
+/* In order to finish a successful deployment you will have to have the following terms:
+- Total Pods defined in statefulset yaml should be equal to ready pods running.
+- Total Pods defined in statefulset yaml should be equal to running pods running.
+- Counts of pods which are committed to the state should be equal to total pods defined in statefulset yaml.
+*/
 func (wbr *RegistryRow) isStatefulSetFinish() (bool, error) {
 	isFinished := false
 	diff := time.Now().Sub(time.Unix(wbr.DBSchema.CreationTimestamp, 0)).Seconds()
@@ -414,6 +419,7 @@ func (wbr *RegistryRow) isStatefulSetFinish() (bool, error) {
 		isFinished = true
 		return isFinished, nil
 	}
+	var countOfPodsInState int32
 	var countOfRunningPods int32
 	var totalDesiredPods int32
 	var readyPodsCount int32
@@ -421,6 +427,7 @@ func (wbr *RegistryRow) isStatefulSetFinish() (bool, error) {
 		totalDesiredPods = statefulset.Statefulset.DesiredState
 		countOfRunningPods = countOfRunningPods + statefulset.Status.Replicas
 		readyPodsCount = readyPodsCount + statefulset.Status.ReadyReplicas
+		countOfPodsInState = int32(len(statefulset.Pods))
 
 		if statefulset.ProgressDeadlineSeconds < int64(diff) {
 			log.WithFields(log.Fields{
@@ -440,7 +447,7 @@ func (wbr *RegistryRow) isStatefulSetFinish() (bool, error) {
 		"current_pods_count":              countOfRunningPods,
 		"total_statefulsets":              len(wbr.DBSchema.Resources.Statefulsets),
 	}).Debug("Statefulset status")
-	if totalDesiredPods == readyPodsCount && totalDesiredPods == countOfRunningPods || wbr.status == DeploymentStatusDeleted {
+	if totalDesiredPods == readyPodsCount && totalDesiredPods == countOfRunningPods && countOfPodsInState == totalDesiredPods || wbr.status == DeploymentStatusDeleted {
 		log.WithFields(log.Fields{
 			"application":                    wbr.DBSchema.Application,
 			"namespace":                      wbr.DBSchema.Namespace,

@@ -97,11 +97,11 @@ func (route *RouterKubernetesManager) ApplicationsColumnValues(resp http.Respons
 	columnName := params["column"]
 
 	allowColumns := map[string]struct{}{
-		"name":      struct{}{},
-		"cluster":   struct{}{},
-		"namespace": struct{}{},
-		"status":    struct{}{},
-		"deploy_by": struct{}{},
+		"name":      {},
+		"cluster":   {},
+		"namespace": {},
+		"status":    {},
+		"deploy_by": {},
 	}
 
 	if _, ok := allowColumns[columnName]; !ok {

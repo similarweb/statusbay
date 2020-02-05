@@ -39,7 +39,6 @@ type MetaData struct {
 	Name         string            `json:"Name"`
 	Namespace    string            `json:"Namespace"`
 	ClusterName  string            `json:"ClusterName"`
-	SpecHash     uint64            `json:"SpecHash"`
 	Labels       map[string]string `json:"Labels"`
 	Annotations  map[string]string `json:"Annotations"`
 	Metrics      []Metrics         `json:"Metrics"`

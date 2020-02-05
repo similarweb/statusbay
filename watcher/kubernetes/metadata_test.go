@@ -71,14 +71,13 @@ func TestGetMetadata(t *testing.T) {
 func TestGetMetricsDataFromAnnotations(t *testing.T) {
 
 	annotations := map[string]string{
-		fmt.Sprintf("%s/metrics-providername-metric-name", METAPREFIX):   "metric query 1",
-		fmt.Sprintf("%s/metrics-providername-metric-name-2", METAPREFIX): "metric query 2",
+		fmt.Sprintf("%s/metrics-providername-metric-name", METAPREFIX): "metric query 1",
 	}
 
 	metrics := GetMetricsDataFromAnnotations(annotations)
 
-	if len(metrics) != 2 {
-		t.Fatalf("unexpected annotation metrics count, got %d expected %d", len(metrics), 2)
+	if len(metrics) != 1 {
+		t.Fatalf("unexpected annotation metrics count, got %d expected %d", len(metrics), 1)
 	}
 
 	metric := metrics[0]
@@ -95,14 +94,13 @@ func TestGetMetricsDataFromAnnotations(t *testing.T) {
 
 func TestGetAlertsDataFromAnnotations(t *testing.T) {
 	annotations := map[string]string{
-		fmt.Sprintf("%s/alerts-providername", METAPREFIX):  "foo,foo1",
-		fmt.Sprintf("%s/alerts-providername2", METAPREFIX): "foo",
+		fmt.Sprintf("%s/alerts-providername", METAPREFIX): "foo,foo1",
 	}
 
 	alerts := GetAlertsDataFromAnnotations(annotations)
 
-	if len(alerts) != 2 {
-		t.Fatalf("unexpected annotation alerts count, got %d expected %d", len(alerts), 2)
+	if len(alerts) != 1 {
+		t.Fatalf("unexpected annotation alerts count, got %d expected %d", len(alerts), 1)
 	}
 
 	alert := alerts[0]

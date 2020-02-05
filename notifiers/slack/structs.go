@@ -4,7 +4,7 @@ import (
 	slackApi "github.com/nlopes/slack"
 )
 
-var defaultMessageConfig = map[ReportStage]Message{
+var defaultMessageConfig = map[ReportStage]*Message{
 	started: {
 		Title:   "Latency, Hits, Events and more can be found in Statusier report. <{link}|Click here> to view Statusier report",
 		Pretext: "Kubernetes deployment started {deployed_by}",
@@ -47,9 +47,9 @@ type Message struct {
 }
 
 type Config struct {
-	Token            string                  `yaml:"token" mapstructure:"token"`
-	DefaultChannels  []string                `yaml:"default_channels" mapstructure:"default_channels"`
-	MessageTemplates map[ReportStage]Message `yaml:"message_templates" mapstructure:"message_templates"`
+	Token            string                   `yaml:"token" mapstructure:"token"`
+	DefaultChannels  []string                 `yaml:"default_channels" mapstructure:"default_channels"`
+	MessageTemplates map[ReportStage]*Message `yaml:"message_templates" mapstructure:"message_templates"`
 }
 
 type Manager struct {

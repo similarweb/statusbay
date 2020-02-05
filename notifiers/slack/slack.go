@@ -33,9 +33,29 @@ func NewSlack(urlBase string) common.Notifier {
 
 // LoadConfig maps a generic notifier config (map[string]interface{}) to a concrete type
 func (sl *Manager) LoadConfig(notifierConfig common.NotifierConfig) (err error) {
-	sl.config = Config{}
-	if err = mapstructure.Decode(notifierConfig, &sl.config); err != nil {
+	newConfig := Config{}
+	if err = mapstructure.Decode(notifierConfig, &newConfig); err != nil {
 		return
+	}
+
+	sl.config.Token = newConfig.Token
+
+	if newConfig.DefaultChannels != nil {
+		sl.config.DefaultChannels = newConfig.DefaultChannels
+	}
+
+	if newConfig.MessageTemplates != nil {
+		if newConfig.MessageTemplates[started] != nil {
+			sl.config.MessageTemplates[started] = newConfig.MessageTemplates[started]
+		}
+
+		if newConfig.MessageTemplates[ended] != nil {
+			sl.config.MessageTemplates[ended] = newConfig.MessageTemplates[ended]
+		}
+
+		if newConfig.MessageTemplates[deleted] != nil {
+			sl.config.MessageTemplates[deleted] = newConfig.MessageTemplates[deleted]
+		}
 	}
 
 	// validate config

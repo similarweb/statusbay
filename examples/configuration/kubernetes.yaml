@@ -1,5 +1,8 @@
 ---
-log_level: INFO
+log:
+  level: INFO
+  # gelf_address: 127.0.0.1
+
 mysql:
   dns: 127.0.0.1
   port: 3306

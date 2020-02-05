@@ -17,6 +17,3 @@ applies:
   max_apply_time: 10m
   check_finish_delay: 5s
   collect_data_after_apply_finish: 10s
-  
-  
-  

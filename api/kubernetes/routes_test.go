@@ -73,27 +73,42 @@ func TestApplicationsFiltersData(t *testing.T) {
 	ms.api.BindEndpoints()
 	ms.api.Serve()
 
-	rr := httptest.NewRecorder()
-	req, err := http.NewRequest("GET", "/api/v1/kubernetes/applications/values/cluster", nil)
-	if err != nil {
-		t.Fatalf("Http request returned with error")
+	testsResponseCount := []struct {
+		endpoint              string
+		expectedStatusCode    int
+		expectedCountResponse int
+	}{
+		{"/api/v1/kubernetes/applications/values/cluster", http.StatusOK, 2},
+		{"/api/v1/kubernetes/applications/values/none", http.StatusBadRequest, 0},
 	}
 
-	ms.api.Router().ServeHTTP(rr, req)
-	if rr.Code != http.StatusOK {
-		t.Fatalf("handler returned wrong status code: got %v want %v", rr.Code, http.StatusOK)
-	}
+	for _, test := range testsResponseCount {
+		t.Run(test.endpoint, func(t *testing.T) {
 
-	if err != nil {
-		t.Fatal(err)
-	}
+			rr := httptest.NewRecorder()
+			req, err := http.NewRequest("GET", test.endpoint, nil)
+			if err != nil {
+				t.Fatalf("Http request returned with error")
+			}
 
-	response := []string{}
-	body, err := ioutil.ReadAll(rr.Body)
-	err = json.Unmarshal(body, &response)
+			ms.api.Router().ServeHTTP(rr, req)
+			if rr.Code != test.expectedStatusCode {
+				t.Fatalf("handler returned wrong status code: got %v want %v", rr.Code, test.expectedStatusCode)
+			}
 
-	if len(response) != 2 {
-		t.Fatalf("unexpected filters response count, got %d expected %d", len(response), 2)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			response := []string{}
+			body, err := ioutil.ReadAll(rr.Body)
+			err = json.Unmarshal(body, &response)
+
+			if len(response) != test.expectedCountResponse {
+				t.Fatalf("unexpected filters response count, got %d expected %d", len(response), test.expectedCountResponse)
+			}
+
+		})
 	}
 
 }

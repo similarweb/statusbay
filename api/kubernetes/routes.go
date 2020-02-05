@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"net/url"
 	"statusbay/api/httpresponse"
 	"statusbay/config"
 	"statusbay/state"
@@ -91,8 +92,26 @@ func (route *RouterKubernetesManager) Applications(resp http.ResponseWriter, req
 
 func (route *RouterKubernetesManager) ApplicationsColumnValues(resp http.ResponseWriter, req *http.Request) {
 
+	errs := url.Values{}
 	params := mux.Vars(req)
 	columnName := params["column"]
+
+	allowColumns := map[string]struct{}{
+		"name":      struct{}{},
+		"cluster":   struct{}{},
+		"namespace": struct{}{},
+		"status":    struct{}{},
+		"deploy_by": struct{}{},
+	}
+
+	if _, ok := allowColumns[columnName]; !ok {
+		errs.Add("column", "Column name is not allow")
+	}
+
+	if len(errs) > 0 {
+		httpresponse.JSONErrorParameters(resp, http.StatusBadRequest, errs)
+		return
+	}
 
 	var table *state.TableKubernetes
 

@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"net/url"
 	"statusbay/api/httpresponse"
 	"statusbay/config"
+	"statusbay/state"
 
 	"strconv"
 
@@ -37,6 +39,7 @@ func NewKubernetesRoutes(storage Storage, router *mux.Router, eventPath string) 
 
 func (kr *RouterKubernetesManager) bindEndpoints() {
 	kr.router.HandleFunc("/api/v1/kubernetes/applications", kr.Applications).Methods("GET")
+	kr.router.HandleFunc("/api/v1/kubernetes/applications/values/{column}", kr.ApplicationsColumnValues).Methods("GET")
 	kr.router.HandleFunc("/api/v1/kubernetes/application/{job_id}/{time}", kr.GetDeployment).Methods("GET")
 }
 
@@ -85,6 +88,40 @@ func (route *RouterKubernetesManager) Applications(resp http.ResponseWriter, req
 	}
 
 	httpresponse.JSONWrite(resp, http.StatusOK, r)
+}
+
+func (route *RouterKubernetesManager) ApplicationsColumnValues(resp http.ResponseWriter, req *http.Request) {
+
+	errs := url.Values{}
+	params := mux.Vars(req)
+	columnName := params["column"]
+
+	allowColumns := map[string]struct{}{
+		"name":      {},
+		"cluster":   {},
+		"namespace": {},
+		"status":    {},
+		"deploy_by": {},
+	}
+
+	if _, ok := allowColumns[columnName]; !ok {
+		errs.Add("column", "Column name is not allow")
+	}
+
+	if len(errs) > 0 {
+		httpresponse.JSONErrorParameters(resp, http.StatusBadRequest, errs)
+		return
+	}
+
+	var table *state.TableKubernetes
+
+	values, err := route.storage.GetUniqueFieldValues(table.TableName(), columnName)
+	if err != nil {
+		httpresponse.JSONError(resp, http.StatusNotFound, err)
+
+	}
+
+	httpresponse.JSONWrite(resp, http.StatusOK, values)
 }
 
 func (route *RouterKubernetesManager) GetDeployment(resp http.ResponseWriter, req *http.Request) {

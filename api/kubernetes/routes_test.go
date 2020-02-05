@@ -66,3 +66,49 @@ func TestApplicationsData(t *testing.T) {
 	}
 
 }
+
+func TestApplicationsFiltersData(t *testing.T) {
+
+	ms := MockServer(t, "", nil, nil)
+	ms.api.BindEndpoints()
+	ms.api.Serve()
+
+	testsResponseCount := []struct {
+		endpoint              string
+		expectedStatusCode    int
+		expectedCountResponse int
+	}{
+		{"/api/v1/kubernetes/applications/values/cluster", http.StatusOK, 2},
+		{"/api/v1/kubernetes/applications/values/none", http.StatusBadRequest, 0},
+	}
+
+	for _, test := range testsResponseCount {
+		t.Run(test.endpoint, func(t *testing.T) {
+
+			rr := httptest.NewRecorder()
+			req, err := http.NewRequest("GET", test.endpoint, nil)
+			if err != nil {
+				t.Fatalf("Http request returned with error")
+			}
+
+			ms.api.Router().ServeHTTP(rr, req)
+			if rr.Code != test.expectedStatusCode {
+				t.Fatalf("handler returned wrong status code: got %v want %v", rr.Code, test.expectedStatusCode)
+			}
+
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			response := []string{}
+			body, err := ioutil.ReadAll(rr.Body)
+			err = json.Unmarshal(body, &response)
+
+			if len(response) != test.expectedCountResponse {
+				t.Fatalf("unexpected filters response count, got %d expected %d", len(response), test.expectedCountResponse)
+			}
+
+		})
+	}
+
+}

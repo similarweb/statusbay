@@ -10,7 +10,7 @@ import (
 
 func TestSetupLogging(t *testing.T) {
 
-	visibility.SetupLogging("log_level", "foo")
+	visibility.SetupLogging("log_level", "", "foo")
 	time.Sleep(time.Second)
 	log.GetLevel()
 

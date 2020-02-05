@@ -1,0 +1,34 @@
+{{- $root := . -}}
+{{range $i, $e := until (int .Values.daemonset.count) }}
+{{-  $name := printf "%s-%d" $root.Values.daemonset.name  $i  -}}
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ $name }}
+  labels:
+    name: {{ $name }}
+    component: {{ $name }}
+  annotations:
+{{ toYaml $root.Values.daemonset.annotations | indent 4}}
+spec:
+  selector:
+    matchLabels:
+      component: {{ $name }}
+  template:
+    metadata:
+      labels:
+        name: {{ $name }}
+        component: {{ $name }}
+    spec:
+      containers:
+      - name: {{ $name }}
+        image: "{{ $root.Values.daemonset.image.repository }}:{{ $root.Values.daemonset.image.tag }}"
+        imagePullPolicy: {{ $root.Values.daemonset.image.pullPolicy }}
+        livenessProbe:
+{{- toYaml $root.Values.daemonset.livenessProbe | nindent 10 }}
+        readinessProbe:
+{{- toYaml $root.Values.daemonset.readinessProbe | nindent 10 }}
+        resources:
+{{- toYaml $root.Values.daemonset.resources | nindent 10 }}
+{{- end }}

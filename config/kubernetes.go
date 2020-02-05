@@ -39,11 +39,11 @@ type EventMarksConfig struct {
 
 // Kubernetes is holds all application configuration
 type Kubernetes struct {
-	LogLevel string             `yaml:"log_level"`
-	MySQL    *MySQLConfig       `yaml:"mysql"`
-	Slack    *SlackConfig       `yaml:"slack"`
-	UI       *UIConfig          `yaml:"ui"`
-	Applies  *KubernetesApplies `yaml:"applies"`
+	Log     LogConfig          `yaml:"log"`
+	MySQL   *MySQLConfig       `yaml:"mysql"`
+	Slack   *SlackConfig       `yaml:"slack"`
+	UI      *UIConfig          `yaml:"ui"`
+	Applies *KubernetesApplies `yaml:"applies"`
 }
 
 type KubernetesMarksEvents struct {

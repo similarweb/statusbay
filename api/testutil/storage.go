@@ -32,3 +32,8 @@ func (m *MockStorage) ApplicationsCount(queryFillter kubernetes.FilterApplicatio
 func (m *MockStorage) GetDeployment(name string, time int64) (state.TableKubernetes, error) {
 	return responseTable[0], nil
 }
+
+func (m *MockStorage) GetUniqueFieldValues(tableName, columnName string) ([]string, error) {
+	values := []string{"foo", "foo1"}
+	return values, nil
+}

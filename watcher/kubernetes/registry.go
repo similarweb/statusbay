@@ -137,13 +137,7 @@ func (dr *RegistryManager) LoadRunningApplies() []*RegistryRow {
 }
 
 // NewApplication will creates a new deployment row
-func (dr *RegistryManager) NewApplication(
-	appName string,
-	resourceName string,
-	namespace string,
-	clusterName string,
-	annotations map[string]string,
-	status DeploymentStatus) *RegistryRow {
+func (dr *RegistryManager) NewApplication(appName string, resourceName string, namespace string, clusterName string, annotations map[string]string, status DeploymentStatus) *RegistryRow {
 	dr.newAppLock.Lock()
 	defer dr.newAppLock.Unlock()
 
@@ -223,13 +217,16 @@ func (dr *RegistryManager) Get(name, namespace string) *RegistryRow {
 }
 
 // AddDeployment add new deployment under application
-func (wbr *RegistryRow) AddDeployment(name, namespace string, labels map[string]string, desiredState int32, maxDeploymentTime int64) *DeploymentData {
+func (wbr *RegistryRow) AddDeployment(name, namespace string, labels map[string]string, annotations map[string]string, desiredState int32, maxDeploymentTime int64) *DeploymentData {
 
 	data := DeploymentData{
 		Deployment: MetaData{
 			Name:         name,
 			Namespace:    namespace,
 			Labels:       labels,
+			Annotations:  annotations,
+			Metrics:      GetMetricsDataFromAnnotations(annotations),
+			Alerts:       GetAlertsDataFromAnnotations(annotations),
 			DesiredState: desiredState,
 		},
 		Pods:                    make(map[string]DeploymenPod, 0),
@@ -248,13 +245,16 @@ func (wbr *RegistryRow) AddDeployment(name, namespace string, labels map[string]
 }
 
 // AddDaemonset add new daemonset under application
-func (wbr *RegistryRow) AddDaemonset(name, namespace string, labels map[string]string, desiredState int32, maxDeploymentTime int64) *DaemonsetData {
+func (wbr *RegistryRow) AddDaemonset(name, namespace string, labels map[string]string, annotations map[string]string, desiredState int32, maxDeploymentTime int64) *DaemonsetData {
 
 	data := DaemonsetData{
 		Metadata: MetaData{
 			Name:         name,
 			Namespace:    namespace,
 			Labels:       labels,
+			Annotations:  annotations,
+			Metrics:      GetMetricsDataFromAnnotations(annotations),
+			Alerts:       GetAlertsDataFromAnnotations(annotations),
 			DesiredState: desiredState,
 		},
 		Pods:                    make(map[string]DeploymenPod, 0),

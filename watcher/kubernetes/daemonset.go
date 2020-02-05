@@ -156,6 +156,7 @@ func (dsm *DaemonsetManager) watchDaemonsets(ctx context.Context) {
 						daemonset.GetName(),
 						daemonset.GetNamespace(),
 						daemonset.GetLabels(),
+						daemonset.GetAnnotations(),
 						daemonset.Status.DesiredNumberScheduled,
 						progressDeadLine)
 					daemonsetWatchListOptions := metaV1.ListOptions{

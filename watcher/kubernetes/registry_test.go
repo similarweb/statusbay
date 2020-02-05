@@ -19,9 +19,10 @@ func createMockDeploymentData(registry *kuberneteswatcher.RegistryManager, statu
 
 	fakeDeployment := GetFakeDeployment(200)
 	labels := map[string]string{}
+	annotations := map[string]string{}
 
 	registryRow := registry.NewApplication("nginx", fakeDeployment.GetName(), fakeDeployment.GetNamespace(), "cluster-name", fakeDeployment.GetAnnotations(), status)
-	registryDeploymentData := registryRow.AddDeployment("application", "pe", labels, 1, 3)
+	registryDeploymentData := registryRow.AddDeployment("application", "pe", labels, annotations, 1, 3)
 
 	return registryDeploymentData
 
@@ -131,7 +132,8 @@ func TestAddDeployment(t *testing.T) {
 		"statusbay.io/report-deploy-by":      "elad.kaplan@similarweb.com",
 		"statusbay.io/report-slack-channels": "#channel",
 	}
-	data := registryRow.AddDeployment("nginx-deployment", "pe", labels, 3, 300)
+	annotations := map[string]string{}
+	data := registryRow.AddDeployment("nginx-deployment", "pe", labels, annotations, 3, 300)
 
 	// TODO:: add report check
 	t.Run("deployment_data", func(t *testing.T) {
@@ -201,7 +203,8 @@ func TestDeploymentData(t *testing.T) {
 		"statusbay.io/report-deploy-by":      "elad.kaplan@similarweb.com",
 		"statusbay.io/report-slack-channels": "#channel",
 	}
-	data := registryRow.AddDeployment("nginx-deployment", "pe", labels, 1, 3)
+	annotations := map[string]string{}
+	data := registryRow.AddDeployment("nginx-deployment", "pe", labels, annotations, 1, 3)
 
 	t.Run("update_deployment_Status", func(t *testing.T) {
 		deploymentStatus := appsV1.DeploymentStatus{
@@ -345,8 +348,10 @@ func TestSave(t *testing.T) {
 		"statusbay.io/report-deploy-by":      "elad.kaplan@similarweb.com",
 		"statusbay.io/report-slack-channels": "#channel",
 	}
-	registryRow.AddDeployment("nginx-deployment", "pe", labels, 1, 3)
-	registryRow.AddDeployment("nginx-deployment2", "pe", labels, 1, 3)
+	annotations := map[string]string{}
+
+	registryRow.AddDeployment("nginx-deployment", "pe", labels, annotations, 1, 3)
+	registryRow.AddDeployment("nginx-deployment2", "pe", labels, annotations, 1, 3)
 
 	time.Sleep(time.Second * 5)
 	id := uint(1)
@@ -391,12 +396,13 @@ func TestDeploymentFinishSuccessful(t *testing.T) {
 		"statusbay.io/report-deploy-by":      "elad.kaplan@similarweb.com",
 		"statusbay.io/report-slack-channels": "#channel",
 	}
+	annotations := map[string]string{}
 
 	replicasetStatus := appsV1.ReplicaSetStatus{
 		Replicas:      3,
 		ReadyReplicas: 3,
 	}
-	data := registryRow.AddDeployment("nginx-deployment", "pe", labels, 3, 300)
+	data := registryRow.AddDeployment("nginx-deployment", "pe", labels, annotations, 3, 300)
 
 	data.InitReplicaset("replicaset-name")
 
@@ -421,12 +427,12 @@ func TestDeploymentFinishProgressDeadLine(t *testing.T) {
 	registryRow := registry.NewApplication("nginx", fakeDeployment.GetName(), fakeDeployment.GetNamespace(), "cluster-name", fakeDeployment.GetAnnotations(), kuberneteswatcher.DeploymentStatusRunning)
 
 	labels := map[string]string{}
-
+	annotations := map[string]string{}
 	replicasetStatus := appsV1.ReplicaSetStatus{
 		Replicas:      3,
 		ReadyReplicas: 2,
 	}
-	data := registryRow.AddDeployment("nginx-deployment", "pe", labels, 3, 2)
+	data := registryRow.AddDeployment("nginx-deployment", "pe", labels, annotations, 3, 2)
 
 	data.InitReplicaset("replicaset-name")
 

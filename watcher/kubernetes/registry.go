@@ -441,19 +441,21 @@ func (wbr *RegistryRow) isStatefulSetFinish() (bool, error) {
 		}
 	}
 	log.WithFields(log.Fields{
-		"application":                     wbr.DBSchema.Application,
-		"namespace":                       wbr.DBSchema.Namespace,
-		"total_statefulsets_desired_pods": totalDesiredPods,
-		"current_pods_count":              countOfRunningPods,
-		"total_statefulsets":              len(wbr.DBSchema.Resources.Statefulsets),
+		"application":                      wbr.DBSchema.Application,
+		"namespace":                        wbr.DBSchema.Namespace,
+		"total_statefulsets_desired_pods":  totalDesiredPods,
+		"total_statefulsets_in_state_pods": countOfPodsInState,
+		"current_pods_count":               countOfRunningPods,
+		"total_statefulsets":               len(wbr.DBSchema.Resources.Statefulsets),
 	}).Debug("Statefulset status")
 	if totalDesiredPods == readyPodsCount && totalDesiredPods == countOfRunningPods && countOfPodsInState == totalDesiredPods || wbr.status == DeploymentStatusDeleted {
 		log.WithFields(log.Fields{
-			"application":                    wbr.DBSchema.Application,
-			"namespace":                      wbr.DBSchema.Namespace,
-			"total_statefulset_desired_pods": totalDesiredPods,
-			"current_pods_count":             countOfRunningPods,
-			"total_statefulsets":             len(wbr.DBSchema.Resources.Daemonsets),
+			"application":                      wbr.DBSchema.Application,
+			"namespace":                        wbr.DBSchema.Namespace,
+			"total_statefulset_desired_pods":   totalDesiredPods,
+			"total_statefulsets_in_state_pods": countOfPodsInState,
+			"current_pods_count":               countOfRunningPods,
+			"total_statefulsets":               len(wbr.DBSchema.Resources.Daemonsets),
 		}).Info("Statefulset apply has finished")
 		// Wating few minutes to collect more event after deployment finished
 		isFinished = true

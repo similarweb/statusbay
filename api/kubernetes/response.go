@@ -29,7 +29,6 @@ type ResponseMetaData struct {
 	Name         string            `json:"Name"`
 	Namespace    string            `json:"Namespace"`
 	ClusterName  string            `json:"ClusterName"`
-	SpecHash     uint64            `json:"SpecHash"`
 	Labels       map[string]string `json:"Labels"`
 	DesiredState int32             `json:"DesiredState"`
 	Alerts       []ResponseAlerts  `json:"Alerts"`

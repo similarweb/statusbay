@@ -3,11 +3,10 @@ package notifiers
 import (
 	"fmt"
 	"github.com/pkg/errors"
-	"io"
 	"statusbay/notifiers/common"
 )
 
-type NotifierMaker func(defaultConfigReader io.Reader, urlBase string) (common.Notifier, error)
+type NotifierMaker func(urlBase string) common.Notifier
 
 const notRegisteredTemplate = "notifier by the name %s was not registered"
 

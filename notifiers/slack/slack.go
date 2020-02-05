@@ -7,9 +7,6 @@ import (
 	"github.com/mitchellh/mapstructure"
 	slackApi "github.com/nlopes/slack"
 	"github.com/pkg/errors"
-	"gopkg.in/yaml.v2"
-	"io"
-	"io/ioutil"
 	"statusbay/notifiers/common"
 	"statusbay/serverutil"
 	watcherCommon "statusbay/watcher/kubernetes/common"
@@ -27,22 +24,11 @@ var (
 )
 
 // NewSlack returns a slack notifier
-func NewSlack(defaultConfigReader io.Reader, urlBase string) (notifier common.Notifier, err error) {
-	var data []byte
-	defaultMessageConfig := map[ReportStage]*Message{}
-
-	if data, err = ioutil.ReadAll(defaultConfigReader); err != nil {
-		return
-	} else if err = yaml.Unmarshal(data, &defaultMessageConfig); err != nil {
-		return
-	}
-
-	notifier = &Manager{
+func NewSlack(urlBase string) common.Notifier {
+	return &Manager{
 		config:  Config{MessageTemplates: defaultMessageConfig},
 		urlBase: urlBase,
 	}
-
-	return
 }
 
 // LoadConfig maps a generic notifier config (map[string]interface{}) to a concrete type

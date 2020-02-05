@@ -2,34 +2,28 @@ package testutil
 
 import (
 	"errors"
-	"io"
 	"statusbay/notifiers"
 	"statusbay/notifiers/common"
 	"statusbay/serverutil"
 	watcherCommon "statusbay/watcher/kubernetes/common"
-	"strings"
 )
 
 var (
-	emptyNotifierMaker notifiers.NotifierMaker = func(defaultConfigReader io.Reader, urlBase string) (notifier common.Notifier, err error) {
-		return
+	emptyNotifierMaker notifiers.NotifierMaker = func(urlBase string) common.Notifier {
+		return nil
 	}
 )
 
 func GetNotifierMakerMock(makerType, errorMessage string) notifiers.NotifierMaker {
 	switch makerType {
-	case "error":
-		return func(defaultConfigReader io.Reader, urlBase string) (notifier common.Notifier, err error) {
-			return nil, errors.New(errorMessage)
-		}
 	case "mock":
 		if errorMessage == "" {
-			return func(defaultConfigReader io.Reader, urlBase string) (notifier common.Notifier, err error) {
-				return &NotifierMock{}, nil
+			return func(urlBase string) common.Notifier {
+				return &NotifierMock{}
 			}
 		} else {
-			return func(defaultConfigReader io.Reader, urlBase string) (notifier common.Notifier, err error) {
-				return &NotifierMock{err: errors.New(errorMessage)}, nil
+			return func(urlBase string) common.Notifier {
+				return &NotifierMock{err: errors.New(errorMessage)}
 			}
 		}
 	default:
@@ -48,39 +42,18 @@ func (n *NotifierMock) LoadConfig(common.NotifierConfig) (err error) {
 	return
 }
 
-func (*NotifierMock) ReportStarted(message watcherCommon.DeploymentReport) {
+func (*NotifierMock) ReportStarted(watcherCommon.DeploymentReport) {
 	panic("implement me")
 }
 
-func (*NotifierMock) ReportDeleted(message watcherCommon.DeploymentReport) {
+func (*NotifierMock) ReportDeleted(watcherCommon.DeploymentReport) {
 	panic("implement me")
 }
 
-func (*NotifierMock) ReportEnded(message watcherCommon.DeploymentReport) {
+func (*NotifierMock) ReportEnded(watcherCommon.DeploymentReport) {
 	panic("implement me")
 }
 
 func (*NotifierMock) Serve() (sf serverutil.StopFunc) {
 	return
-}
-
-func NewMockReader(source string, err error) io.Reader {
-	if err != nil {
-		return &ReaderMock{err: err}
-	} else {
-		return &ReaderMock{source: strings.NewReader(source)}
-	}
-}
-
-type ReaderMock struct {
-	source io.Reader
-	err    error
-}
-
-func (r *ReaderMock) Read(p []byte) (n int, err error) {
-	if r.err != nil {
-		err = r.err
-		return
-	}
-	return r.source.Read(p)
 }

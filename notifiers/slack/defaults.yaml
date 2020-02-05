@@ -1,9 +1,0 @@
-message_templates:
-  beginning_message:
-    title: Latency, Hits, Events and more can be found in Statusier report. <{link}|Click here> to view Statusier report
-    pretext: Kubernetes deployment started {deployed_by}
-  end_message:
-    pretext: Kubernetes deployment finished with status {status}
-    text: <{link}|Click here> to view Statusier report
-  deleted_message:
-    title: Deployment deleted {deployed_by}. <{link}|Click here> to view statusbay report

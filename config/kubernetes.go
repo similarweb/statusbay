@@ -50,19 +50,18 @@ type Kubernetes struct {
 	registeredNotifiers []notifierCommon.Notifier
 }
 
-func (k *Kubernetes) BuildNotifiers(path string) (registeredNotifiers []notifierCommon.Notifier) {
-	var err error
+func (k *Kubernetes) BuildNotifiers() (registeredNotifiers []notifierCommon.Notifier, err error) {
 	if k.NotifierConfigs != nil {
 		notifierLoader.RegisterNotifiers()
 
-		if registeredNotifiers, err = notifierLoader.Load(k.NotifierConfigs, path, k.UI.BaseURL); err != nil {
+		if registeredNotifiers, err = notifierLoader.Load(k.NotifierConfigs, k.UI.BaseURL); err != nil {
 			return
 		}
 		k.registeredNotifiers = registeredNotifiers
 	} else {
 		registeredNotifiers = []notifierCommon.Notifier{}
 	}
-	return k.registeredNotifiers
+	return
 }
 
 type KubernetesMarksEvents struct {

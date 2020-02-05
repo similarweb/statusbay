@@ -4,6 +4,20 @@ import (
 	slackApi "github.com/nlopes/slack"
 )
 
+var defaultMessageConfig = map[ReportStage]*Message{
+	started: {
+		Title:   "Latency, Hits, Events and more can be found in Statusier report. <{link}|Click here> to view Statusier report",
+		Pretext: "Kubernetes deployment started {deployed_by}",
+	},
+	ended: {
+		Pretext: "Kubernetes deployment finished with status {status}",
+		Text:    "<{link}|Click here> to view Statusier report",
+	},
+	deleted: {
+		Title: "Deployment deleted {deployed_by}. <{link}|Click here> to view statusbay report",
+	},
+}
+
 type ReportStage string
 
 const (

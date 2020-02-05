@@ -1,7 +1,6 @@
 package notifiers_test
 
 import (
-	"io"
 	"statusbay/notifiers"
 	"statusbay/notifiers/common"
 	"testing"
@@ -9,7 +8,7 @@ import (
 
 func TestNotifierRegistration(t *testing.T) {
 	var notifierName common.NotifierName = "test_notifier"
-	var notifierMaker notifiers.NotifierMaker = func(defaultConfigReader io.Reader, urlBase string) (notifier common.Notifier, err error) {
+	var notifierMaker notifiers.NotifierMaker = func(urlBase string) (notifier common.Notifier) {
 		return
 	}
 
@@ -50,9 +49,9 @@ func TestUnregisteredNotifierDoesNotReturn(t *testing.T) {
 
 func TestMultipleNotifierRegistration(t *testing.T) {
 	notifiersToRegister := map[common.NotifierName]notifiers.NotifierMaker{
-		"test_notifier1": func(_ io.Reader, _ string) (_ common.Notifier, _ error) { return },
-		"test_notifier2": func(_ io.Reader, _ string) (_ common.Notifier, _ error) { return },
-		"test_notifier3": func(_ io.Reader, _ string) (_ common.Notifier, _ error) { return },
+		"test_notifier1": func(_ string) (_ common.Notifier) { return },
+		"test_notifier2": func(_ string) (_ common.Notifier) { return },
+		"test_notifier3": func(_ string) (_ common.Notifier) { return },
 	}
 
 	for notifierName, notifierMaker := range notifiersToRegister {

@@ -74,6 +74,9 @@ func startKubernetesWatcher(configPath, kubeconfig, apiserverHost string) server
 		os.Exit(1)
 	}
 
+	//Setup logging
+	visibility.SetupLogging(watcherConfig.Log.Level, watcherConfig.Log.GelfAddress, "wacher_kubernetes")
+
 	// Init kubernetes client
 	kubernetesClientManager, cErr := client.NewClientManager(kubeconfig, apiserverHost)
 	if cErr != nil {
@@ -133,7 +136,7 @@ func startAPIServer(configPath, eventConfigPath string) serverutil.StopFunc {
 	}
 
 	//Setup logging
-	visibility.SetupLogging(apiConfig.LogLevel, "api")
+	visibility.SetupLogging(apiConfig.Log.Level, apiConfig.Log.GelfAddress, "api")
 
 	mysqlManager := state.NewMysqlClient(apiConfig.MySQL)
 	mysqlManager.Migration()

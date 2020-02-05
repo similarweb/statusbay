@@ -32,6 +32,8 @@ type ResponseMetaData struct {
 	SpecHash     uint64            `json:"SpecHash"`
 	Labels       map[string]string `json:"Labels"`
 	DesiredState int32             `json:"DesiredState"`
+	Alerts       []ResponseAlerts  `json:"Alerts"`
+	Metrics      []ResponseMetrics `json:"Metrics"`
 }
 
 type DeploymentDataResponse struct {
@@ -99,6 +101,17 @@ type ResponseKubernetesDeployment struct {
 	Status    string                 `json:"Status"`
 	Time      string                 `json:"Time"`
 	Details   ResponseDeploymentData `json:"Details"`
+}
+
+type ResponseAlerts struct {
+	Tags     string `json:"Tags"`
+	Provider string `json:"Provider"`
+}
+
+type ResponseMetrics struct {
+	Name     string `json:"Name"`
+	Query    string `json:"Query"`
+	Provider string `json:"Provider"`
 }
 
 // END Kubernetes deployment response

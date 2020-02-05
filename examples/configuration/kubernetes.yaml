@@ -9,10 +9,11 @@ mysql:
   username: root
   password: 1234
   schema: statusbay
-slack:
-  token: 
-  default_channels:
-    - '#foo'
+# notifiers:
+#   slack:
+#     token: 
+#     default_channels:
+#       - '#foo'
 ui:
   base_url: http://127.0.0.1:8081
 applies:

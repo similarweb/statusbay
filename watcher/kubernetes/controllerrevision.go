@@ -133,12 +133,12 @@ func (cr *ControllerRevisionManager) WatchControllerRevisionPods(ctx context.Con
 
 			controllerRevisionPodLabelValue := controllerRevisionHash
 			if controllerRevisionPodLabelValuePerfix != "" {
-				controllerRevisionPodLabelValue = fmt.Sprintf("%s-%s", registryData.GetName(), controllerRevisionHash)
+				controllerRevisionPodLabelValue = fmt.Sprintf("%s-%s", controllerRevisionPodLabelValuePerfix, controllerRevisionHash)
 			}
 
 			log.WithFields(log.Fields{
 				"controller_revision_pod_label_key":   appsV1.ControllerRevisionHashLabelKey,
-				"controller_revision_pod_label_value": controllerRevisionPodLabelValue}).Debug("Going to watch pods with the following fields")
+				"controller_revision_pod_label_value": controllerRevisionPodLabelValue}).Info("Going to watch pods with the following fields")
 
 			// Start watching pods with the specific appsV1.ControllerRevisionHashLabelKey
 			podLabelSelector := map[string]string{appsV1.ControllerRevisionHashLabelKey: controllerRevisionPodLabelValue}

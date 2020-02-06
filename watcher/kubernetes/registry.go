@@ -279,13 +279,14 @@ func (wbr *RegistryRow) AddDaemonset(name, namespace string, labels map[string]s
 }
 
 // AddStatefulset add a new statefulset under application settings
-func (wbr *RegistryRow) AddStatefulset(name, namespace string, labels map[string]string, desiredState int32, maxDeploymentTime int64) *StatefulsetData {
+func (wbr *RegistryRow) AddStatefulset(name, namespace string, labels map[string]string, annotations map[string]string, desiredState int32, maxDeploymentTime int64) *StatefulsetData {
 
 	data := StatefulsetData{
 		Statefulset: MetaData{
 			Name:         name,
 			Namespace:    namespace,
 			Labels:       labels,
+			Annotations:  annotations,
 			DesiredState: desiredState,
 		},
 		Pods:                    make(map[string]DeploymenPod, 0),
@@ -416,8 +417,7 @@ func (wbr *RegistryRow) isDaemonSetFinish() (bool, error) {
 // isStatefulSetFinish defines when a deployment of Statefulset id done.
 /* In order to finish a successful deployment you will have to have the following terms:
 - Total Pods defined in statefulset yaml should be equal to ready pods running.
-- Total Pods defined in statefulset yaml should be equal to running pods running.
-- Counts of pods which are committed to the state should be equal to total pods defined in statefulset yaml.
+- Counts of pods which are committed to the state should be equal to running pods running.
 */
 func (wbr *RegistryRow) isStatefulSetFinish() (bool, error) {
 	isFinished := false
@@ -454,15 +454,15 @@ func (wbr *RegistryRow) isStatefulSetFinish() (bool, error) {
 		"total_statefulsets_in_state_pods": countOfPodsInState,
 		"current_pods_count":               countOfRunningPods,
 		"total_statefulsets":               len(wbr.DBSchema.Resources.Statefulsets),
-	}).Debug("Statefulset status")
-	if totalDesiredPods == readyPodsCount && totalDesiredPods == countOfRunningPods && countOfPodsInState == totalDesiredPods || wbr.status == common.DeploymentStatusDeleted {
+	}).Info("Statefulset status")
+	if totalDesiredPods == readyPodsCount && countOfPodsInState == countOfRunningPods || wbr.status == common.DeploymentStatusDeleted {
 		log.WithFields(log.Fields{
 			"application":                      wbr.DBSchema.Application,
 			"namespace":                        wbr.DBSchema.Namespace,
 			"total_statefulset_desired_pods":   totalDesiredPods,
 			"total_statefulsets_in_state_pods": countOfPodsInState,
 			"current_pods_count":               countOfRunningPods,
-			"total_statefulsets":               len(wbr.DBSchema.Resources.Daemonsets),
+			"total_statefulsets":               len(wbr.DBSchema.Resources.Statefulsets),
 		}).Info("Statefulset apply has finished")
 		// Wating few minutes to collect more event after deployment finished
 		isFinished = true

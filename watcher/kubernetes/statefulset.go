@@ -145,7 +145,13 @@ func (ssm *StatefulsetManager) watchStatefulsets(ctx context.Context) {
 							statefulset.GetAnnotations(),
 							statefulsetStatus)
 					}
-					registryApply := appRegistry.AddStatefulset(statefulsetName, statefulset.GetNamespace(), statefulset.GetLabels(), *statefulset.Spec.Replicas, progressDeadLine)
+					registryApply := appRegistry.AddStatefulset(
+						statefulsetName,
+						statefulset.GetNamespace(),
+						statefulset.GetLabels(),
+						statefulset.GetAnnotations(),
+						*statefulset.Spec.Replicas,
+						progressDeadLine)
 					statefulsetWatchListOptions := metaV1.ListOptions{
 						LabelSelector: labels.SelectorFromSet(statefulset.GetLabels()).String()}
 					maxWatchTime := ssm.maxDeploymentTime

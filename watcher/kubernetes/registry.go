@@ -455,7 +455,7 @@ func (wbr *RegistryRow) isStatefulSetFinish() (bool, error) {
 		"current_pods_count":               countOfRunningPods,
 		"total_statefulsets":               len(wbr.DBSchema.Resources.Statefulsets),
 	}).Debug("Statefulset status")
-	if totalDesiredPods == readyPodsCount && totalDesiredPods == countOfRunningPods && countOfPodsInState == totalDesiredPods || wbr.status == DeploymentStatusDeleted {
+	if totalDesiredPods == readyPodsCount && totalDesiredPods == countOfRunningPods && countOfPodsInState == totalDesiredPods || wbr.status == common.DeploymentStatusDeleted {
 		log.WithFields(log.Fields{
 			"application":                      wbr.DBSchema.Application,
 			"namespace":                        wbr.DBSchema.Namespace,
@@ -499,8 +499,6 @@ func (wbr *RegistryRow) isFinish(checkFinishDelay time.Duration) {
 			isDsFinished, dsErr := wbr.isDaemonSetFinish()
 			isSsFinished, ssErr := wbr.isStatefulSetFinish()
 			if dsErr != nil || depErr != nil || ssErr != nil {
-				wbr.Stop(DeploymentStatusFailed, DeploymentStatusDescriptionProgressDeadline)
-			if dsErr != nil || depErr != nil {
 				wbr.Stop(common.DeploymentStatusFailed, DeploymentStatusDescriptionProgressDeadline)
 				wbr.cancelFn()
 				log.WithFields(log.Fields{
@@ -512,8 +510,6 @@ func (wbr *RegistryRow) isFinish(checkFinishDelay time.Duration) {
 				}).Error("isFinish function watcher had an error")
 				return
 			} else if isDepFinished && isDsFinished && isSsFinished {
-				wbr.Stop(DeploymentSuccessful, DeploymentStatusDescriptionSuccessful)
-			} else if isDepFinished && isDsFinished {
 				wbr.Stop(common.DeploymentSuccessful, DeploymentStatusDescriptionSuccessful)
 				wbr.cancelFn()
 			}

@@ -3,6 +3,7 @@ package kuberneteswatcher
 import (
 	"context"
 	"statusbay/serverutil"
+	"statusbay/watcher/kubernetes/common"
 	"strconv"
 	"time"
 
@@ -132,9 +133,9 @@ func (ssm *StatefulsetManager) watchStatefulsets(ctx context.Context) {
 					}
 					appRegistry := ssm.registryManager.Get(statefulsetName, statefulset.GetNamespace())
 					if appRegistry == nil {
-						statefulsetStatus := DeploymentStatusRunning
+						statefulsetStatus := common.DeploymentStatusRunning
 						if event.Type == eventwatch.Deleted {
-							statefulsetStatus = DeploymentStatusDeleted
+							statefulsetStatus = common.DeploymentStatusDeleted
 						}
 
 						appRegistry = ssm.registryManager.NewApplication(statefulsetName,

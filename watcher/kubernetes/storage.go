@@ -3,6 +3,7 @@ package kuberneteswatcher
 import (
 	"encoding/json"
 	"statusbay/state"
+	"statusbay/watcher/kubernetes/common"
 
 	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"
@@ -10,9 +11,9 @@ import (
 
 // Storage interface
 type Storage interface {
-	CreateApply(data *RegistryRow, status DeploymentStatus) (uint, error)
-	UpdateApply(id uint, data *RegistryRow, status DeploymentStatus) (bool, error)
-	GetAppliesByStatus(status DeploymentStatus) (map[uint]DBSchema, error)
+	CreateApply(data *RegistryRow, status common.DeploymentStatus) (uint, error)
+	UpdateApply(id uint, data *RegistryRow, status common.DeploymentStatus) (bool, error)
+	GetAppliesByStatus(status common.DeploymentStatus) (map[uint]DBSchema, error)
 	UpdateAppliesVersionHistory(deploymentName string, hash uint64) bool
 	DeleteAppliedVersion(deploymentName string) bool
 }
@@ -31,7 +32,7 @@ func NewMysql(db *state.MySQLManager) *MySQLStorage {
 }
 
 // CreateDeployment creating a new deployment
-func (my *MySQLStorage) CreateApply(data *RegistryRow, status DeploymentStatus) (uint, error) {
+func (my *MySQLStorage) CreateApply(data *RegistryRow, status common.DeploymentStatus) (uint, error) {
 
 	log.WithFields(log.Fields{
 		"name": data.DBSchema.Application,
@@ -65,7 +66,7 @@ func (my *MySQLStorage) CreateApply(data *RegistryRow, status DeploymentStatus) 
 }
 
 // UpdateApply update current deployment
-func (my *MySQLStorage) UpdateApply(id uint, data *RegistryRow, status DeploymentStatus) (bool, error) {
+func (my *MySQLStorage) UpdateApply(id uint, data *RegistryRow, status common.DeploymentStatus) (bool, error) {
 
 	log.WithFields(log.Fields{
 		"name": data.DBSchema.Application,
@@ -93,7 +94,7 @@ func (my *MySQLStorage) UpdateApply(id uint, data *RegistryRow, status Deploymen
 }
 
 // GetAppliesByStatus return lits of deployment by given status
-func (my *MySQLStorage) GetAppliesByStatus(status DeploymentStatus) (map[uint]DBSchema, error) {
+func (my *MySQLStorage) GetAppliesByStatus(status common.DeploymentStatus) (map[uint]DBSchema, error) {
 
 	appRow := &[]state.TableKubernetes{}
 	resources := map[uint]DBSchema{}

@@ -1,22 +1,22 @@
 pod:
-- pattern: "OOMKilled"
-  descriptions:
-    - >-
-      pod-test
-- pattern: "CrashLoopBackOff"
-  descriptions:
-  - >-
-      pod-test-1
+  - pattern: "OOMKilled"
+    descriptions:
+      - >-
+        pod-test
+  - pattern: "CrashLoopBackOff"
+    descriptions:
+      - >-
+        pod-test-1
 
 replicaset:
-- pattern: "Created pod"
-  descriptions:
-  - >-
-    rs-1
-    
-    
+  - pattern: "Created pod"
+    descriptions:
+      - >-
+        rs-1
+
+
 deployment:
-- pattern: "Scaled up"
-  descriptions:
-  - >-
-    deployment-1
+  - pattern: "Scaled up"
+    descriptions:
+      - >-
+        deployment-1

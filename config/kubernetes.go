@@ -1,10 +1,12 @@
 package config
 
 import (
-	"io/ioutil"
-	"time"
-
 	"gopkg.in/yaml.v2"
+	"io/ioutil"
+	notifierCommon "statusbay/notifiers/common"
+	notifierLoader "statusbay/notifiers/load"
+	"statusbay/state"
+	"time"
 )
 
 type DashboardConfig struct {
@@ -31,7 +33,7 @@ type KubernetesApplies struct {
 	CollectDataAfterApplyFinish time.Duration `yaml:"collect_data_after_apply_finish"`
 }
 
-// EventMarksConfig is defind how the mark event will look
+// EventMarksConfig is defined how the mark event will look
 type EventMarksConfig struct {
 	Pattern      string   `yaml:"pattern"`
 	Descriptions []string `yaml:"descriptions"`
@@ -39,11 +41,27 @@ type EventMarksConfig struct {
 
 // Kubernetes is holds all application configuration
 type Kubernetes struct {
-	Log     LogConfig          `yaml:"log"`
-	MySQL   *MySQLConfig       `yaml:"mysql"`
-	Slack   *SlackConfig       `yaml:"slack"`
-	UI      *UIConfig          `yaml:"ui"`
-	Applies *KubernetesApplies `yaml:"applies"`
+	Log             LogConfig                   `yaml:"log"`
+	MySQL           *state.MySQLConfig          `yaml:"mysql"`
+	NotifierConfigs notifierCommon.ConfigByName `yaml:"notifiers"`
+	UI              *UIConfig                   `yaml:"ui"`
+	Applies         *KubernetesApplies          `yaml:"applies"`
+
+	registeredNotifiers []notifierCommon.Notifier
+}
+
+func (k *Kubernetes) BuildNotifiers() (registeredNotifiers []notifierCommon.Notifier, err error) {
+	if k.NotifierConfigs != nil {
+		notifierLoader.RegisterNotifiers()
+
+		if registeredNotifiers, err = notifierLoader.Load(k.NotifierConfigs, k.UI.BaseURL); err != nil {
+			return
+		}
+		k.registeredNotifiers = registeredNotifiers
+	} else {
+		registeredNotifiers = []notifierCommon.Notifier{}
+	}
+	return
 }
 
 type KubernetesMarksEvents struct {
@@ -53,18 +71,19 @@ type KubernetesMarksEvents struct {
 }
 
 // LoadKubernetesConfig will load all yaml configuration file to struct
-func LoadKubernetesConfig(location string) (Kubernetes, error) {
-	config := Kubernetes{}
-	data, err := ioutil.ReadFile(location)
-	if err != nil {
-		return config, err
-	}
-	err = yaml.Unmarshal(data, &config)
-	if err != nil {
-		return config, err
+func LoadKubernetesConfig(path string) (config Kubernetes, err error) {
+	var (
+		data []byte
+	)
+	if data, err = ioutil.ReadFile(path); err != nil {
+		return
 	}
 
-	return config, nil
+	if err = yaml.Unmarshal(data, &config); err != nil {
+		return
+	}
+
+	return
 }
 
 func LoadKubernetesMarksConfig(location string) (KubernetesMarksEvents, error) {

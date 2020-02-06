@@ -3,24 +3,20 @@ package main
 import (
 	"flag"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"os"
 	"os/signal"
-	"statusbay/config"
-	"statusbay/serverutil"
-	"statusbay/state"
-	"statusbay/visibility"
-
 	"statusbay/api"
 	"statusbay/api/alerts"
 	apiKubernetes "statusbay/api/kubernetes"
 	"statusbay/api/metrics"
+	"statusbay/config"
+	"statusbay/serverutil"
+	"statusbay/state"
+	"statusbay/visibility"
 	kuberneteswatcher "statusbay/watcher/kubernetes"
 	"statusbay/watcher/kubernetes/client"
 	"time"
-
-	"github.com/nlopes/slack"
-
-	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -82,9 +78,9 @@ func startKubernetesWatcher(configPath, kubeconfig, apiserverHost string) server
 	visibility.SetupLogging(watcherConfig.Log.Level, watcherConfig.Log.GelfAddress, "wacher_kubernetes")
 
 	// Init kubernetes client
-	kubernetesClientManager, err := client.NewClientManager(kubeconfig, apiserverHost)
-	if err != nil {
-		log.WithError(err).Panic("could not init kubernetes client")
+	kubernetesClientManager, cErr := client.NewClientManager(kubeconfig, apiserverHost)
+	if cErr != nil {
+		log.WithError(cErr).Panic("could not init kubernetes client")
 		os.Exit(1)
 	}
 	kubernetesClientset := kubernetesClientManager.GetInsecureClient()
@@ -94,10 +90,14 @@ func startKubernetesWatcher(configPath, kubeconfig, apiserverHost string) server
 	mysqlManager.Migration()
 	mysql := kuberneteswatcher.NewMysql(mysqlManager)
 
-	//Slack
-	api := slack.New(watcherConfig.Slack.Token)
-	slack := state.NewSlack(api)
-	reporter := kuberneteswatcher.NewReporter(slack, watcherConfig.Slack.DefaultChannels, watcherConfig.UI.BaseURL)
+	notifiers, nErr := watcherConfig.BuildNotifiers()
+	if nErr != nil {
+		log.WithError(nErr).Panic("failed to build notifiers")
+		os.Exit(1)
+	}
+
+	// Init Reporter
+	reporter := kuberneteswatcher.NewReporter(notifiers)
 
 	//Replicaset manager
 	registryManager := kuberneteswatcher.NewRegistryManager(watcherConfig.Applies.SaveInterval, watcherConfig.Applies.CheckFinishDelay, watcherConfig.Applies.CollectDataAfterApplyFinish, mysql, reporter)

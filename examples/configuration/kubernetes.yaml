@@ -1,0 +1,23 @@
+---
+log:
+  level: INFO
+  # gelf_address: 127.0.0.1
+
+mysql:
+  dns: 127.0.0.1
+  port: 3306
+  username: root
+  password: 1234
+  schema: statusbay
+# notifiers:
+#   slack:
+#     token: 
+#     default_channels:
+#       - '#foo'
+ui:
+  base_url: http://127.0.0.1:8081
+applies:
+  save_interval: 2s
+  max_apply_time: 10m
+  check_finish_delay: 5s
+  collect_data_after_apply_finish: 10s

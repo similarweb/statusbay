@@ -25,7 +25,6 @@ type WatchData struct {
 	Ctx          context.Context
 }
 
-// MessageDeploy struct  TODO ::
 type MessageDeploy struct {
 	UID               string            `json:"ID"`
 	Kind              string            `json:"Kind"`
@@ -40,7 +39,6 @@ type MetaData struct {
 	Name         string            `json:"Name"`
 	Namespace    string            `json:"Namespace"`
 	ClusterName  string            `json:"ClusterName"`
-	SpecHash     uint64            `json:"SpecHash"`
 	Labels       map[string]string `json:"Labels"`
 	Annotations  map[string]string `json:"Annotations"`
 	Metrics      []Metrics         `json:"Metrics"`

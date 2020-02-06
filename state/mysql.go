@@ -2,7 +2,6 @@ package state
 
 import (
 	"fmt"
-	"statusbay/config"
 	"strings"
 	"time"
 
@@ -51,7 +50,7 @@ func open(username, password, dns, schema string, port int) (*gorm.DB, error) {
 }
 
 // NewMysqlClient create new MyySQL client
-func NewMysqlClient(config *config.MySQLConfig) *MySQLManager {
+func NewMysqlClient(config *MySQLConfig) *MySQLManager {
 
 	var db *gorm.DB
 
@@ -88,4 +87,13 @@ func NewMysqlClient(config *config.MySQLConfig) *MySQLManager {
 func (my *MySQLManager) Migration() {
 	my.DB.AutoMigrate(&TableKubernetes{})
 	my.DB.AutoMigrate(&TableDeploymentsHash{})
+}
+
+// MySQLConfig client configuration
+type MySQLConfig struct {
+	DNS      string `yaml:"dns"`
+	Port     int    `yaml:"port"`
+	Username string `yaml:"username"`
+	Password string `yaml:"password"`
+	Schema   string `yaml:"schema"`
 }

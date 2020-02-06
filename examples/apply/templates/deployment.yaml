@@ -1,0 +1,42 @@
+{{- $root := . -}}
+{{range $i, $e := until (int .Values.deployment.count) }}
+{{-  $name := printf "%s-%d" $root.Values.deployment.name  $i  -}}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name }}
+  labels:
+    component: {{ $name }}
+  annotations:
+{{ toYaml $root.Values.deployment.annotations | indent 4}}
+spec:
+  replicas: {{ $root.Values.deployment.replicas}}
+  progressDeadlineSeconds: {{ $root.Values.deployment.progressDeadlineSeconds}}
+  selector:
+    matchLabels:
+      component: {{ $name }}
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        component: {{ $name }}
+    spec:
+      containers:
+        - name: {{ $name }}
+          image: "{{ $root.Values.deployment.image.repository }}:{{ $root.Values.deployment.image.tag }}"
+          imagePullPolicy: {{ $root.Values.deployment.image.pullPolicy }}
+          env:
+          - name: EXAMPLE
+            value: "Environment variable"
+          livenessProbe:
+{{- toYaml $root.Values.deployment.livenessProbe | nindent 12 }}
+          readinessProbe:
+{{- toYaml $root.Values.deployment.readinessProbe | nindent 12 }}
+          resources:
+{{- toYaml $root.Values.deployment.resources | nindent 12 }}
+{{- end }}

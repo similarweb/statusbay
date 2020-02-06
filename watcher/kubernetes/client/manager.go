@@ -115,8 +115,7 @@ func (cm *clientManager) init() error {
 		return err
 	}
 
-	err = cm.initInsecureClients()
-	return err
+	return cm.initInsecureClients()
 }
 
 // NewClientManager creates client manager with given kubeConfigPath and apiserverHost parameters.

@@ -3,6 +3,7 @@ package kuberneteswatcher_test
 import (
 	"context"
 	kuberneteswatcher "statusbay/watcher/kubernetes"
+	"statusbay/watcher/kubernetes/common"
 	"testing"
 	"time"
 
@@ -36,9 +37,9 @@ func NewPodManagerMock() (*fake.Clientset, *kuberneteswatcher.PodsManager) {
 }
 
 func TestPodWatch(t *testing.T) {
-	registry, storageMock, _ := NewRegistryMock()
+	registry, storageMock := NewRegistryMock()
 
-	registryDeploymentData := createMockDeploymentData(registry, kuberneteswatcher.DeploymentStatusRunning)
+	registryDeploymentData := createMockDeploymentData(registry, common.DeploymentStatusRunning)
 
 	ctx := context.Background()
 
@@ -128,9 +129,9 @@ func TestPodWatch(t *testing.T) {
 }
 
 func TestPodWatchEvent(t *testing.T) {
-	registry, storageMock, _ := NewRegistryMock()
+	registry, storageMock := NewRegistryMock()
 
-	registryDeploymentData := createMockDeploymentData(registry, kuberneteswatcher.DeploymentStatusRunning)
+	registryDeploymentData := createMockDeploymentData(registry, common.DeploymentStatusRunning)
 
 	ctx := context.Background()
 

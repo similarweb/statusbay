@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	kuberneteswatcher "statusbay/watcher/kubernetes"
+	"statusbay/watcher/kubernetes/common"
 	"testing"
 	"time"
 
@@ -32,9 +33,9 @@ func NewServiceManagerMockMock(client *fake.Clientset) *kuberneteswatcher.Servic
 }
 
 func TestServiceWatch(t *testing.T) {
-	registry, storageMock, _ := NewRegistryMock()
+	registory, storageMock := NewRegistryMock()
 
-	registryDeploymentData := createMockDeploymentData(registry, kuberneteswatcher.DeploymentStatusRunning)
+	registryDeploymentData := createMockDeploymentData(registory, common.DeploymentStatusRunning)
 
 	ctx := context.Background()
 

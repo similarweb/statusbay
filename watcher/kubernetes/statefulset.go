@@ -242,6 +242,7 @@ func (ssm *StatefulsetManager) watchStatefulset(ctx context.Context, cancelFn co
 					statefulset.ObjectMeta.Name,
 					namespace,
 					nil)
+
 				// Start watching services of statefulset
 				ssm.serviceManager.Watch <- WatchData{
 					ListOptions:  metaV1.ListOptions{TimeoutSeconds: &maxWatchTime, LabelSelector: labels.SelectorFromSet(statefulset.Spec.Selector.MatchLabels).String()},

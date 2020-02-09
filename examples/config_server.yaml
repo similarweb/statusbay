@@ -1,0 +1,20 @@
+---
+log_level: DEBUG
+mysql:
+  dns: 127.0.0.1
+  username: root
+  password: 1234
+  schema: statusier
+metrics:
+  enable: false
+  datadog:
+    api_key: 5b490730119a748844d8f8a4db1efc99
+    app_key: 8d67d6fff061aaec756ebee081dffc7f64d7a2fc
+    cache_cleanup_interval: 1m
+    cache_expiration: 3m
+alerts:
+  enable: false
+  statuscake:
+    endpoint: https://app.statuscake.com/API
+    username: SimilarWeb
+    api_key: HWkXI34axJ97qyfj8CQPnEGFpR5YTO

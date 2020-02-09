@@ -1,0 +1,46 @@
+---
+log_level: INFO
+mysql:
+  dns: 127.0.0.1
+  port: 3306
+  username: root
+  password: 1234
+  schema: statusbay
+notifiers:
+  slack:
+    # token: xoxb-3292636427-648819785415-Jp4wnWd2p56tBK2E32CUYwbD
+    token: xoxb-3292636427-937731620800-h1FXwPEw88INo8Rs5BTus2gx
+    default_channels:
+      - '#isan_test'
+    message_templates:
+      beginning_message:
+        title: 123Latency, Hits, Events and more can be found in Statusier report. <{link}|Click here> to view Statusier report
+        pretext: Kubernetes deployment started {deployed_by}
+      end_message:
+        pretext: 123Kubernetes deployment finished with status {status}
+        text: <{link}|Click here> to view Statusier report
+ui:
+  base_url: http://127.0.0.1:8081
+kubernetes_settings:
+  log_template_url: https://app.logz.io/#/dashboard/kibana/discover?_a=(columns:!(short_message,message),query:(query:'[[query]]'),sort:!('@timestamp',desc))&_g=(time:(from:'[[from]]',to:'[[to]]'))
+  deployment:
+    collect_start_delay: "3s"
+    max_deployment_time: "10m"
+    save_interval: "2s"
+    deployment_history: "30m"
+    check_finish_duration: "5s"
+    collect_data_after_deployment_finish: "10s"
+  metrics:
+    dashboard:
+      service: https://app.datadoghq.com/dashboard/6bu-ne2-kiv/kubernetes-service-inspector?tpl_var_cluster=kubernetes-production&tpl_var_deployment={{deployment}}&tpl_var_destination_service_name={{service_name}}&tpl_var_destination_service_namespace={{namespace}}&tpl_var_namespace={{namespace}}
+      docker: https://app.datadoghq.com/dashboard/6bu-ne2-kiv/kubernetes-service-inspector?tpl_var_cluster=kubernetes-production&tpl_var_deployment={{deployment}}&tpl_var_namespace={{namespace}}
+    docker:
+      - title: Memory usage by container (RSS)
+        metric: max:kubernetes.memory.requests{FILTERS},max:kubernetes.memory.usage{FILTERS} by {container_name}.fill(0).rollup(max)
+      - title: CPU usage by container
+        metric: sum:sum:kubernetes.cpu.limits{{FILTERS},sum:kubernetes.cpu.usage.total{FILTERS}by {container_name}.fill(0).rollup(max)
+applies:
+  save_interval: 2s
+  max_apply_time: 10m
+  check_finish_delay: 5s
+  collect_data_after_apply_finish: 10s

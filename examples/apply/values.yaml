@@ -24,8 +24,8 @@ daemonset:
   annotations:
     statusbay.io/progress-deadline-seconds: "30"
     statusbay.io/application-name: "statusbay-application"
-    statusbay.io/report-slack-channels: "#foo-channel"
-    statusbay.io/report-deploy-by: foo@similarweb.com
+    statusbay.io/report-slack-channels: "#isan_test"
+    statusbay.io/report-deploy-by: isan.rivkin@similarweb.com
     statusbay.io/alerts-pingdom: nginx
     statusbay.io/metrics-datadog-2xx: query for 2xx
     statusbay.io/metrics-datadog-errors-5xx: query for 5xx
@@ -58,8 +58,8 @@ deployment:
     
   annotations:
     statusbay.io/application-name: "statusbay-application"
-    statusbay.io/report-slack-channels: "#foo-channel"
-    statusbay.io/report-deploy-by: foo@similarweb.com
+    statusbay.io/report-slack-channels: "#isan_test"
+    statusbay.io/report-deploy-by: isan.rivkin@similarweb.com
     statusbay.io/alerts-pingdom: nginx
     statusbay.io/metrics-datadog-2xx: query for 2xx
     statusbay.io/metrics-datadog-errors-5xx: query for 5xx

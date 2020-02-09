@@ -1,0 +1,52 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment1
+  labels:
+    app.kubernetes.io/name: deployment1
+    app.kubernetes.io/managed-by: me
+  annotations:
+    statusbay.io/application-name: "elad-1"
+    statusbay.io/report-slack-channels: ""
+    statusbay.io/report-deploy-by: isan.rivkin@similarweb.com
+    statusbay.io/alerts-statuscake-tags: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: deployment1
+      app.kubernetes.io/instance: test-instance
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: deployment1
+        app.kubernetes.io/instance: test-instance
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:latest
+          imagePullPolicy: IfNotPresent
+          env:
+          - name: EXAMPLE
+            value: "Environment variable"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            failureThreshold: 3
+            periodSeconds: 2
+          readinessProbe:
+            failureThreshold: 3
+            initialDelaySeconds: 5
+            periodSeconds: 3
+            successThreshold: 1
+            timeoutSeconds: 0
+            httpGet:
+              path: /
+              port: 80

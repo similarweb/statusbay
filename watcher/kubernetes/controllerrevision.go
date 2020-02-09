@@ -14,12 +14,14 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+//BackoffParams parameters
 type BackoffParams struct {
 	InitialInterval time.Duration
 	Multiplier      float64
 	MaxElapsedTime  time.Duration
 }
 
+//NewBackOffParams Parameters init
 func NewBackOffParams() *BackoffParams {
 	return &BackoffParams{
 		InitialInterval: 0,
@@ -28,11 +30,13 @@ func NewBackOffParams() *BackoffParams {
 	}
 }
 
+//ControllerRevision Main interface
 type ControllerRevision interface {
-	WatchControllerRevisionPods(ctx context.Context, registryData RegistryData, resourceGeneration int64, controllerRevisionlabels map[string]string, namespace string) error
-	WatchControllerRevisionPodsRetry(ctx context.Context, registryData RegistryData, resourceGeneration int64, controllerRevisionlabels map[string]string, namespace string, backOffParams *BackoffParams)
+	WatchControllerRevisionPods(ctx context.Context, registryData RegistryData, resourceGeneration int64, controllerRevisionlabels map[string]string, controllerRevisionHashlabelKey string, controllerRevisionPodLabelValuePerfix string, namespace string) error
+	WatchControllerRevisionPodsRetry(ctx context.Context, registryData RegistryData, resourceGeneration int64, controllerRevisionlabels map[string]string, controllerRevisionHashlabelKey string, controllerRevisionPodLabelValuePerfix string, namespace string, backOffParams *BackoffParams) error
 }
 
+//ControllerRevisionManager Manager to interfact with Kubernetes kind
 type ControllerRevisionManager struct {
 	// Kubernetes client
 	client kubernetes.Interface
@@ -41,8 +45,8 @@ type ControllerRevisionManager struct {
 	podsManager *PodsManager
 }
 
-// NewControllerReisionManager create new instance of controllerRecision manager
-func NewControllerReisionManager(client kubernetes.Interface, podsManager *PodsManager) *ControllerRevisionManager {
+// NewControllerRevisionManager create new instance of controllerRevision manager
+func NewControllerRevisionManager(client kubernetes.Interface, podsManager *PodsManager) *ControllerRevisionManager {
 	return &ControllerRevisionManager{
 		client:      client,
 		podsManager: podsManager,
@@ -50,7 +54,7 @@ func NewControllerReisionManager(client kubernetes.Interface, podsManager *PodsM
 }
 
 // WatchControllerRevisionPodsRetry perform exponential backoff retry on WatchControllerRevisionPods
-func (cr *ControllerRevisionManager) WatchControllerRevisionPodsRetry(ctx context.Context, registryData RegistryData, resourceGeneration int64, controllerRevisionlabels map[string]string, namespace string, backOff *BackoffParams) {
+func (cr *ControllerRevisionManager) WatchControllerRevisionPodsRetry(ctx context.Context, registryData RegistryData, resourceGeneration int64, controllerRevisionlabels map[string]string, controllerRevisionHashlabelKey string, controllerRevisionPodLabelValuePerfix string, namespace string, backOff *BackoffParams) error {
 	defaultParams := NewBackOffParams()
 	if backOff != nil {
 		defaultParams = backOff
@@ -62,7 +66,7 @@ func (cr *ControllerRevisionManager) WatchControllerRevisionPodsRetry(ctx contex
 	ticker := backoff.NewTicker(b)
 	var err error
 	for range ticker.C {
-		if err = cr.WatchControllerRevisionPods(ctx, registryData, resourceGeneration, controllerRevisionlabels, namespace); err != nil {
+		if err = cr.WatchControllerRevisionPods(ctx, registryData, resourceGeneration, controllerRevisionlabels, controllerRevisionHashlabelKey, controllerRevisionPodLabelValuePerfix, namespace); err != nil {
 			log.WithFields(log.Fields{
 				"error": err,
 			}).Warn("retrying backoff")
@@ -75,50 +79,70 @@ func (cr *ControllerRevisionManager) WatchControllerRevisionPodsRetry(ctx contex
 		log.WithFields(log.Fields{
 			"error": err,
 		}).Error("Stopping retrying backoff Fail")
-		return
+		return err
+
 	}
+	return err
 }
 
 // WatchControllerRevisionPods finds the correct pods to watch
 // 1. search a controllerrevision resource that is related to (statefulset or daemonset) using the version id and labels.
 // 2. once found, extract the controller-revision-hash value and look for pods with this annotation
 // 3. watch those pods.
-func (cr *ControllerRevisionManager) WatchControllerRevisionPods(ctx context.Context, registryData RegistryData, resourceGeneration int64, controllerRevisionlabels map[string]string, namespace string) error {
-	// find controller revision that fits the resource version
+func (cr *ControllerRevisionManager) WatchControllerRevisionPods(ctx context.Context, registryData RegistryData, resourceGeneration int64, controllerRevisionlabels map[string]string, controllerRevisionHashlabelKey string, controllerRevisionPodLabelValuePerfix string, namespace string) error {
+	registryDataName := registryData.GetName()
+	// find controller revision that fits the resource version`
 	revisions, err := cr.client.AppsV1().ControllerRevisions(namespace).List(metaV1.ListOptions{
-		LabelSelector: labels.SelectorFromSet(controllerRevisionlabels).String(),
-	})
+		LabelSelector: labels.SelectorFromSet(controllerRevisionlabels).String()})
+
 	if err != nil {
 		log.WithFields(log.Fields{
-			fmt.Sprintf("%T", registryData): registryData.GetName(),
+			fmt.Sprintf("%T", registryData): registryDataName,
 			"namespace":                     namespace,
 			"revision":                      resourceGeneration,
 			"error":                         err,
 		}).Error("Cannot list revisions")
 		return errors.New("Cannot list revisions")
 	}
-	// find the revision hash inside controller revision
+
+	// Get the revision hash inside controller revision
 	for _, revision := range revisions.Items {
 		if revision.Revision == resourceGeneration {
-			controllerRevisionHash, valExist := revision.ObjectMeta.Labels[appsV1.DefaultDaemonSetUniqueLabelKey]
+			log.WithField("controller_revision_hash_label_key", controllerRevisionHashlabelKey).Info(
+				"Searching for controllerRevisionHash from the controllerRevisionHashlabelKey")
+			controllerRevisionHash, valExist := revision.ObjectMeta.Labels[controllerRevisionHashlabelKey]
 			if !valExist {
 				log.WithFields(log.Fields{
-					fmt.Sprintf("%T", registryData): registryData.GetName(),
-					"namespace":                     namespace,
-					"revision":                      resourceGeneration,
-				}).Warn("Cannot find controller-revision-hash label inside ControllerRevision. cannot start watch on pods")
-				return errors.New("Cannot find controller-revision-hash label inside ControllerRevision. cannot start watch on pods")
+					fmt.Sprintf("%T", registryData):      registryDataName,
+					"namespace":                          namespace,
+					"controller_revision_hash_label_key": controllerRevisionHashlabelKey,
+					"revision":                           resourceGeneration,
+				}).Warn("Cannot find controllerRevision label inside ControllerRevision kind. cannot start watch on pods")
+				return errors.New("Cannot find controllerRevisionHashLabelKey lables, inside ControllerRevision. cannot start watch on pods")
 			}
 			log.WithFields(log.Fields{
-				fmt.Sprintf("%T", registryData): registryData.GetName(),
-				"namespace":                     namespace,
-				"revision":                      resourceGeneration,
-				"controllerRevisionHash":        controllerRevisionHash,
-			}).Debug("ControllerRevision found  find controller-revision-hash calling Pods Manager")
-			// start watch on pods
-			podListOptions := metaV1.ListOptions{LabelSelector: labels.SelectorFromSet(map[string]string{
-				appsV1.DefaultDaemonSetUniqueLabelKey: controllerRevisionHash,
-			}).String()}
+				fmt.Sprintf("%T", registryData):      registryDataName,
+				"namespace":                          namespace,
+				"revision":                           resourceGeneration,
+				"controller_revision_hash_label_key": controllerRevisionHashlabelKey,
+				"controllerRevisionHash":             controllerRevisionHash,
+			}).Debug("ControllerRevision found controller-revision-hash calling Pods Manager")
+
+			log.WithField("controllerRevisionPodLabelValuePerfix", controllerRevisionPodLabelValuePerfix).Debug(
+				"Going to check for ConrollerRevisionPodLabel Value with prefix")
+
+			controllerRevisionPodLabelValue := controllerRevisionHash
+			if controllerRevisionPodLabelValuePerfix != "" {
+				controllerRevisionPodLabelValue = fmt.Sprintf("%s-%s", controllerRevisionPodLabelValuePerfix, controllerRevisionHash)
+			}
+
+			log.WithFields(log.Fields{
+				"controller_revision_pod_label_key":   appsV1.ControllerRevisionHashLabelKey,
+				"controller_revision_pod_label_value": controllerRevisionPodLabelValue}).Info("Going to watch pods with the following fields")
+
+			// Start watching pods with the specific appsV1.ControllerRevisionHashLabelKey
+			podLabelSelector := map[string]string{appsV1.ControllerRevisionHashLabelKey: controllerRevisionPodLabelValue}
+			podListOptions := metaV1.ListOptions{LabelSelector: labels.SelectorFromSet(podLabelSelector).String()}
 			cr.podsManager.Watch <- WatchData{
 				ListOptions:  podListOptions,
 				RegistryData: registryData,
@@ -129,9 +153,10 @@ func (cr *ControllerRevisionManager) WatchControllerRevisionPods(ctx context.Con
 		}
 	}
 	log.WithFields(log.Fields{
-		fmt.Sprintf("%T", registryData): registryData.GetName(),
-		"namespace":                     namespace,
-		"revision":                      resourceGeneration,
-	}).Error("Cannot find resourceVersion in ControllerRevision. cannot start watch on pods")
-	return errors.New("Cannot find resourceVersion in ControllerRevision. cannot start watch on pods")
+		fmt.Sprintf("%T", registryData):      registryDataName,
+		"namespace":                          namespace,
+		"revision":                           resourceGeneration,
+		"controller_revision_hash_label_key": controllerRevisionHashlabelKey,
+	}).Debug("Cannot find resourceVersion in ControllerRevision. cannot start watch on pods")
+	return nil
 }

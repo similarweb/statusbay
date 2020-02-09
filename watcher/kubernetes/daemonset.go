@@ -30,9 +30,6 @@ type DaemonsetManager struct {
 	// Will triggered when deployment watch started
 	serviceManager *ServiceManager
 
-	// will be trigged when pod deployment watch start
-	podsManager *PodsManager
-
 	//
 	controllerRevManager ControllerRevision
 	// Max watch time
@@ -40,13 +37,12 @@ type DaemonsetManager struct {
 }
 
 //NewDaemonsetManager  create new instance to manage damonset related things
-func NewDaemonsetManager(k8sClient kubernetes.Interface, eventManager *EventsManager, registryManager *RegistryManager, serviceManager *ServiceManager, podsManager *PodsManager, controllerRevisionManager ControllerRevision, maxDeploymentTime time.Duration) *DaemonsetManager {
+func NewDaemonsetManager(k8sClient kubernetes.Interface, eventManager *EventsManager, registryManager *RegistryManager, serviceManager *ServiceManager, controllerRevisionManager ControllerRevision, maxDeploymentTime time.Duration) *DaemonsetManager {
 	return &DaemonsetManager{
 		client:               k8sClient,
 		eventManager:         eventManager,
 		registryManager:      registryManager,
 		serviceManager:       serviceManager,
-		podsManager:          podsManager,
 		controllerRevManager: controllerRevisionManager,
 		maxDeploymentTime:    int64(maxDeploymentTime.Seconds()),
 	}
@@ -242,8 +238,16 @@ func (dsm *DaemonsetManager) watchDaemonset(ctx context.Context, cancelFn contex
 					TimeoutSeconds: &maxWatchTime,
 				}
 				dsm.watchEvents(ctx, daemonsetData, eventListOptions, namespace)
+
 				// start pods watch
-				dsm.watchPods(ctx, daemonsetData, daemonset, namespace)
+				dsm.controllerRevManager.WatchControllerRevisionPodsRetry(ctx, daemonsetData,
+					daemonset.ObjectMeta.Generation,
+					daemonset.Spec.Selector.MatchLabels,
+					appsV1.DefaultDaemonSetUniqueLabelKey,
+					"",
+					namespace,
+					nil)
+
 				// start service watch
 				dsm.serviceManager.Watch <- WatchData{
 					ListOptions:  metaV1.ListOptions{TimeoutSeconds: &maxWatchTime, LabelSelector: labels.SelectorFromSet(daemonset.Spec.Selector.MatchLabels).String()},
@@ -262,13 +266,6 @@ func (dsm *DaemonsetManager) watchDaemonset(ctx context.Context, cancelFn contex
 			return
 		}
 	}
-}
-
-// watchPods will trigger a controller revision manager to watch for the related pods
-func (dsm *DaemonsetManager) watchPods(ctx context.Context, daemonsetData *DaemonsetData, daemonset *appsV1.DaemonSet, namespace string) {
-	resourceGeneration := daemonset.ObjectMeta.Generation
-	revisionLabels := map[string]string{"name": daemonsetData.GetName()}
-	dsm.controllerRevManager.WatchControllerRevisionPodsRetry(ctx, daemonsetData, resourceGeneration, revisionLabels, namespace, nil)
 }
 
 // watchEvents will watch for events related to the Daemonset Resource

@@ -148,7 +148,6 @@ func (dsm *DaemonsetManager) watchDaemonsets(ctx context.Context) {
 						appRegistry = dsm.registryManager.NewApplication(daemonsetName,
 							daemonset.GetName(),
 							daemonset.GetNamespace(),
-							"cluster-name",
 							daemonset.GetAnnotations(),
 							daemonsetStatus)
 

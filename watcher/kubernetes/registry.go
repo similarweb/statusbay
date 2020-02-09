@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"os"
 	"statusbay/serverutil"
 	"statusbay/watcher/kubernetes/common"
 	"sync"
@@ -47,6 +48,7 @@ type RegistryRow struct {
 
 // RegistryManager defined multiple rows data
 type RegistryManager struct {
+	clusterName                 string
 	registryData                map[string]*RegistryRow
 	saveInterval                time.Duration
 	checkFinishDelay            time.Duration
@@ -67,8 +69,14 @@ func (dr *RegistryManager) DeleteAppliedVersion(name, namespace string) bool {
 }
 
 // NewRegistryManager create new schema registry instance
-func NewRegistryManager(saveInterval time.Duration, checkFinishDelay time.Duration, collectDataAfterApplyFinish time.Duration, storage Storage, reporter *ReporterManager) *RegistryManager {
+func NewRegistryManager(saveInterval time.Duration, checkFinishDelay time.Duration, collectDataAfterApplyFinish time.Duration, storage Storage, reporter *ReporterManager, clusterName string) *RegistryManager {
+	if clusterName == "" {
+		log.Panic("cluster name is mandatory field")
+		os.Exit(1)
+	}
+
 	return &RegistryManager{
+		clusterName:                 clusterName,
 		saveInterval:                saveInterval,
 		checkFinishDelay:            checkFinishDelay,
 		collectDataAfterApplyFinish: collectDataAfterApplyFinish,
@@ -142,7 +150,6 @@ func (dr *RegistryManager) NewApplication(
 	appName string,
 	_ string,
 	namespace string,
-	clusterName string,
 	annotations map[string]string,
 	status common.DeploymentStatus) *RegistryRow {
 	dr.newAppLock.Lock()
@@ -163,7 +170,7 @@ func (dr *RegistryManager) NewApplication(
 		collectDataAfterDeploymentFinish: dr.collectDataAfterApplyFinish,
 		DBSchema: DBSchema{
 			Application:           appName,
-			Cluster:               clusterName,
+			Cluster:               dr.clusterName,
 			Namespace:             namespace,
 			CreationTimestamp:     deployTime,
 			ReportTo:              reportTo,
@@ -204,7 +211,7 @@ func (dr *RegistryManager) NewApplication(
 		"deploy_by":   deployBy,
 		"report_to":   reportTo,
 		"namespace":   namespace,
-		"cluster":     clusterName,
+		"cluster":     dr.clusterName,
 	}).Info("New application deployment started")
 
 	go row.isFinish(dr.checkFinishDelay)

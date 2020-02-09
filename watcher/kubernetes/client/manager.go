@@ -2,6 +2,7 @@ package client
 
 import (
 	"errors"
+
 	log "github.com/sirupsen/logrus"
 
 	"k8s.io/client-go/kubernetes"
@@ -103,6 +104,7 @@ func (cm *clientManager) initInsecureClients() error {
 	if err != nil {
 		return err
 	}
+
 
 	cm.insecureClient = k8sClient
 	return nil

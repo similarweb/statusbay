@@ -157,6 +157,6 @@ func (cr *ControllerRevisionManager) WatchControllerRevisionPods(ctx context.Con
 		"namespace":                          namespace,
 		"revision":                           resourceGeneration,
 		"controller_revision_hash_label_key": controllerRevisionHashlabelKey,
-	}).Error("Cannot find resourceVersion in ControllerRevision. cannot start watch on pods")
-	return errors.New("Cannot find resourceVersion in ControllerRevision. cannot start watch on pods")
+	}).Debug("Cannot find resourceVersion in ControllerRevision. cannot start watch on pods")
+	return nil
 }

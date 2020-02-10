@@ -30,7 +30,7 @@ daemonset:
     statusbay.io/metrics-datadog-2xx: query for 2xx
     statusbay.io/metrics-datadog-errors-5xx: query for 5xx
     # statusbay.io/alerts-statuscake: nginx
-    # statusbay.io/metrics-prometuse-errors-title-5xx: query for 4xx
+    # statusbay.io/metrics-prometheus-errors-title-5xx: query for 4xx
     
 deployment:
   count: 1
@@ -64,4 +64,4 @@ deployment:
     statusbay.io/metrics-datadog-2xx: query for 2xx
     statusbay.io/metrics-datadog-errors-5xx: query for 5xx
     # statusbay.io/alerts-statuscake: nginx
-    # statusbay.io/metrics-prometuse-errors-title-5xx: query for 4xx
+    # statusbay.io/metrics-prometheus-errors-title-5xx: query for 4xx

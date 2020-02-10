@@ -1,6 +1,5 @@
 # Getting started
-
-This document describes how to setup your local development environment.
+This document describes how to setup your local development environment for StatusBay development.
 
 ## Preparation
 

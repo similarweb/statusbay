@@ -5,7 +5,7 @@ List of available API endpoints.
 
 # Application healthcheck
 
-This endpoint returns the checks of healthy API application.
+This endpoint returns the health status of the API application.
 
 | Method        | Path           | Produces          |
 | :------------ |:---------------| :-----------------|
@@ -15,7 +15,7 @@ This endpoint returns the checks of healthy API application.
 
 ```bash
 $ curl \
-    http://127.0.0.1:8080/api/v1/health
+  'http://127.0.0.1:8080/api/v1/health'
 ```
 
 #### Response Sample
@@ -35,16 +35,16 @@ This endpoint return metrics query data from a given provider.
 
 #### Parameters
 
-- **provider** - The provider of the metrics response. 
-- **query** - The metric query.
-- **from** - The metric data points date range.
-- **to** - The metric data points date range.
+- **provider** - the provider of the metrics response. 
+- **query** - the metric query.
+- **from** - the metric data points start time (unix time).
+- **to** - the metric data points end time (unix time).
 
 #### Request Sample
 
 ```bash
 $ curl \
-    'http://127.0.0.1:8080/api/v1/application/metric?provider=datadog&query=sum:web.http.2xx\{*\}.as_count()&from=1577734291&to=1577741491'
+  'http://127.0.0.1:8080/api/v1/application/metric?provider=datadog&query=sum:web.http.2xx\{*\}.as_count()&from=1577734291&to=1577741491'
 ```
 
 #### Response Sample
@@ -90,16 +90,16 @@ This endpoint returns alerts for a given provider.
 
 #### Parameters
 
-- **provider** - The provider of the alerts response. 
-- **tags** - list of tags filters (comma separated).
-- **from** - The alerts data points date range.
-- **to** - The alerts data points date range.
+- **provider** - the provider of the alerts response. 
+- **tags** - comma separated tags to filter by.
+- **from** - the alerts data points start time (unix time).
+- **to** - the alerts data points end time (unix time).
 
 #### Request Sample 
 
 ```bash
 $ curl \
-    'http://127.0.0.1:8080/api/v1/application/metric?provider=datadog&query=sum:web.http.2xx\{*\}.as_count()&from=1577734291&to=1577741491'
+  'http://127.0.0.1:8080/api/v1/application/alerts?provider=pingdom&tags=production,virginia&from=1577734291&to=1577741491'
 ```
 
 #### Response Sample 
@@ -137,22 +137,22 @@ This endpoint returns a list of applications.
 
 #### Parameters
 
-- **offset** `(default: 0)` - Is simply the number of records you wish to skip before selecting records.
-- **limit**  `(default: 20)` - Number of records in the response.
-- **cluster** `(default: "")` - Filter application by cluster name. by default all the clusters will be returned.(For multiple cluster use comma separation)
-- **namespace** `(default: "")` - Filter application by namespace. by default all the namespaces will be returned.(For multiple namespaces use comma separation)
-- **status** `(default: "")` - Filter application by status. by default all the statuses will be returned.(For multiple statuses use comma separation)
-- **orderby** `(default: "time")` - Order the records response. by default will uses time column. 
-- **sortdirection** `(default: "desc")` - Sort the applications. by default descending.
-- **from** `(default: "0")` - Filter applications by range of time.
-- **to** `(default: "0")` - Filter applications by range of time.
-- **distinct** `(default: "false")` - Filter applications by uniqueness.
+- **limit**  `(default: 20)` - number of records in the response.
+- **offset** `(default: 0)` - the number of records you wish to skip before selecting records.
+- **cluster** `(default: "" -> all)` - filter applications by cluster name. (for multiple clusters filtering use comma separation)
+- **namespace** `(default: "" -> all)` - filter application by namespace. (for multiple namespaces filtering use comma separation)
+- **status** `(default: "" -> all)` - filter application by status. (for multiple statuses filtering use comma separation)
+- **orderby** `(default: "time")` - order the records response.
+- **sortdirection** `(default: "desc")` - sort direction of the response records.
+- **from** `(default: "0")` - filter applications by range of time, start time - unix time.
+- **to** `(default: "0")` - filter applications by range of time, end time - unix time.
+- **distinct** `(default: "false")` - enable uniqueness on returned results.
 
 #### Request Sample
 
 ```bash
 $ curl \
-     http://127.0.0.1:8080/api/v1/kubernetes/applications
+  'http://127.0.0.1:8080/api/v1/kubernetes/applications'
 ```
 
 #### Response Sample
@@ -190,7 +190,7 @@ $ curl \
 
 ```
 
-# Application Unique values
+# Applications Unique Values
 
 This endpoint returns a unique column values
 
@@ -200,13 +200,13 @@ This endpoint returns a unique column values
 
 #### Parameters
 
-- **column** - DB column name. Available column names i.e: cluster, namespace, status & deploy_by.
+- **column** - database column name. available column names i.e: cluster, namespace, status & deploy_by.
 
 #### Request Sample 
 
 ```bash
 $ curl \
-     127.0.0.1:8080/api/v1/kubernetes/applications/values/cluster
+  'http://127.0.0.1:8080/api/v1/kubernetes/applications/values/cluster'
 ```
 
 #### Response Sample 
@@ -220,7 +220,7 @@ $ curl \
 ]
 ```
 
-# Deployment details
+# Application's Deployment Details
 
 This endpoint returns a specific deployment details.
 
@@ -230,14 +230,14 @@ This endpoint returns a specific deployment details.
 
 #### Parameters
 
-- **name** - Application name.
-- **time** - Deployment timestamp.
+- **name** - application name.
+- **time** - deployment timestamp.
 
 #### Request Sample
 
 ```bash
 $ curl \
-     127.0.0.1:8080/api/v1/kubernetes/application/example-deployment/1580045074
+  'http://127.0.0.1:8080/api/v1/kubernetes/application/example-deployment/1580045074'
 ```
 
 #### Response Sample

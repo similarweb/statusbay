@@ -1,6 +1,7 @@
-# How To Use
+## How To Use
 
-### After the initial setup those are the different features when writing an application deployment: 
+### Deployment Example
+After you've installed and configured StatusBay, lets take a look at this deployment example:
 
 ```yaml
 ---
@@ -34,78 +35,15 @@ spec:
           imagePullPolicy: IfNotPresent
 ```
 
-**Annotation (Optional):** 
 
-`statusbay.io/application-name`
+### Available Annotations
+| Name | Description | Required | Example | 
+| ---- | ----------- | -------- | ------- | 
+| statusbay.io/application-name | Used to group different kinds under one logical StatusBay unit | No | `statusbay.io/application-name: my-amazing-app` |
+| statusbay.io/progress-deadline-seconds | Use this to override the default deployment timeout before it's marked as failed | No | `statusbay.io/progress-deadline-seconds: 600` |
+| statusbay.io/report-slack-channels | Comma separated list of Slack channels to send deployment notifications to. Note: the bot must be present in the channels | No | `statusbay.io/report-slack-channels: #deployments,#devops` |
+| statusbay.io/alerts-pingdom | Comma separated Pingdom tags associated with this deployment | No | `statusbay.io/alerts-pingdom: nginx,us-east-1` |
+| statusbay.io/alerts-statuscake | Comma separated StatusCake tags associated with this deployment | No | `statusbay.io/alerts-statuscake: nginx,us-east-1` |
+| statusbay.io/metrics-datadog-{custom-metric-name} | Datadog metric associated with your deployment | No | `statusbay.io/metrics-datadog-2xx: sum:nginx.2xx{environment:production}` |
+| statusbay.io/metrics-prometheus-{custom-metric-name} | Prometheus metric associated with your deployment | No | `statusbay.io/metrics-prometheus-5xx: prometheus_http_requests_total{code="200"}` |
 
-**When to use:**
-
-Use when more then one resource should be grouped under the same application.
-
-**For example:**
-
-When deploying a service using a helm chart with multiple resources (Deployment, StatefulSet, Service, etc) 
-
----
-**Annotation (Optional):** 
-
-`statusbay.io/progress-deadline-seconds` 
-
-**When to use:**
-
-Use to override the default timeout of a deployment before its declared failed as failed. 
-
-**For example (Optional):**
-
-You have a resource that takes 5 minutes to warm up and become ready while the default progress dead line is 1 minute. 
-
----
-**Annotation (Optional):** 
-
-`statusbay.io/report-slack-channels`
-
-
-**When to use:**
-
-List of Slack (comma separated) channels for StatusBay notifications.
-> Note: to get slack notification from StatusBay you must invite the given bot the to destination Slack channel 
-
-**For example:**
-
-When you deploy an application and you want to notify 3 different channels.
-
----
-**Annotation (Optional):** 
-
-`statusbay.io/alerts-pingdom` -
-
-**When to use:**
-
-List of Pingdom checks that are associated with your deployment.
-
----
-**Annotation (Optional):** 
-
-`statusbay.io/alerts-statuscake`
-
-**When to use:**
-
-List of Statuscake checks that are associated with your deployment.
-
----
-**Annotation (Optional):** 
-
-`statusbay.io/metrics-datadog-{custom-metric-name}`
-
-**When to use:**
-
-List of Datadog queries that are associated with your deployment.
-
----
-**Annotation (Optional):** 
-
-`statusbay.io/metrics-prometuse-errors-title-{custom-metric-name}`
-
-**When to use:**
-
-List of Prometuse queries that are associated with your deployment.

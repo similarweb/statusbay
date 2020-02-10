@@ -1,13 +1,22 @@
-# External Logging System
+## External Logging System
 
-The StatusBay application can expose the application logs to external logging system (For example elasticsearch stack).
+StatusBay application can ship the application logs to external logging system (for example elasticsearch stack).
+
+<hr>
+
+### Configuration
+
+In order to ship StatusBay's application logs to a external logging system, configure the following API settings:
+
+```bash
+api:
+  application:    
+    log:
+      level: INFO
+      gelf_address: 127.0.0.1
+```
 
 
-## How to setup?
+### Using Helm Chart?
 
-StatusBay can ship the application logs to external logging system by using Gelf protocol. 
-
-
-### Using helm deployment?
-
-Go to [Helm Deployment](https://github.com/similarweb/statusbay-helm) and configure the `api.application.log.gelf_address` value.
+Go to your [helm chart configuration](https://github.com/similarweb/statusbay-helm/blob/master/values.yaml) and set `api.application.log.gelf_address` value.

@@ -99,8 +99,8 @@ func startKubernetesWatcher(configPath, kubeconfig, apiserverHost string) server
 	// Init Reporter
 	reporter := kuberneteswatcher.NewReporter(notifiers)
 
-	//Replicaset manager
-	registryManager := kuberneteswatcher.NewRegistryManager(watcherConfig.Applies.SaveInterval, watcherConfig.Applies.CheckFinishDelay, watcherConfig.Applies.CollectDataAfterApplyFinish, mysql, reporter)
+	//Registry manager
+	registryManager := kuberneteswatcher.NewRegistryManager(watcherConfig.Applies.SaveInterval, watcherConfig.Applies.CheckFinishDelay, watcherConfig.Applies.CollectDataAfterApplyFinish, mysql, reporter, watcherConfig.ClusterName)
 
 	//Event manager
 	eventManager := kuberneteswatcher.NewEventsManager(kubernetesClientset)

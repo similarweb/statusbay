@@ -144,7 +144,6 @@ func (dsm *DaemonsetManager) watchDaemonsets(ctx context.Context) {
 							daemonsetStatus = common.DeploymentStatusDeleted
 						}
 						appRegistry = dsm.registryManager.NewApplication(daemonsetName,
-							daemonset.GetName(),
 							daemonset.GetNamespace(),
 							daemonset.GetAnnotations(),
 							daemonsetStatus)

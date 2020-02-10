@@ -148,7 +148,6 @@ func (dr *RegistryManager) LoadRunningApplies() []*RegistryRow {
 // NewApplication will creates a new deployment row
 func (dr *RegistryManager) NewApplication(
 	appName string,
-	_ string,
 	namespace string,
 	annotations map[string]string,
 	status common.DeploymentStatus) *RegistryRow {

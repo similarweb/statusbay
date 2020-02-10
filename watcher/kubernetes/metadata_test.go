@@ -139,3 +139,29 @@ func TestGetProgressDeadlineApply(t *testing.T) {
 	})
 
 }
+func TestGetApplicationName(t *testing.T) {
+
+	t.Run("get_name_annotation", func(t *testing.T) {
+
+		annotations := map[string]string{
+			fmt.Sprintf("%s/%s", ANNOTATION_PREFIX, ANNOTATION_APPLICATION_NAME): "foo",
+		}
+		applicationName := GetApplicationName(annotations, "default")
+
+		if applicationName != "foo" {
+			t.Fatalf("unexpected %s annotation value, got %s expected %s", ANNOTATION_APPLICATION_NAME, applicationName, "foo")
+
+		}
+	})
+	t.Run("get_un_exists_progress_deadline_annotation", func(t *testing.T) {
+
+		annotations := map[string]string{}
+		applicationName := GetApplicationName(annotations, "default")
+
+		if applicationName != "default" {
+			t.Fatalf("unexpected %s annotation value, got %s expected %s", ANNOTATION_APPLICATION_NAME, applicationName, "default")
+
+		}
+	})
+
+}

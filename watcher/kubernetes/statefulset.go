@@ -109,11 +109,8 @@ func (ssm *StatefulsetManager) watchStatefulsets(ctx context.Context) {
 					log.WithField("object", event.Object).Warn("Failed to parse statefulset watcher data")
 					continue
 				}
-				statefulsetName := statefulset.GetName()
-				applicationName := GetMetadata(statefulset.GetAnnotations(), "statusbay.io/application-name")
-				if applicationName != "" {
-					statefulsetName = applicationName
-				}
+
+				statefulsetName := GetApplicationName(statefulset.GetAnnotations(), statefulset.GetName())
 
 				if event.Type == eventwatch.Modified || event.Type == eventwatch.Added || event.Type == eventwatch.Deleted {
 					// handle modified event

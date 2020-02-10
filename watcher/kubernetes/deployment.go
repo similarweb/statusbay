@@ -131,11 +131,9 @@ func (dm *DeploymentManager) watchDeployments(ctx context.Context) {
 					log.WithField("object", event.Object).Warn("Failed to parse deployment watch data")
 					continue
 				}
-				deploymentName := deployment.GetName()
-				applicationName := GetMetadata(deployment.GetAnnotations(), "statusbay.io/application-name")
-				if applicationName != "" {
-					deploymentName = applicationName
-				}
+
+				deploymentName := GetApplicationName(deployment.GetAnnotations(), deployment.GetName())
+
 				if event.Type == eventwatch.Modified || event.Type == eventwatch.Added || event.Type == eventwatch.Deleted {
 
 					if event.Type == eventwatch.Deleted {

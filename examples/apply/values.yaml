@@ -57,7 +57,7 @@ deployment:
       port: 80
     
   annotations:
-    statusbay.io/progress-deadline-seconds: "5"
+    statusbay.io/progress-deadline-seconds: "30"
     statusbay.io/application-name: "statusbay-application"
     statusbay.io/report-slack-channels: "#foo-channel"
     statusbay.io/report-deploy-by: foo@similarweb.com

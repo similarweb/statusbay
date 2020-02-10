@@ -112,11 +112,8 @@ func (dsm *DaemonsetManager) watchDaemonsets(ctx context.Context) {
 					log.WithField("object", event.Object).Warn("Failed to parse daemonset watch data")
 					continue
 				}
-				daemonsetName := daemonset.GetName()
-				applicationName := GetMetadata(daemonset.GetAnnotations(), "statusbay.io/application-name")
-				if applicationName != "" {
-					daemonsetName = applicationName
-				}
+
+				daemonsetName := GetApplicationName(daemonset.GetAnnotations(), daemonset.GetName())
 
 				if event.Type == eventwatch.Modified ||
 					event.Type == eventwatch.Added ||

@@ -14,6 +14,9 @@ const (
 
 	//ANNOTATION_PROGRESS_DEADLINE_SECONDS is statusbay progress deadline seconds
 	ANNOTATION_PROGRESS_DEADLINE_SECONDS = "progress-deadline-seconds"
+
+	//ANNOTATION_APPLICATION_NAME is statusbay application name
+	ANNOTATION_APPLICATION_NAME = "application-name"
 )
 
 // GetMetadataByPrefix will return anitasion values key prefix
@@ -114,4 +117,16 @@ func GetProgressDeadlineApply(annotations map[string]string, defaultValue int64)
 	}
 
 	return progressDeadLine
+}
+
+//GetApplicationName return the application name from the given annotation. if the annotation name not found the default value will return
+func GetApplicationName(annotations map[string]string, defaultValue string) string {
+
+	applicationName := GetMetadata(annotations, fmt.Sprintf("%s/%s", ANNOTATION_PREFIX, ANNOTATION_APPLICATION_NAME))
+	if applicationName == "" {
+		applicationName = defaultValue
+	}
+
+	return applicationName
+
 }

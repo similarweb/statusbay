@@ -156,11 +156,9 @@ func (dm *DeploymentManager) watchDeployments(ctx context.Context) {
 						if event.Type == eventwatch.Deleted {
 							deploymentStatus = common.DeploymentStatusDeleted
 						}
-
 						applicationRegistry = dm.registryManager.NewApplication(deploymentName,
 							deployment.GetName(),
 							deployment.GetNamespace(),
-							"cluster-name",
 							deployment.GetAnnotations(),
 							deploymentStatus)
 					}

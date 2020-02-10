@@ -136,7 +136,6 @@ func (ssm *StatefulsetManager) watchStatefulsets(ctx context.Context) {
 						appRegistry = ssm.registryManager.NewApplication(statefulsetName,
 							statefulset.GetName(),
 							statefulset.GetNamespace(),
-							"cluster-name",
 							statefulset.GetAnnotations(),
 							statefulsetStatus)
 					}

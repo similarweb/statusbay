@@ -5,9 +5,10 @@ import (
 	"statusbay/serverutil"
 	"time"
 
+	"statusbay/watcher/kubernetes/common"
+
 	"github.com/mitchellh/hashstructure"
 	log "github.com/sirupsen/logrus"
-	"statusbay/watcher/kubernetes/common"
 
 	appsV1 "k8s.io/api/apps/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -147,6 +148,10 @@ func (dm *DeploymentManager) watchDeployments(ctx context.Context) {
 					}
 
 					applicationRegistry := dm.registryManager.Get(deploymentName, deployment.GetNamespace())
+
+					// extract annotation for progressDeadLine since Daemonset don't have hat feature.
+					progressDeadLine := GetProgressDeadlineApply(deployment.GetAnnotations(), dm.maxDeploymentTime)
+
 					if applicationRegistry == nil {
 
 						deploymentStatus := common.DeploymentStatusRunning
@@ -167,14 +172,10 @@ func (dm *DeploymentManager) watchDeployments(ctx context.Context) {
 						deployment.GetLabels(),
 						deployment.GetAnnotations(),
 						*deployment.Spec.Replicas,
-						int64(*deployment.Spec.ProgressDeadlineSeconds))
+						progressDeadLine)
 					deploymentWatchListOptions := metaV1.ListOptions{LabelSelector: labels.SelectorFromSet(deployment.GetLabels()).String()}
 
 					maxWatchTime := dm.maxDeploymentTime
-
-					if int64(*deployment.Spec.ProgressDeadlineSeconds) > dm.maxDeploymentTime {
-						maxWatchTime = int64(*deployment.Spec.ProgressDeadlineSeconds)
-					}
 
 					go dm.watchDeployment(applicationRegistry.ctx,
 						applicationRegistry.cancelFn,

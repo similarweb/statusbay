@@ -5,7 +5,6 @@ import (
 	"context"
 	"statusbay/serverutil"
 	"statusbay/watcher/kubernetes/common"
-	"strconv"
 	"time"
 
 	"github.com/mitchellh/hashstructure"
@@ -118,12 +117,7 @@ func (dsm *DaemonsetManager) watchDaemonsets(ctx context.Context) {
 				if applicationName != "" {
 					daemonsetName = applicationName
 				}
-				// extract annotation for progressDeadLine since Daemonset don't have hat feature.
-				progressDeadLineAnnotations := GetMetadata(daemonset.GetAnnotations(), "statusbay.io/progress-deadline-seconds")
-				progressDeadLine, err := strconv.ParseInt(progressDeadLineAnnotations, 10, 64)
-				if err != nil {
-					progressDeadLine = dsm.maxDeploymentTime
-				}
+
 				if event.Type == eventwatch.Modified ||
 					event.Type == eventwatch.Added ||
 					event.Type == eventwatch.Deleted {
@@ -140,6 +134,10 @@ func (dsm *DaemonsetManager) watchDaemonsets(ctx context.Context) {
 						}
 					}
 					appRegistry := dsm.registryManager.Get(daemonsetName, daemonset.GetNamespace())
+
+					// extract annotation for progressDeadLine since Daemonset don't have hat feature.
+					progressDeadLine := GetProgressDeadlineApply(daemonset.GetAnnotations(), dsm.maxDeploymentTime)
+
 					if appRegistry == nil {
 						daemonsetStatus := common.DeploymentStatusRunning
 						if event.Type == eventwatch.Deleted {
@@ -162,18 +160,14 @@ func (dsm *DaemonsetManager) watchDaemonsets(ctx context.Context) {
 						progressDeadLine)
 					daemonsetWatchListOptions := metaV1.ListOptions{
 						LabelSelector: labels.SelectorFromSet(daemonset.GetLabels()).String()}
-					maxWatchTime := dsm.maxDeploymentTime
 
-					if progressDeadLine > dsm.maxDeploymentTime {
-						maxWatchTime = progressDeadLine
-					}
 					go dsm.watchDaemonset(
 						appRegistry.ctx,
 						appRegistry.cancelFn,
 						registryApply,
 						daemonsetWatchListOptions,
 						daemonset.GetNamespace(),
-						maxWatchTime)
+						progressDeadLine)
 				} else {
 					log.WithFields(log.Fields{
 						"event_type": event.Type,

@@ -21,6 +21,7 @@ type RouterKubernetesManager struct {
 	eventMarksConfig config.KubernetesMarksEvents
 }
 
+//NewKubernetesRoutes sets up the Kubernetes router to handle API endpoints
 func NewKubernetesRoutes(storage Storage, router *mux.Router, eventPath string) *RouterKubernetesManager {
 
 	eventMarksConfig, err := config.LoadKubernetesMarksConfig(eventPath)
@@ -37,12 +38,14 @@ func NewKubernetesRoutes(storage Storage, router *mux.Router, eventPath string) 
 	return kubernetesRoutes
 }
 
+//bindEndpoints List of API endpoints
 func (kr *RouterKubernetesManager) bindEndpoints() {
 	kr.router.HandleFunc("/api/v1/kubernetes/applications", kr.Applications).Methods("GET")
 	kr.router.HandleFunc("/api/v1/kubernetes/applications/values/{column}", kr.ApplicationsColumnValues).Methods("GET")
 	kr.router.HandleFunc("/api/v1/kubernetes/application/{application_name}/{time}", kr.GetDeployment).Methods("GET")
 }
 
+//Applications returns a list of applied application.
 func (route *RouterKubernetesManager) Applications(resp http.ResponseWriter, req *http.Request) {
 
 	// Applications' filter
@@ -90,6 +93,7 @@ func (route *RouterKubernetesManager) Applications(resp http.ResponseWriter, req
 	httpresponse.JSONWrite(resp, http.StatusOK, r)
 }
 
+//ApplicationsColumnValues returns a unique column values
 func (route *RouterKubernetesManager) ApplicationsColumnValues(resp http.ResponseWriter, req *http.Request) {
 
 	errs := url.Values{}
@@ -124,6 +128,7 @@ func (route *RouterKubernetesManager) ApplicationsColumnValues(resp http.Respons
 	httpresponse.JSONWrite(resp, http.StatusOK, values)
 }
 
+//GetDeployment returns a specific deployment details.
 func (route *RouterKubernetesManager) GetDeployment(resp http.ResponseWriter, req *http.Request) {
 
 	params := mux.Vars(req)

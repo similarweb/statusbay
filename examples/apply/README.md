@@ -27,7 +27,6 @@ Parameter | Description | Default
 `daemonset.annotations` The annotations used in ingress | `list of annotations`
 `deployment.count` | Number of Deplotments deployments | `1`
 `deployment.replicas` | Number of Deplotments replicas | `3`
-`deployment.progressDeadlineSeconds` | Maximum deployment time | `300`
 `deployment.name` | Prefix of Daemonset | `statusbay-deployment`
 `deployment.image.repository` | container image repository | `nginx`
 `deployment.image.tag` | container image tag | `latest`

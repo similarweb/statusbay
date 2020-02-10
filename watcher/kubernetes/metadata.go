@@ -2,14 +2,18 @@ package kuberneteswatcher
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
 )
 
 const (
-	// METAPREFIX is statusbay prefix annotations
-	METAPREFIX = "statusbay.io"
+	//ANNOTATION_PREFIX is statusbay prefix annotations
+	ANNOTATION_PREFIX = "statusbay.io"
+
+	//ANNOTATION_PROGRESS_DEADLINE_SECONDS is statusbay progress deadline seconds
+	ANNOTATION_PROGRESS_DEADLINE_SECONDS = "progress-deadline-seconds"
 )
 
 // GetMetadataByPrefix will return anitasion values key prefix
@@ -52,7 +56,7 @@ func GetMetadata(annotations map[string]string, search string) string {
 func GetMetricsDataFromAnnotations(annotations map[string]string) []Metrics {
 
 	metrics := []Metrics{}
-	prefix := fmt.Sprintf("%s/metrics-", METAPREFIX)
+	prefix := fmt.Sprintf("%s/metrics-", ANNOTATION_PREFIX)
 
 	for key, val := range annotations {
 		if strings.HasPrefix(key, prefix) {
@@ -82,7 +86,7 @@ func GetMetricsDataFromAnnotations(annotations map[string]string) []Metrics {
 func GetAlertsDataFromAnnotations(annotations map[string]string) []Alerts {
 
 	alerts := []Alerts{}
-	prefix := fmt.Sprintf("%s/alerts-", METAPREFIX)
+	prefix := fmt.Sprintf("%s/alerts-", ANNOTATION_PREFIX)
 
 	for key, val := range annotations {
 		if strings.HasPrefix(key, prefix) {
@@ -98,4 +102,16 @@ func GetAlertsDataFromAnnotations(annotations map[string]string) []Alerts {
 
 	return alerts
 
+}
+
+//GetProgressDeadlineApply returns the maximum apply progress. if the field not exists in annotation list default value will returned
+func GetProgressDeadlineApply(annotations map[string]string, defaultValue int64) int64 {
+
+	progressDeadLineAnnotations := GetMetadata(annotations, fmt.Sprintf("%s/%s", ANNOTATION_PREFIX, ANNOTATION_PROGRESS_DEADLINE_SECONDS))
+	progressDeadLine, err := strconv.ParseInt(progressDeadLineAnnotations, 10, 64)
+	if err != nil {
+		progressDeadLine = int64(defaultValue)
+	}
+
+	return progressDeadLine
 }

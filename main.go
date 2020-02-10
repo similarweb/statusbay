@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"os"
 	"os/signal"
 	"statusbay/api"
@@ -17,6 +16,8 @@ import (
 	kuberneteswatcher "statusbay/watcher/kubernetes"
 	"statusbay/watcher/kubernetes/client"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -108,8 +109,11 @@ func startKubernetesWatcher(configPath, kubeconfig, apiserverHost string) server
 	//Service manager
 	serviceManager := kuberneteswatcher.NewServiceManager(kubernetesClientset)
 
+	//Pvc manager
+	pvcManager := kuberneteswatcher.NewPvcManager(kubernetesClientset, eventManager)
+
 	//Pods manager
-	podsManager := kuberneteswatcher.NewPodsManager(kubernetesClientset, eventManager)
+	podsManager := kuberneteswatcher.NewPodsManager(kubernetesClientset, eventManager, pvcManager)
 
 	//Replicaset manager
 	replicasetManager := kuberneteswatcher.NewReplicasetManager(kubernetesClientset, eventManager, podsManager)
@@ -125,7 +129,7 @@ func startKubernetesWatcher(configPath, kubeconfig, apiserverHost string) server
 	statefulsetManager := kuberneteswatcher.NewStatefulsetManager(kubernetesClientset, eventManager, registryManager, serviceManager, controllerRevisionManager, watcherConfig.Applies.MaxApplyTime)
 
 	// Run a list of backround process for the server
-	return serverutil.RunAll(eventManager, podsManager, deploymentManager, daemonsetManager, statefulsetManager, replicasetManager, registryManager, serviceManager, reporter).StopFunc
+	return serverutil.RunAll(eventManager, podsManager, pvcManager, deploymentManager, daemonsetManager, statefulsetManager, replicasetManager, registryManager, serviceManager, reporter).StopFunc
 }
 
 func startAPIServer(configPath, eventConfigPath string) serverutil.StopFunc {

@@ -123,7 +123,7 @@ func (dr *RegistryManager) LoadRunningApplies() []*RegistryRow {
 
 	for id, appSchema := range apps {
 
-		encodedID := generateID(appSchema.Application, appSchema.Namespace)
+		encodedID := generateID(appSchema.Application, appSchema.Namespace, dr.clusterName)
 		ctx, cancelFn := context.WithCancel(context.Background())
 
 		row := RegistryRow{
@@ -154,7 +154,7 @@ func (dr *RegistryManager) NewApplication(
 	dr.newAppLock.Lock()
 	defer dr.newAppLock.Unlock()
 
-	encodedID := generateID(appName, namespace)
+	encodedID := generateID(appName, namespace, dr.clusterName)
 	reportTo := GetMetadataByPrefix(annotations, fmt.Sprintf("%s/%s", ANNOTATION_PREFIX, "report-"))
 	deployBy := GetMetadata(annotations, fmt.Sprintf("%s/%s", ANNOTATION_PREFIX, "report-deploy-by"))
 	deployTime := time.Now().Unix()
@@ -221,7 +221,7 @@ func (dr *RegistryManager) NewApplication(
 // Get will return deployment row that exists in memory
 func (dr *RegistryManager) Get(name, namespace string) *RegistryRow {
 
-	encodedID := generateID(name, namespace)
+	encodedID := generateID(name, namespace, dr.clusterName)
 	if row, found := dr.registryData[encodedID]; found {
 		return row
 	}
@@ -759,6 +759,6 @@ func (dr *RegistryManager) save() {
 }
 
 // generateID will create a id for the deployment
-func generateID(name, namespace string) string {
-	return base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s-%s", name, namespace)))
+func generateID(name, namespace, cluster string) string {
+	return base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s-%s-%s", name, namespace, cluster)))
 }

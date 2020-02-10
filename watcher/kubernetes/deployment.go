@@ -159,7 +159,6 @@ func (dm *DeploymentManager) watchDeployments(ctx context.Context) {
 							deploymentStatus = common.DeploymentStatusDeleted
 						}
 						applicationRegistry = dm.registryManager.NewApplication(deploymentName,
-							deployment.GetName(),
 							deployment.GetNamespace(),
 							deployment.GetAnnotations(),
 							deploymentStatus)

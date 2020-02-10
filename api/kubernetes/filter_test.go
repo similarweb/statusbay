@@ -19,7 +19,7 @@ func TestFilterApplication(t *testing.T) {
 			Clusters:      []string{""},
 			Namespaces:    []string{""},
 			Statuses:      []string{""},
-			Application:   "",
+			Name:          "",
 			SortBy:        "time",
 			SortDirection: "desc",
 			From:          0,

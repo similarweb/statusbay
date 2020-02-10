@@ -1,5 +1,4 @@
 ---
-cluster_name: default
 log:
   level: INFO
   # gelf_address: 127.0.0.1

@@ -1,12 +1,13 @@
 package config
 
 import (
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	notifierCommon "statusbay/notifiers/common"
 	notifierLoader "statusbay/notifiers/load"
 	"statusbay/state"
 	"time"
+
+	"gopkg.in/yaml.v2"
 )
 
 type DashboardConfig struct {
@@ -41,6 +42,7 @@ type EventMarksConfig struct {
 
 // Kubernetes is holds all application configuration
 type Kubernetes struct {
+	ClusterName     string                      `yaml:"cluster_name"`
 	Log             LogConfig                   `yaml:"log"`
 	MySQL           *state.MySQLConfig          `yaml:"mysql"`
 	NotifierConfigs notifierCommon.ConfigByName `yaml:"notifiers"`

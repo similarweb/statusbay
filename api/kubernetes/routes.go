@@ -40,7 +40,7 @@ func NewKubernetesRoutes(storage Storage, router *mux.Router, eventPath string) 
 func (kr *RouterKubernetesManager) bindEndpoints() {
 	kr.router.HandleFunc("/api/v1/kubernetes/applications", kr.Applications).Methods("GET")
 	kr.router.HandleFunc("/api/v1/kubernetes/applications/values/{column}", kr.ApplicationsColumnValues).Methods("GET")
-	kr.router.HandleFunc("/api/v1/kubernetes/application/{job_id}/{time}", kr.GetDeployment).Methods("GET")
+	kr.router.HandleFunc("/api/v1/kubernetes/application/{application_name}/{time}", kr.GetDeployment).Methods("GET")
 }
 
 func (route *RouterKubernetesManager) Applications(resp http.ResponseWriter, req *http.Request) {
@@ -127,7 +127,7 @@ func (route *RouterKubernetesManager) ApplicationsColumnValues(resp http.Respons
 func (route *RouterKubernetesManager) GetDeployment(resp http.ResponseWriter, req *http.Request) {
 
 	params := mux.Vars(req)
-	applicationName := params["name"]
+	applicationName := params["application_name"]
 
 	deploymentTime, err := strconv.ParseInt(params["time"], 10, 64)
 	if err != nil {
@@ -138,7 +138,7 @@ func (route *RouterKubernetesManager) GetDeployment(resp http.ResponseWriter, re
 	deployment, err := route.storage.GetDeployment(applicationName, deploymentTime)
 	if err != nil {
 		httpresponse.JSONError(resp, http.StatusNotFound, errors.New("Deployment not found"))
-
+		return
 	}
 
 	var kubernetesDeploymentResponse ResponseDeploymentData
@@ -147,6 +147,7 @@ func (route *RouterKubernetesManager) GetDeployment(resp http.ResponseWriter, re
 	if err != nil {
 		log.WithError(err).WithFields(log.Fields{}).Error("Could not parse deployment detail.")
 		httpresponse.JSONError(resp, http.StatusNotFound, errors.New("Could not parse deployment detail."))
+		return
 	}
 
 	MarkApplicationDeploymentEvents(&kubernetesDeploymentResponse, route.eventMarksConfig)

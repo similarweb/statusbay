@@ -19,16 +19,18 @@ import (
 type PodsManager struct {
 	client        kubernetes.Interface
 	eventManager  *EventsManager
+	pvcManager    *PvcManager
 	Watch         chan WatchData
 	podsFirstInit map[string]bool
 	mutex         *sync.RWMutex
 }
 
 // NewPodsManager create new pods instance
-func NewPodsManager(kubernetesClientset kubernetes.Interface, eventManager *EventsManager) *PodsManager {
+func NewPodsManager(kubernetesClientset kubernetes.Interface, eventManager *EventsManager, pvcManager *PvcManager) *PodsManager {
 	return &PodsManager{
 		client:        kubernetesClientset,
 		eventManager:  eventManager,
+		pvcManager:    pvcManager,
 		podsFirstInit: map[string]bool{},
 		mutex:         &sync.RWMutex{},
 		Watch:         make(chan WatchData),
@@ -120,6 +122,17 @@ func (pm *PodsManager) watch(watchData WatchData) {
 					}).String(),
 					}
 					go pm.watchEvents(watchData.Ctx, watchData.RegistryData, eventListOptions, pod.Namespace, pod.GetName())
+					PvcEventListOptions := metaV1.ListOptions{FieldSelector: labels.SelectorFromSet(map[string]string{
+						"involvedObject.name": pod.GetName(),
+						"involvedObject.kind": "PersistentVolumeClaims",
+					}).String()}
+
+					pm.pvcManager.Watch <- WatchData{
+						ListOptions:  PvcEventListOptions,
+						RegistryData: watchData.RegistryData,
+						Namespace:    pod.Namespace,
+						Ctx:          watchData.Ctx,
+					}
 
 				}
 

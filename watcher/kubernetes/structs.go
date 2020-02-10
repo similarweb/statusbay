@@ -51,6 +51,7 @@ type DeploymenPod struct {
 	Phase             *string          `json:"Phase"`
 	CreationTimestamp time.Time        `json:"CreationTimestamp"`
 	Events            *[]EventMessages `json:"Events"`
+	PvcEvents         *[]EventMessages `json:"PvcEvents"`
 }
 
 // EventMessages struct  TODO ::

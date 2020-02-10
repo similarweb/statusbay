@@ -12,7 +12,7 @@ type FilterApplications struct {
 	Limit         int
 	Clusters      []string
 	Namespaces    []string
-	Application   string
+	Name          string
 	Statuses      []string
 	SortBy        string
 	SortDirection string
@@ -27,6 +27,7 @@ func FilterApplication(req *http.Request) FilterApplications {
 	offset, _ := strconv.Atoi(httpparameters.QueryParamWithDefault(req, "offset", "0"))
 	limit, _ := strconv.Atoi(httpparameters.QueryParamWithDefault(req, "limit", "20"))
 	cluster := httpparameters.QueryParamWithDefault(req, "cluster", "")
+	name := httpparameters.QueryParamWithDefault(req, "name", "")
 	namespace := httpparameters.QueryParamWithDefault(req, "namespace", "")
 	status := httpparameters.QueryParamWithDefault(req, "status", "")
 	sortBy := httpparameters.QueryParamWithDefault(req, "sortby", "time")
@@ -40,6 +41,7 @@ func FilterApplication(req *http.Request) FilterApplications {
 		Offset:        offset,
 		Clusters:      strings.Split(cluster, ","),
 		Namespaces:    strings.Split(namespace, ","),
+		Name:          name,
 		Statuses:      strings.Split(status, ","),
 		SortBy:        sortBy,
 		SortDirection: sortDirection,

@@ -1,6 +1,6 @@
 {{- $root := . -}}
 {{range $i, $e := until (int .Values.daemonset.count) }}
-{{-  $name := printf "%s-%d" $root.Values.daemonset.name  $i  -}}
+{{-  $name := printf "%s-%d" $root.Values.daemonset.name  $i  }}
 ---
 apiVersion: apps/v1
 kind: DaemonSet

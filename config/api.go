@@ -48,7 +48,7 @@ type Statuscake struct {
 
 // API is holds all application configuration
 type API struct {
-	Log             LogConfig          `yaml:"level"`
+	Log             LogConfig          `yaml:"log"`
 	MySQL           *state.MySQLConfig `yaml:"mysql"`
 	MetricsProvider *MetricsProvider   `yaml:"metrics"`
 	AlertProvider   *AlertProvider     `yaml:"alerts"`

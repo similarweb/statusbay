@@ -4,7 +4,6 @@ import (
 	"context"
 	"statusbay/serverutil"
 	"statusbay/watcher/kubernetes/common"
-	"strconv"
 	"time"
 
 	"github.com/mitchellh/hashstructure"
@@ -115,12 +114,7 @@ func (ssm *StatefulsetManager) watchStatefulsets(ctx context.Context) {
 				if applicationName != "" {
 					statefulsetName = applicationName
 				}
-				// extract annotation for progressDeadLine since statefulset don't have this feature
-				progressDeadLineAnnotations := GetMetadata(statefulset.GetAnnotations(), "statusbay.io/progress-deadline-seconds")
-				progressDeadLine, err := strconv.ParseInt(progressDeadLineAnnotations, 10, 64)
-				if err != nil {
-					progressDeadLine = int64(ssm.maxDeploymentTime)
-				}
+
 				if event.Type == eventwatch.Modified || event.Type == eventwatch.Added || event.Type == eventwatch.Deleted {
 					// handle modified event
 					if event.Type == eventwatch.Deleted {
@@ -132,6 +126,10 @@ func (ssm *StatefulsetManager) watchStatefulsets(ctx context.Context) {
 						}
 					}
 					appRegistry := ssm.registryManager.Get(statefulsetName, statefulset.GetNamespace())
+
+					// extract annotation for progressDeadLine since statefulset don't have this feature
+					progressDeadLine := GetProgressDeadlineApply(statefulset.GetAnnotations(), ssm.maxDeploymentTime)
+
 					if appRegistry == nil {
 						statefulsetStatus := common.DeploymentStatusRunning
 						if event.Type == eventwatch.Deleted {
@@ -153,18 +151,14 @@ func (ssm *StatefulsetManager) watchStatefulsets(ctx context.Context) {
 						progressDeadLine)
 					statefulsetWatchListOptions := metaV1.ListOptions{
 						LabelSelector: labels.SelectorFromSet(statefulset.GetLabels()).String()}
-					maxWatchTime := ssm.maxDeploymentTime
 
-					if progressDeadLine > ssm.maxDeploymentTime {
-						maxWatchTime = progressDeadLine
-					}
 					go ssm.watchStatefulset(
 						appRegistry.ctx,
 						appRegistry.cancelFn,
 						registryApply,
 						statefulsetWatchListOptions,
 						statefulset.GetNamespace(),
-						maxWatchTime)
+						progressDeadLine)
 				} else {
 					log.WithFields(log.Fields{
 						"event_type":  event.Type,

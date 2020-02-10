@@ -2,10 +2,11 @@ package kuberneteswatcher
 
 import (
 	"context"
-	log "github.com/sirupsen/logrus"
 	notifierCommon "statusbay/notifiers/common"
 	"statusbay/serverutil"
 	"statusbay/watcher/kubernetes/common"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // ReporterManager defined reporter metadata
@@ -91,6 +92,6 @@ func (re *ReporterManager) deploymentDeleted(message common.DeploymentReport) {
 // deploymentFinish will send slack message to channel/user when the deployment is finished
 func (re *ReporterManager) deploymentFinish(message common.DeploymentReport) {
 	for _, notifier := range re.availableNotifiers {
-		notifier.ReportDeleted(message)
+		notifier.ReportEnded(message)
 	}
 }

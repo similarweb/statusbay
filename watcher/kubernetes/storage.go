@@ -121,6 +121,7 @@ func (my *MySQLStorage) GetAppliesByStatus(status common.DeploymentStatus) (map[
 
 }
 
+// UpdateAppliesVersionHistory Checks if we should create/update a new Apply hash
 func (my *MySQLStorage) UpdateAppliesVersionHistory(applyName string, hash uint64) bool {
 
 	row := state.TableDeploymentsHash{}

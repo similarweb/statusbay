@@ -105,7 +105,6 @@ func (cm *clientManager) initInsecureClients() error {
 		return err
 	}
 
-
 	cm.insecureClient = k8sClient
 	return nil
 }

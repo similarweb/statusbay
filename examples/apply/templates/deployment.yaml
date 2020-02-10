@@ -1,6 +1,6 @@
 {{- $root := . -}}
 {{range $i, $e := until (int .Values.deployment.count) }}
-{{-  $name := printf "%s-%d" $root.Values.deployment.name  $i  -}}
+{{-  $name := printf "%s-%d" $root.Values.deployment.name  $i  }}
 ---
 apiVersion: apps/v1
 kind: Deployment

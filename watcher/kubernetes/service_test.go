@@ -57,7 +57,7 @@ func TestServiceWatch(t *testing.T) {
 
 	time.Sleep(time.Second * 5)
 
-	deployment := storageMock.MockWriteDeployment[1].Schema.Resources.Deployments["application"]
+	deployment := storageMock.MockWriteDeployment["1"].Schema.Resources.Deployments["application"]
 
 	// TODO.. complete the test when the task https://trello.com/c/VheJxFTE/42-add-deployment-service-to-the-db is completed
 	fmt.Println(deployment)

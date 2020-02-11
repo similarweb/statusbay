@@ -37,7 +37,7 @@ type DBSchema struct {
 
 // RegistryRow defined row data of deployment
 type RegistryRow struct {
-	id                               uint
+	applyID                          string
 	finish                           bool
 	status                           common.DeploymentStatus
 	ctx                              context.Context
@@ -121,13 +121,13 @@ func (dr *RegistryManager) LoadRunningApplies() []*RegistryRow {
 	apps, _ := dr.storage.GetAppliesByStatus(common.DeploymentStatusRunning)
 	log.WithField("count", len(apps)).Info("Loading running job from DB")
 
-	for id, appSchema := range apps {
+	for applyID, appSchema := range apps {
 
 		encodedID := generateID(appSchema.Application, appSchema.Namespace, dr.clusterName)
 		ctx, cancelFn := context.WithCancel(context.Background())
 
 		row := RegistryRow{
-			id:       id,
+			applyID:  applyID,
 			ctx:      ctx,
 			cancelFn: cancelFn,
 			finish:   false,
@@ -157,7 +157,7 @@ func (dr *RegistryManager) NewApplication(appName string, namespace string, anno
 	ctx, cancelFn := context.WithCancel(context.Background())
 
 	row := RegistryRow{
-		id:                               0,
+		applyID:                          "",
 		ctx:                              ctx,
 		cancelFn:                         cancelFn,
 		finish:                           false,
@@ -701,16 +701,16 @@ func (dr *RegistryManager) save() {
 	for key, data := range dr.registryData {
 		go func(key string, data *RegistryRow, deleteRows *[]string) {
 			defer wg.Done()
-			if data.id == 0 {
+			if data.applyID == "" {
 
-				id, err := dr.storage.CreateApply(data, data.status)
+				applyID, err := dr.storage.CreateApply(data, data.status)
 				if err != nil {
 					*deleteRows = append(*deleteRows, key)
 					return
 				}
-				data.id = id
+				data.applyID = applyID
 			} else {
-				dr.storage.UpdateApply(data.id, data, data.status)
+				dr.storage.UpdateApply(data.applyID, data, data.status)
 			}
 
 			log.WithFields(log.Fields{

@@ -343,7 +343,7 @@ func TestSave(t *testing.T) {
 	registryRow.AddDeployment("nginx-deployment2", "pe", labels, annotations, 1, 3)
 
 	time.Sleep(time.Second * 5)
-	id := uint(1)
+	id := "1"
 
 	t.Run("save_new_deployment", func(t *testing.T) {
 		testCases := []struct {
@@ -398,8 +398,8 @@ func TestDeploymentFinishSuccessful(t *testing.T) {
 	data.UpdateReplicasetStatus("replicaset-name", replicasetStatus)
 
 	time.Sleep(time.Second * 10)
-	if storage.MockWriteDeployment[1].Status != common.DeploymentSuccessful {
-		t.Errorf("unexpected deployment status, got %s expected %s", storage.MockWriteDeployment[1].Status, common.DeploymentSuccessful)
+	if storage.MockWriteDeployment["1"].Status != common.DeploymentSuccessful {
+		t.Errorf("unexpected deployment status, got %s expected %s", storage.MockWriteDeployment["1"].Status, common.DeploymentSuccessful)
 	}
 	// TODO ask elad to explain
 	//if len(mockSlack.PostMessageRequest) != 4 {
@@ -428,12 +428,12 @@ func TestDeploymentFinishProgressDeadLine(t *testing.T) {
 	data.UpdateReplicasetStatus("replicaset-name", replicasetStatus)
 
 	time.Sleep(time.Second * 8)
-	if storage.MockWriteDeployment[1].Status != common.DeploymentStatusFailed {
-		t.Fatalf("unexpected deployment status, got %s expected %s", storage.MockWriteDeployment[1].Status, common.DeploymentStatusFailed)
+	if storage.MockWriteDeployment["1"].Status != common.DeploymentStatusFailed {
+		t.Fatalf("unexpected deployment status, got %s expected %s", storage.MockWriteDeployment["1"].Status, common.DeploymentStatusFailed)
 	}
 
-	if storage.MockWriteDeployment[1].Schema.DeploymentDescription != kuberneteswatcher.DeploymentStatusDescriptionProgressDeadline {
-		t.Fatalf("unexpected deployment message description, got %s expected %s", storage.MockWriteDeployment[1].Schema.DeploymentDescription, kuberneteswatcher.DeploymentStatusDescriptionProgressDeadline)
+	if storage.MockWriteDeployment["1"].Schema.DeploymentDescription != kuberneteswatcher.DeploymentStatusDescriptionProgressDeadline {
+		t.Fatalf("unexpected deployment message description, got %s expected %s", storage.MockWriteDeployment["1"].Schema.DeploymentDescription, kuberneteswatcher.DeploymentStatusDescriptionProgressDeadline)
 	}
 	// TODO ask elad to explain
 	//if len(mockSlack.PostMessageRequest) != 4 {

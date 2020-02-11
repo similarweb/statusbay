@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	// DefaultGracefulShutDown is the default gracefull shot down the server
+	// DefaultGracefulShutDown is the default graceful shot down the server
 	DefaultGracefulShutDown = time.Second * 10
 
 	// DefaultConfigPath is the default configuration file path
@@ -99,8 +99,8 @@ func startKubernetesWatcher(configPath, kubeconfig, apiserverHost string) server
 	// Init Reporter
 	reporter := kuberneteswatcher.NewReporter(notifiers)
 
-	//Replicaset manager
-	registryManager := kuberneteswatcher.NewRegistryManager(watcherConfig.Applies.SaveInterval, watcherConfig.Applies.CheckFinishDelay, watcherConfig.Applies.CollectDataAfterApplyFinish, mysql, reporter)
+	//Registry manager
+	registryManager := kuberneteswatcher.NewRegistryManager(watcherConfig.Applies.SaveInterval, watcherConfig.Applies.CheckFinishDelay, watcherConfig.Applies.CollectDataAfterApplyFinish, mysql, reporter, watcherConfig.ClusterName)
 
 	//Event manager
 	eventManager := kuberneteswatcher.NewEventsManager(kubernetesClientset)
@@ -118,13 +118,14 @@ func startKubernetesWatcher(configPath, kubeconfig, apiserverHost string) server
 	deploymentManager := kuberneteswatcher.NewDeploymentManager(kubernetesClientset, eventManager, registryManager, replicasetManager, serviceManager, watcherConfig.Applies.MaxApplyTime)
 
 	// ControllerRevision Manager
-	controllerRevisionManager := kuberneteswatcher.NewControllerReisionManager(kubernetesClientset, podsManager)
+	controllerRevisionManager := kuberneteswatcher.NewControllerRevisionManager(kubernetesClientset, podsManager)
 	// Daemonset manager
-	daemonsetManager := kuberneteswatcher.NewDaemonsetManager(kubernetesClientset, eventManager, registryManager, serviceManager, podsManager, controllerRevisionManager, watcherConfig.Applies.MaxApplyTime)
+	daemonsetManager := kuberneteswatcher.NewDaemonsetManager(kubernetesClientset, eventManager, registryManager, serviceManager, controllerRevisionManager, watcherConfig.Applies.MaxApplyTime)
+	//Statefulset manager
+	statefulsetManager := kuberneteswatcher.NewStatefulsetManager(kubernetesClientset, eventManager, registryManager, serviceManager, controllerRevisionManager, watcherConfig.Applies.MaxApplyTime)
 
-	//run lis of backround proccess for the server
-	return serverutil.RunAll(eventManager, podsManager, deploymentManager, daemonsetManager, replicasetManager, registryManager, serviceManager, reporter).StopFunc
-
+	// Run a list of backround process for the server
+	return serverutil.RunAll(eventManager, podsManager, deploymentManager, daemonsetManager, statefulsetManager, replicasetManager, registryManager, serviceManager, reporter).StopFunc
 }
 
 func startAPIServer(configPath, eventConfigPath string) serverutil.StopFunc {
@@ -153,7 +154,7 @@ func startAPIServer(configPath, eventConfigPath string) serverutil.StopFunc {
 	//Start the server
 	server := api.NewServer(kubernetesStorage, "8080", eventConfigPath, metricsProviders, alertsProviders)
 
-	//run lis of backround proccess for the server
+	//run lis of backround process for the server
 	return serverutil.RunAll(server, metricClient).StopFunc
 
 }

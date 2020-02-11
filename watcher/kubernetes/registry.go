@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"os"
 	"statusbay/serverutil"
 	"statusbay/watcher/kubernetes/common"
 	"sync"
@@ -16,8 +17,9 @@ import (
 )
 
 type Resources struct {
-	Deployments map[string]*DeploymentData `json:"Deployments"`
-	Daemonsets  map[string]*DaemonsetData  `json:"Daemonsets"`
+	Deployments  map[string]*DeploymentData  `json:"Deployments"`
+	Daemonsets   map[string]*DaemonsetData   `json:"Daemonsets"`
+	Statefulsets map[string]*StatefulsetData `json:"Statefulsets"`
 }
 
 //DBSchema is a struct that save as json in given storage
@@ -46,6 +48,7 @@ type RegistryRow struct {
 
 // RegistryManager defined multiple rows data
 type RegistryManager struct {
+	clusterName                 string
 	registryData                map[string]*RegistryRow
 	saveInterval                time.Duration
 	checkFinishDelay            time.Duration
@@ -66,8 +69,14 @@ func (dr *RegistryManager) DeleteAppliedVersion(name, namespace string) bool {
 }
 
 // NewRegistryManager create new schema registry instance
-func NewRegistryManager(saveInterval time.Duration, checkFinishDelay time.Duration, collectDataAfterApplyFinish time.Duration, storage Storage, reporter *ReporterManager) *RegistryManager {
+func NewRegistryManager(saveInterval time.Duration, checkFinishDelay time.Duration, collectDataAfterApplyFinish time.Duration, storage Storage, reporter *ReporterManager, clusterName string) *RegistryManager {
+	if clusterName == "" {
+		log.Panic("cluster name is mandatory field")
+		os.Exit(1)
+	}
+
 	return &RegistryManager{
+		clusterName:                 clusterName,
 		saveInterval:                saveInterval,
 		checkFinishDelay:            checkFinishDelay,
 		collectDataAfterApplyFinish: collectDataAfterApplyFinish,
@@ -114,7 +123,7 @@ func (dr *RegistryManager) LoadRunningApplies() []*RegistryRow {
 
 	for id, appSchema := range apps {
 
-		encodedID := generateID(appSchema.Application, appSchema.Namespace)
+		encodedID := generateID(appSchema.Application, appSchema.Namespace, dr.clusterName)
 		ctx, cancelFn := context.WithCancel(context.Background())
 
 		row := RegistryRow{
@@ -139,17 +148,15 @@ func (dr *RegistryManager) LoadRunningApplies() []*RegistryRow {
 // NewApplication will creates a new deployment row
 func (dr *RegistryManager) NewApplication(
 	appName string,
-	_ string,
 	namespace string,
-	clusterName string,
 	annotations map[string]string,
 	status common.DeploymentStatus) *RegistryRow {
 	dr.newAppLock.Lock()
 	defer dr.newAppLock.Unlock()
 
-	encodedID := generateID(appName, namespace)
-	reportTo := GetMetadataByPrefix(annotations, fmt.Sprintf("%s/%s", METAPREFIX, "report-"))
-	deployBy := GetMetadata(annotations, fmt.Sprintf("%s/%s", METAPREFIX, "report-deploy-by"))
+	encodedID := generateID(appName, namespace, dr.clusterName)
+	reportTo := GetMetadataByPrefix(annotations, fmt.Sprintf("%s/%s", ANNOTATION_PREFIX, "report-"))
+	deployBy := GetMetadata(annotations, fmt.Sprintf("%s/%s", ANNOTATION_PREFIX, "report-deploy-by"))
 	deployTime := time.Now().Unix()
 	ctx, cancelFn := context.WithCancel(context.Background())
 
@@ -162,15 +169,16 @@ func (dr *RegistryManager) NewApplication(
 		collectDataAfterDeploymentFinish: dr.collectDataAfterApplyFinish,
 		DBSchema: DBSchema{
 			Application:           appName,
-			Cluster:               clusterName,
+			Cluster:               dr.clusterName,
 			Namespace:             namespace,
 			CreationTimestamp:     deployTime,
 			ReportTo:              reportTo,
 			DeployBy:              deployBy,
 			DeploymentDescription: DeploymentStatusDescriptionRunning,
 			Resources: Resources{
-				Deployments: make(map[string]*DeploymentData),
-				Daemonsets:  make(map[string]*DaemonsetData),
+				Deployments:  make(map[string]*DeploymentData),
+				Daemonsets:   make(map[string]*DaemonsetData),
+				Statefulsets: make(map[string]*StatefulsetData),
 			},
 		},
 	}
@@ -202,7 +210,7 @@ func (dr *RegistryManager) NewApplication(
 		"deploy_by":   deployBy,
 		"report_to":   reportTo,
 		"namespace":   namespace,
-		"cluster":     clusterName,
+		"cluster":     dr.clusterName,
 	}).Info("New application deployment started")
 
 	go row.isFinish(dr.checkFinishDelay)
@@ -213,7 +221,7 @@ func (dr *RegistryManager) NewApplication(
 // Get will return deployment row that exists in memory
 func (dr *RegistryManager) Get(name, namespace string) *RegistryRow {
 
-	encodedID := generateID(name, namespace)
+	encodedID := generateID(name, namespace, dr.clusterName)
 	if row, found := dr.registryData[encodedID]; found {
 		return row
 	}
@@ -272,6 +280,31 @@ func (wbr *RegistryRow) AddDaemonset(name, namespace string, labels map[string]s
 		"namespace":    wbr.DBSchema.Namespace,
 		"daemonset_id": name,
 	}).Info("Daemonset associated to application")
+
+	return &data
+}
+
+// AddStatefulset add a new statefulset under application settings
+func (wbr *RegistryRow) AddStatefulset(name, namespace string, labels map[string]string, annotations map[string]string, desiredState int32, maxDeploymentTime int64) *StatefulsetData {
+
+	data := StatefulsetData{
+		Statefulset: MetaData{
+			Name:         name,
+			Namespace:    namespace,
+			Labels:       labels,
+			Annotations:  annotations,
+			DesiredState: desiredState,
+		},
+		Pods:                    make(map[string]DeploymenPod, 0),
+		ProgressDeadlineSeconds: maxDeploymentTime,
+	}
+	wbr.DBSchema.Resources.Statefulsets[name] = &data
+
+	log.WithFields(log.Fields{
+		"application":    wbr.DBSchema.Application,
+		"namespace":      wbr.DBSchema.Namespace,
+		"statefulset_id": name,
+	}).Info("Statefulset was associated to the application")
 
 	return &data
 }
@@ -387,15 +420,73 @@ func (wbr *RegistryRow) isDaemonSetFinish() (bool, error) {
 	return isFinished, nil
 }
 
+// isStatefulSetFinish defines when a deployment of Statefulset id done.
+/* In order to finish a successful deployment you will have to have the following terms:
+- Total Pods defined in statefulset yaml should be equal to ready pods running.
+- Counts of pods which are committed to the state should be equal to running pods running.
+*/
+func (wbr *RegistryRow) isStatefulSetFinish() (bool, error) {
+	isFinished := false
+	diff := time.Now().Sub(time.Unix(wbr.DBSchema.CreationTimestamp, 0)).Seconds()
+	if len(wbr.DBSchema.Resources.Statefulsets) == 0 {
+		isFinished = true
+		return isFinished, nil
+	}
+	var countOfPodsInState int32
+	var countOfRunningPods int32
+	var totalDesiredPods int32
+	var readyPodsCount int32
+	for _, statefulset := range wbr.DBSchema.Resources.Statefulsets {
+		totalDesiredPods = statefulset.Statefulset.DesiredState
+		countOfRunningPods = countOfRunningPods + statefulset.Status.Replicas
+		readyPodsCount = readyPodsCount + statefulset.Status.ReadyReplicas
+		countOfPodsInState = int32(len(statefulset.Pods))
+
+		if statefulset.ProgressDeadlineSeconds < int64(diff) {
+			log.WithFields(log.Fields{
+				"progress_deadline_seconds": statefulset.ProgressDeadlineSeconds,
+				"deploy_time":               diff,
+				"application":               wbr.DBSchema.Application,
+				"statefulset":               statefulset.Statefulset.Name,
+				"namespace":                 statefulset.Statefulset.Namespace,
+			}).Error("Failed due to progress deadline")
+			return isFinished, errors.New("ProgressDeadLine has passed")
+		}
+	}
+	log.WithFields(log.Fields{
+		"application":                      wbr.DBSchema.Application,
+		"namespace":                        wbr.DBSchema.Namespace,
+		"total_statefulsets_desired_pods":  totalDesiredPods,
+		"total_statefulsets_in_state_pods": countOfPodsInState,
+		"current_pods_count":               countOfRunningPods,
+		"total_statefulsets":               len(wbr.DBSchema.Resources.Statefulsets),
+	}).Info("Statefulset status")
+	if totalDesiredPods == readyPodsCount && countOfPodsInState == countOfRunningPods || wbr.status == common.DeploymentStatusDeleted {
+		log.WithFields(log.Fields{
+			"application":                      wbr.DBSchema.Application,
+			"namespace":                        wbr.DBSchema.Namespace,
+			"total_statefulset_desired_pods":   totalDesiredPods,
+			"total_statefulsets_in_state_pods": countOfPodsInState,
+			"current_pods_count":               countOfRunningPods,
+			"total_statefulsets":               len(wbr.DBSchema.Resources.Statefulsets),
+		}).Info("Statefulset apply has finished")
+		// Wating few minutes to collect more event after deployment finished
+		isFinished = true
+		return isFinished, nil
+	}
+	return isFinished, nil
+}
+
 // isFinish will check (by interval number) when the deployment finished by replicaset status
 func (wbr *RegistryRow) isFinish(checkFinishDelay time.Duration) {
 	log.WithFields(log.Fields{
-		"application":      wbr.DBSchema.Application,
-		"namespace":        wbr.DBSchema.Namespace,
-		"deployment_count": len(wbr.DBSchema.Resources.Deployments),
-		"daemonsets_count": len(wbr.DBSchema.Resources.Daemonsets),
-		"applied_by":       len(wbr.DBSchema.DeployBy),
-		"check_delay":      checkFinishDelay,
+		"application":        wbr.DBSchema.Application,
+		"namespace":          wbr.DBSchema.Namespace,
+		"deployment_count":   len(wbr.DBSchema.Resources.Deployments),
+		"daemonsets_count":   len(wbr.DBSchema.Resources.Daemonsets),
+		"statefulsets_count": len(wbr.DBSchema.Resources.Statefulsets),
+		"applied_by":         len(wbr.DBSchema.DeployBy),
+		"check_delay":        checkFinishDelay,
 	}).Info("starting to watch on registry row")
 	time.Sleep(checkFinishDelay)
 
@@ -412,17 +503,19 @@ func (wbr *RegistryRow) isFinish(checkFinishDelay time.Duration) {
 			}
 			isDepFinished, depErr := wbr.isDeploymentFinish()
 			isDsFinished, dsErr := wbr.isDaemonSetFinish()
-			if dsErr != nil || depErr != nil {
+			isSsFinished, ssErr := wbr.isStatefulSetFinish()
+			if dsErr != nil || depErr != nil || ssErr != nil {
 				wbr.Stop(common.DeploymentStatusFailed, DeploymentStatusDescriptionProgressDeadline)
 				wbr.cancelFn()
 				log.WithFields(log.Fields{
-					"application":      wbr.DBSchema.Application,
-					"namespace":        wbr.DBSchema.Namespace,
-					"deployment_error": depErr,
-					"daemonset_error":  dsErr,
-				}).Error("isFinish function watch was errored")
+					"application":       wbr.DBSchema.Application,
+					"namespace":         wbr.DBSchema.Namespace,
+					"deployment_error":  depErr,
+					"daemonset_error":   dsErr,
+					"statefulset_error": ssErr,
+				}).Error("isFinish function watcher had an error")
 				return
-			} else if isDepFinished && isDsFinished {
+			} else if isDepFinished && isDsFinished && isSsFinished {
 				wbr.Stop(common.DeploymentSuccessful, DeploymentStatusDescriptionSuccessful)
 				wbr.cancelFn()
 			}
@@ -580,6 +673,36 @@ func (dsd *DaemonsetData) GetName() string {
 	return dsd.Metadata.Name
 }
 
+// UpdateStatefulsetEvents will append events to StatefulsetEvents list
+func (ssd *StatefulsetData) UpdateStatefulsetEvents(event EventMessages) {
+	ssd.StatefulsetEvents = append(ssd.StatefulsetEvents, event)
+}
+
+// UpdatePod will set pod events to statefulset
+func (ssd *StatefulsetData) UpdatePod(pod *v1.Pod, status string) error {
+	return UpdatePodStatus(ssd.Pods, pod, status)
+}
+
+// UpdatePodEvents will set pod events
+func (ssd *StatefulsetData) UpdatePodEvents(podName string, event EventMessages) error {
+	return UpdatePodEvents(ssd.Pods, podName, event)
+}
+
+// GetName get the Statefulset name
+func (ssd *StatefulsetData) GetName() string {
+	return ssd.Statefulset.Name
+}
+
+// NewPod Attach a new pod to the Statefulset row
+func (ssd *StatefulsetData) NewPod(pod *v1.Pod) error {
+	return NewPodToPods(ssd.Pods, pod)
+}
+
+// UpdateApplyStatus will update a statefulset status
+func (ssd *StatefulsetData) UpdateApplyStatus(status appsV1.StatefulSetStatus) {
+	ssd.Status = status
+}
+
 // save will save all the row list to the storage
 func (dr *RegistryManager) save() {
 
@@ -636,6 +759,6 @@ func (dr *RegistryManager) save() {
 }
 
 // generateID will create a id for the deployment
-func generateID(name, namespace string) string {
-	return base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s-%s", name, namespace)))
+func generateID(name, namespace, cluster string) string {
+	return base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s-%s-%s", name, namespace, cluster)))
 }

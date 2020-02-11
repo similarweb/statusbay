@@ -71,7 +71,7 @@ func TestGetMetadata(t *testing.T) {
 func TestGetMetricsDataFromAnnotations(t *testing.T) {
 
 	annotations := map[string]string{
-		fmt.Sprintf("%s/metrics-providername-metric-name", METAPREFIX): "metric query 1",
+		fmt.Sprintf("%s/metrics-providername-metric-name", ANNOTATION_PREFIX): "metric query 1",
 	}
 
 	metrics := GetMetricsDataFromAnnotations(annotations)
@@ -94,7 +94,7 @@ func TestGetMetricsDataFromAnnotations(t *testing.T) {
 
 func TestGetAlertsDataFromAnnotations(t *testing.T) {
 	annotations := map[string]string{
-		fmt.Sprintf("%s/alerts-providername", METAPREFIX): "foo,foo1",
+		fmt.Sprintf("%s/alerts-providername", ANNOTATION_PREFIX): "foo,foo1",
 	}
 
 	alerts := GetAlertsDataFromAnnotations(annotations)
@@ -111,4 +111,57 @@ func TestGetAlertsDataFromAnnotations(t *testing.T) {
 	if alert.Tags != "foo,foo1" {
 		t.Fatalf("unexpected alert tags, got %s expected %s", alert.Tags, "foo,foo1")
 	}
+}
+
+func TestGetProgressDeadlineApply(t *testing.T) {
+
+	t.Run("get_progress_deadline_annotation", func(t *testing.T) {
+
+		annotations := map[string]string{
+			fmt.Sprintf("%s/%s", ANNOTATION_PREFIX, ANNOTATION_PROGRESS_DEADLINE_SECONDS): "10",
+		}
+		progressDeadlineSeconds := GetProgressDeadlineApply(annotations, 2)
+
+		if progressDeadlineSeconds != 10 {
+			t.Fatalf("unexpected %s annotation value, got %d expected %d", ANNOTATION_PROGRESS_DEADLINE_SECONDS, progressDeadlineSeconds, 10)
+
+		}
+	})
+	t.Run("get_un_exists_progress_deadline_annotation", func(t *testing.T) {
+
+		annotations := map[string]string{}
+		progressDeadlineSeconds := GetProgressDeadlineApply(annotations, 60)
+
+		if progressDeadlineSeconds != 60 {
+			t.Fatalf("unexpected %s annotation value, got %d expected %d", ANNOTATION_PROGRESS_DEADLINE_SECONDS, progressDeadlineSeconds, 60)
+
+		}
+	})
+
+}
+func TestGetApplicationName(t *testing.T) {
+
+	t.Run("get_name_annotation", func(t *testing.T) {
+
+		annotations := map[string]string{
+			fmt.Sprintf("%s/%s", ANNOTATION_PREFIX, ANNOTATION_APPLICATION_NAME): "foo",
+		}
+		applicationName := GetApplicationName(annotations, "default")
+
+		if applicationName != "foo" {
+			t.Fatalf("unexpected %s annotation value, got %s expected %s", ANNOTATION_APPLICATION_NAME, applicationName, "foo")
+
+		}
+	})
+	t.Run("get_un_exists_progress_deadline_annotation", func(t *testing.T) {
+
+		annotations := map[string]string{}
+		applicationName := GetApplicationName(annotations, "default")
+
+		if applicationName != "default" {
+			t.Fatalf("unexpected %s annotation value, got %s expected %s", ANNOTATION_APPLICATION_NAME, applicationName, "default")
+
+		}
+	})
+
 }

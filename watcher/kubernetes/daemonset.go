@@ -5,7 +5,6 @@ import (
 	"context"
 	"statusbay/serverutil"
 	"statusbay/watcher/kubernetes/common"
-	"strconv"
 	"time"
 
 	"github.com/mitchellh/hashstructure"
@@ -30,9 +29,6 @@ type DaemonsetManager struct {
 	// Will triggered when deployment watch started
 	serviceManager *ServiceManager
 
-	// will be trigged when pod deployment watch start
-	podsManager *PodsManager
-
 	//
 	controllerRevManager ControllerRevision
 	// Max watch time
@@ -40,13 +36,12 @@ type DaemonsetManager struct {
 }
 
 //NewDaemonsetManager  create new instance to manage damonset related things
-func NewDaemonsetManager(k8sClient kubernetes.Interface, eventManager *EventsManager, registryManager *RegistryManager, serviceManager *ServiceManager, podsManager *PodsManager, controllerRevisionManager ControllerRevision, maxDeploymentTime time.Duration) *DaemonsetManager {
+func NewDaemonsetManager(k8sClient kubernetes.Interface, eventManager *EventsManager, registryManager *RegistryManager, serviceManager *ServiceManager, controllerRevisionManager ControllerRevision, maxDeploymentTime time.Duration) *DaemonsetManager {
 	return &DaemonsetManager{
 		client:               k8sClient,
 		eventManager:         eventManager,
 		registryManager:      registryManager,
 		serviceManager:       serviceManager,
-		podsManager:          podsManager,
 		controllerRevManager: controllerRevisionManager,
 		maxDeploymentTime:    int64(maxDeploymentTime.Seconds()),
 	}
@@ -117,17 +112,9 @@ func (dsm *DaemonsetManager) watchDaemonsets(ctx context.Context) {
 					log.WithField("object", event.Object).Warn("Failed to parse daemonset watch data")
 					continue
 				}
-				daemonsetName := daemonset.GetName()
-				applicationName := GetMetadata(daemonset.GetAnnotations(), "statusbay.io/application-name")
-				if applicationName != "" {
-					daemonsetName = applicationName
-				}
-				// extract annotation for progressDeadLine since Daemonset don't have hat feature.
-				progressDeadLineAnnotations := GetMetadata(daemonset.GetAnnotations(), "statusbay.io/progress-deadline-seconds")
-				progressDeadLine, err := strconv.ParseInt(progressDeadLineAnnotations, 10, 64)
-				if err != nil {
-					progressDeadLine = dsm.maxDeploymentTime
-				}
+
+				daemonsetName := GetApplicationName(daemonset.GetAnnotations(), daemonset.GetName())
+
 				if event.Type == eventwatch.Modified ||
 					event.Type == eventwatch.Added ||
 					event.Type == eventwatch.Deleted {
@@ -144,15 +131,17 @@ func (dsm *DaemonsetManager) watchDaemonsets(ctx context.Context) {
 						}
 					}
 					appRegistry := dsm.registryManager.Get(daemonsetName, daemonset.GetNamespace())
+
+					// extract annotation for progressDeadLine since Daemonset don't have hat feature.
+					progressDeadLine := GetProgressDeadlineApply(daemonset.GetAnnotations(), dsm.maxDeploymentTime)
+
 					if appRegistry == nil {
 						daemonsetStatus := common.DeploymentStatusRunning
 						if event.Type == eventwatch.Deleted {
 							daemonsetStatus = common.DeploymentStatusDeleted
 						}
 						appRegistry = dsm.registryManager.NewApplication(daemonsetName,
-							daemonset.GetName(),
 							daemonset.GetNamespace(),
-							"cluster-name",
 							daemonset.GetAnnotations(),
 							daemonsetStatus)
 
@@ -166,18 +155,14 @@ func (dsm *DaemonsetManager) watchDaemonsets(ctx context.Context) {
 						progressDeadLine)
 					daemonsetWatchListOptions := metaV1.ListOptions{
 						LabelSelector: labels.SelectorFromSet(daemonset.GetLabels()).String()}
-					maxWatchTime := dsm.maxDeploymentTime
 
-					if progressDeadLine > dsm.maxDeploymentTime {
-						maxWatchTime = progressDeadLine
-					}
 					go dsm.watchDaemonset(
 						appRegistry.ctx,
 						appRegistry.cancelFn,
 						registryApply,
 						daemonsetWatchListOptions,
 						daemonset.GetNamespace(),
-						maxWatchTime)
+						progressDeadLine)
 				} else {
 					log.WithFields(log.Fields{
 						"event_type": event.Type,
@@ -242,8 +227,16 @@ func (dsm *DaemonsetManager) watchDaemonset(ctx context.Context, cancelFn contex
 					TimeoutSeconds: &maxWatchTime,
 				}
 				dsm.watchEvents(ctx, daemonsetData, eventListOptions, namespace)
+
 				// start pods watch
-				dsm.watchPods(ctx, daemonsetData, daemonset, namespace)
+				dsm.controllerRevManager.WatchControllerRevisionPodsRetry(ctx, daemonsetData,
+					daemonset.ObjectMeta.Generation,
+					daemonset.Spec.Selector.MatchLabels,
+					appsV1.DefaultDaemonSetUniqueLabelKey,
+					"",
+					namespace,
+					nil)
+
 				// start service watch
 				dsm.serviceManager.Watch <- WatchData{
 					ListOptions:  metaV1.ListOptions{TimeoutSeconds: &maxWatchTime, LabelSelector: labels.SelectorFromSet(daemonset.Spec.Selector.MatchLabels).String()},
@@ -262,13 +255,6 @@ func (dsm *DaemonsetManager) watchDaemonset(ctx context.Context, cancelFn contex
 			return
 		}
 	}
-}
-
-// watchPods will trigger a controller revision manager to watch for the related pods
-func (dsm *DaemonsetManager) watchPods(ctx context.Context, daemonsetData *DaemonsetData, daemonset *appsV1.DaemonSet, namespace string) {
-	resourceGeneration := daemonset.ObjectMeta.Generation
-	revisionLabels := map[string]string{"name": daemonsetData.GetName()}
-	dsm.controllerRevManager.WatchControllerRevisionPodsRetry(ctx, daemonsetData, resourceGeneration, revisionLabels, namespace, nil)
 }
 
 // watchEvents will watch for events related to the Daemonset Resource

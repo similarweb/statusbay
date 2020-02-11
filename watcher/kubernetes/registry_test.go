@@ -20,7 +20,7 @@ func createMockDeploymentData(registry *kuberneteswatcher.RegistryManager, statu
 	labels := map[string]string{}
 	annotations := map[string]string{}
 
-	registryRow := registry.NewApplication("nginx", fakeDeployment.GetName(), fakeDeployment.GetNamespace(), "cluster-name", fakeDeployment.GetAnnotations(), status)
+	registryRow := registry.NewApplication("nginx", fakeDeployment.GetNamespace(), fakeDeployment.GetAnnotations(), status)
 	registryDeploymentData := registryRow.AddDeployment("application", "pe", labels, annotations, 1, 3)
 
 	return registryDeploymentData
@@ -35,7 +35,7 @@ func NewRegistryMock() (*kuberneteswatcher.RegistryManager, *testutil.MockStorag
 
 	storageMock := testutil.NewMockStorage()
 	reporter := kuberneteswatcher.NewReporter([]notifierCommon.Notifier{})
-	registry := kuberneteswatcher.NewRegistryManager(saveInterval, checkFinishDelay, collectDataAfterApplyFinish, storageMock, reporter)
+	registry := kuberneteswatcher.NewRegistryManager(saveInterval, checkFinishDelay, collectDataAfterApplyFinish, storageMock, reporter, "mock-cluster")
 	registry.Serve()
 	reporter.Serve()
 	return registry, storageMock
@@ -47,7 +47,7 @@ func TestNewApplicationDeployment(t *testing.T) {
 	registry, _ := NewRegistryMock()
 
 	fakeDeployment := GetFakeDeployment(300)
-	registryRow := registry.NewApplication("nginx", fakeDeployment.GetName(), fakeDeployment.GetNamespace(), "cluster-name", fakeDeployment.GetAnnotations(), common.DeploymentStatusRunning)
+	registryRow := registry.NewApplication("nginx", fakeDeployment.GetNamespace(), fakeDeployment.GetAnnotations(), common.DeploymentStatusRunning)
 
 	testCases := []struct {
 		description string
@@ -115,7 +115,7 @@ func TestAddDeployment(t *testing.T) {
 	registry, _ := NewRegistryMock()
 
 	fakeDeployment := GetFakeDeployment(300)
-	registryRow := registry.NewApplication("nginx", fakeDeployment.GetName(), fakeDeployment.GetNamespace(), "cluster-name", fakeDeployment.GetAnnotations(), common.DeploymentStatusRunning)
+	registryRow := registry.NewApplication("nginx", fakeDeployment.GetNamespace(), fakeDeployment.GetAnnotations(), common.DeploymentStatusRunning)
 
 	labels := map[string]string{
 		"statusbay.io/report-deploy-by":      "elad.kaplan@similarweb.com",
@@ -186,7 +186,7 @@ func TestDeploymentData(t *testing.T) {
 	registry, _ := NewRegistryMock()
 
 	fakeDeployment := GetFakeDeployment(300)
-	registryRow := registry.NewApplication("nginx", fakeDeployment.GetName(), fakeDeployment.GetNamespace(), "cluster-name", fakeDeployment.GetAnnotations(), common.DeploymentStatusRunning)
+	registryRow := registry.NewApplication("nginx", fakeDeployment.GetNamespace(), fakeDeployment.GetAnnotations(), common.DeploymentStatusRunning)
 
 	labels := map[string]string{
 		"statusbay.io/report-deploy-by":      "elad.kaplan@similarweb.com",
@@ -331,7 +331,7 @@ func TestSave(t *testing.T) {
 	registry, storage := NewRegistryMock()
 
 	fakeDeployment := GetFakeDeployment(300)
-	registryRow := registry.NewApplication("nginx", fakeDeployment.GetName(), fakeDeployment.GetNamespace(), "cluster-name", fakeDeployment.GetAnnotations(), common.DeploymentStatusRunning)
+	registryRow := registry.NewApplication("nginx", fakeDeployment.GetNamespace(), fakeDeployment.GetAnnotations(), common.DeploymentStatusRunning)
 
 	labels := map[string]string{
 		"statusbay.io/report-deploy-by":      "elad.kaplan@similarweb.com",
@@ -379,7 +379,7 @@ func TestDeploymentFinishSuccessful(t *testing.T) {
 	registry, storage := NewRegistryMock()
 
 	fakeDeployment := GetFakeDeployment(300)
-	registryRow := registry.NewApplication("nginx", fakeDeployment.GetName(), fakeDeployment.GetNamespace(), "cluster-name", fakeDeployment.GetAnnotations(), common.DeploymentStatusRunning)
+	registryRow := registry.NewApplication("nginx", fakeDeployment.GetNamespace(), fakeDeployment.GetAnnotations(), common.DeploymentStatusRunning)
 
 	labels := map[string]string{
 		"statusbay.io/report-deploy-by":      "elad.kaplan@similarweb.com",
@@ -413,7 +413,7 @@ func TestDeploymentFinishProgressDeadLine(t *testing.T) {
 	var progressDeadlineSeconds int32
 	progressDeadlineSeconds = 1
 	fakeDeployment := GetFakeDeployment(progressDeadlineSeconds)
-	registryRow := registry.NewApplication("nginx", fakeDeployment.GetName(), fakeDeployment.GetNamespace(), "cluster-name", fakeDeployment.GetAnnotations(), common.DeploymentStatusRunning)
+	registryRow := registry.NewApplication("nginx", fakeDeployment.GetNamespace(), fakeDeployment.GetAnnotations(), common.DeploymentStatusRunning)
 
 	labels := map[string]string{}
 	annotations := map[string]string{}

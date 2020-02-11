@@ -35,3 +35,4 @@ helm delete foo
 | `deployment.resources` | the [resources] to allocate for a pod | undefined |
 | `deployment.livenessProbe` | readiness health check | `HTTP 80 /` |
 | `deployment.readinessProbe` | readiness health check | `HTTP 80 /` |
+

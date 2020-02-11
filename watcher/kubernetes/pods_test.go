@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	log "github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
@@ -43,7 +44,7 @@ func TestPodWatch(t *testing.T) {
 	registry, storageMock := NewRegistryMock()
 
 	registryDeploymentData := createMockDeploymentData(registry, common.DeploymentStatusRunning)
-
+	lg := log.WithField("test", "TestPodWatch")
 	ctx := context.Background()
 
 	client, podManager := NewPodManagerMock()
@@ -53,6 +54,7 @@ func TestPodWatch(t *testing.T) {
 		ListOptions:  metav1.ListOptions{},
 		Namespace:    "pe",
 		Ctx:          ctx,
+		LogEntry:     *lg,
 	}
 	time.Sleep(time.Second)
 
@@ -135,7 +137,7 @@ func TestPodWatchEvent(t *testing.T) {
 	registry, storageMock := NewRegistryMock()
 
 	registryDeploymentData := createMockDeploymentData(registry, common.DeploymentStatusRunning)
-
+	lg := log.WithField("test", "TestPodWatchEvent")
 	ctx := context.Background()
 
 	client, podManager := NewPodManagerMock()
@@ -145,6 +147,7 @@ func TestPodWatchEvent(t *testing.T) {
 		ListOptions:  metav1.ListOptions{},
 		Namespace:    "pe",
 		Ctx:          ctx,
+		LogEntry:     *lg,
 	}
 	time.Sleep(time.Second)
 

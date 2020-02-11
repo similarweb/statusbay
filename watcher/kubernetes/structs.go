@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	log "github.com/sirupsen/logrus"
 	appsV1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 
@@ -19,10 +20,11 @@ type RegistryData interface {
 
 // WatchData struct
 type WatchData struct {
+	Ctx          context.Context
 	ListOptions  metaV1.ListOptions
 	RegistryData RegistryData
 	Namespace    string
-	Ctx          context.Context
+	LogEntry     log.Entry
 }
 
 type MessageDeploy struct {

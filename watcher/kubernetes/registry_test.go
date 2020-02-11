@@ -441,3 +441,18 @@ func TestDeploymentFinishProgressDeadLine(t *testing.T) {
 	//}
 
 }
+
+func TestGetApplyID(t *testing.T) {
+
+	registry, _ := NewRegistryMock()
+
+	fakeDeployment := GetFakeDeployment(1)
+	registryRow := registry.NewApplication("nginx", fakeDeployment.GetNamespace(), fakeDeployment.GetAnnotations(), common.DeploymentStatusRunning)
+	registryRow.DBSchema.CreationTimestamp = 12345
+	applyID := registryRow.GetApplyID()
+
+	if applyID != "8fe4325f717a39f8bdcf772cc81e201102851fb8" {
+		t.Fatalf("unexpected apply ID, got %s expected %s", applyID, "8fe4325f717a39f8bdcf772cc81e201102851fb8")
+
+	}
+}

@@ -150,8 +150,8 @@ func (route *RouterKubernetesManager) GetDeployment(resp http.ResponseWriter, re
 
 	err = json.Unmarshal([]byte(deployment.Details), &kubernetesDeploymentResponse)
 	if err != nil {
-		log.WithError(err).WithFields(log.Fields{}).Error("Could not parse deployment detail.")
-		httpresponse.JSONError(resp, http.StatusNotFound, errors.New("Could not parse deployment detail."))
+		log.WithError(err).WithFields(log.Fields{}).Error("Could not parse deployment detail")
+		httpresponse.JSONError(resp, http.StatusNotFound, errors.New("Could not parse deployment detail"))
 		return
 	}
 

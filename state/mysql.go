@@ -62,7 +62,7 @@ func NewMysqlClient(config *MySQLConfig) *MySQLManager {
 			if err == nil {
 				break
 			}
-			log.Warn("Failed to open DB connection, sleeping for 5 second.")
+			log.Warn("Failed to open DB connection, sleeping for 5 second")
 			time.Sleep(5 * time.Second)
 		}
 		c <- 1
@@ -71,7 +71,7 @@ func NewMysqlClient(config *MySQLConfig) *MySQLManager {
 	select {
 	case <-c:
 	case <-time.After(60 * time.Second):
-		log.Fatal("Failed to connect DB after 1 minute, time out.")
+		log.Fatal("Failed to connect DB after 1 minute, time out")
 	}
 
 	if strings.ToLower(fmt.Sprintf("%s", log.GetLevel())) == "debug" {

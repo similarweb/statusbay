@@ -2,7 +2,6 @@ package kuberneteswatcher
 
 import (
 	"context"
-	"fmt"
 	"statusbay/serverutil"
 
 	log "github.com/sirupsen/logrus"
@@ -55,24 +54,19 @@ func (sm *ServiceManager) Serve() serverutil.StopFunc {
 func (sm *ServiceManager) watch(watchData WatchData) {
 
 	go func() {
-		log.WithFields(log.Fields{
-			fmt.Sprintf("%T", watchData.RegistryData): watchData.RegistryData.GetName(),
-			"namespace": watchData.Namespace,
-		}).Info("Start watch on service")
 
-		log.WithFields(log.Fields{
-			"namespace":   watchData.Namespace,
-			"list_option": watchData.ListOptions,
-		}).Debug("Start watch on service with list options")
+		watchData.LogEntry.Info("Start watch on service")
+
+		watchData.LogEntry.WithField("list_option", watchData.ListOptions).Debug("Start watch on service with list options")
 
 		services, err := sm.client.CoreV1().Services(watchData.Namespace).List(watchData.ListOptions)
 		if err != nil {
-			log.WithError(err).WithField("list_option", watchData.ListOptions.String()).Error("Error when trying to start watch on services")
+			watchData.LogEntry.WithError(err).WithField("list_option", watchData.ListOptions.String()).Error("Error when trying to start watch on services")
 			return
 		}
 
 		if len(services.Items) == 0 {
-			log.WithError(err).WithField("list_option", watchData.ListOptions.String()).Info("services not found")
+			// watchData.LogEntry.WithError(err).WithField("list_option", watchData.ListOptions.String()).Debug("services not found")
 			return
 		}
 

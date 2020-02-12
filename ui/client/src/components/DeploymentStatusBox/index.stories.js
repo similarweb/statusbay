@@ -13,6 +13,7 @@ export const Story = () => {
     Failed: 'failed',
     Running: 'running',
     Timeout: 'timeout',
+    Deleted: 'deleted',
   };
   const defaultValue = 'successful';
 

@@ -13,6 +13,7 @@ const mockDeploymentDetails = require('./deployment-details.mock');
 const {getQuery} = require('../services/helpers');
 
 const mock = new MockAdapter(fetcher);
+// TODO: add 'distinct' filter
 const filter = (params, data) => {
     const {offset, limit, cluster, from, to, name, nameSpace, status, userName} = params;
     let filtered = [...data];
@@ -47,10 +48,7 @@ mock.onGet(`${config.apiBaseUrl}${nameSpaces.urlPath}`)
  mock.onGet(new RegExp(`${config.apiBaseUrl}${applications.urlPath}/*`))
  .reply((config) => {
      const params = getQuery(config.url);
-     return [200, config.url.includes('distinct')
-       ? filter(params, mockApps.getAll())
-       : filter(params, mockDeployments.getAll())
-     ]
+     return [200, filter(params, mockApps.getAll())]
  });
 
 // mock socket data

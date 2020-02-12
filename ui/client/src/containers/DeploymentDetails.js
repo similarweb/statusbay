@@ -22,7 +22,7 @@ const DeploymentDetails = () => {
   const location = useLocation();
   const history = useHistory();
   const { tab = '0' } = querystring.parse(location.search);
-  const { appId, deploymentId } = useParams();
+  const { deploymentId } = useParams();
   const handleTabChange = (event, newValue) => {
     history.push({
       pathname: location.pathname,
@@ -32,7 +32,7 @@ const DeploymentDetails = () => {
     });
   };
   return (
-    <DeploymentDetailsContextProvider id={`${appId}/${deploymentId}`}>
+    <DeploymentDetailsContextProvider id={`${deploymentId}`}>
       <PageContent>
         <Box m={3} display="flex" alignItems="center" justifyContent="space-between">
           <PageTitle>

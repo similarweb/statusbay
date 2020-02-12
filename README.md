@@ -14,7 +14,7 @@ Key features:
 
 ### What is StatusBay?
 StatusBay is an open source tool that provides the missing visibility into the K8S deployment process. 
-It does that by subscribing to K8S cluster(s), collects all the relevant events from K8S and provides a step by step "zoom-in" into the deployment process.
+It does that by subscribing to K8S cluster(s), collecting all the relevant events from K8S and providing a step by step "zoom-in" into the deployment process.
 The main goal is to ease the experience of troubleshooting and debugging a service in K8S and provide confidence while making changes. 
 
 StatusBay is designed to be dynamic and extensible, you can easily integrate with different metric providers to monitor the quality of the deployment over time. 
@@ -40,7 +40,7 @@ We've also created an API to provide an easy way to access the data and built a 
 
 ## How does it work?
 
-StatusBay **watcher** subscribes to K8S cluster event stream and watch for resource changes (CREATE/UPDATE/DELETE) 
+StatusBay **watcher** subscribes to K8S cluster event stream and watch for resource changes (CREATE/UPDATE/DELETE).
 Upon a change, such as a new application deployment, it starts monitoring the progress of all the resource kinds (deployment, statefulset, daemonset, etc) associated with that deployment, notifies the relevant persona on success/failure/timeout and provides detailed report through the UI.
 
 **Example Scenario**:

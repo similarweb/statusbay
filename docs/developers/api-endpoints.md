@@ -27,7 +27,7 @@ $ curl \
 
 # Metrics
 
-This endpoint return metrics query data from a given provider.
+This endpoint returns metrics query data from a given provider.
 
 | Method        | Path                       | Produces          |
 | :------------ |:---------------------------| :-----------------|
@@ -139,9 +139,10 @@ This endpoint returns a list of applications.
 
 - **limit**  `(default: 20)` - number of records in the response.
 - **offset** `(default: 0)` - the number of records you wish to skip before selecting records.
-- **cluster** `(default: "" -> all)` - filter applications by cluster name. (for multiple clusters filtering use comma separation)
-- **namespace** `(default: "" -> all)` - filter application by namespace. (for multiple namespaces filtering use comma separation)
-- **status** `(default: "" -> all)` - filter application by status. (for multiple statuses filtering use comma separation)
+- **cluster** `(default: "" -> all)` - filter applications by cluster name. (for multiple clusters, use comma separated string )
+- **namespace** `(default: "" -> all)` - filter application by namespace. (for multiple namespaces use comma separated string)
+- **status** `(default: "" -> all)` - filter application by status. (for multiple statuses use comma separated string)
+- **name** `(default: "" -> all)` - filter deployments for a specific application name.
 - **orderby** `(default: "time")` - order the records response.
 - **sortdirection** `(default: "desc")` - sort direction of the response records.
 - **from** `(default: "0")` - filter applications by range of time, start time - unix time.

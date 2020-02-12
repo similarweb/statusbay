@@ -1,6 +1,6 @@
 # Developer Guide
 
-This section describes how developers can build from StatusBay source code, customize their deployments, and contribute to the StatusBay project.
+This section describes how developers can build StatusBay from the source code, customize their deployments, and contribute to the project.
 
 * [Getting started](./getting-started.md)
 * [Architecture](./architecture.md) 

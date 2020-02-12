@@ -1,9 +1,9 @@
 # Getting started
-This document describes how to setup your local development environment for StatusBay development.
+This document describes how to setup your local development environment for StatusBay.
 
 ## Preparation
 
-Make sure the following software is installed:
+Make sure the following tools are installed:
 
 * Docker
 * Golang 1.12.0+ ([installation manual](https://golang.org/dl/))
@@ -23,29 +23,33 @@ Minikube is one the options to achieve that.
 $ minikube start
 ```
 
-## Run the MySQL
+## Run MySQL
 ```
 $ docker run -p 3306:3306 -e MYSQL_DATABASE=statusbay -e MYSQL_ROOT_PASSWORD=1234 -d mysql:5.7
 ```
 
-# Run the watcher
-This command will run StatusBay watcher application.
+# Run StatusBay watcher
+This command will run StatusBay watcher.
 
-Please refer to [configuration example](/examples/configuration/kubernetes.yaml) file.
+Please refer to [configuration example](/examples/configuration/kubernetes.yaml) file to see additional configurations.
 
 ```
 $ go run main.go -config ./examples/configuration/kubernetes.yaml -mode kubernetes -kubeconfig ~/.kube/config
+
+
+# The reason we pass -kubeconfig in the command above is in order to define the cluster we wish the watcher to subscribe to it's event stream.
 ```
 
 # Run the API server
 This command will run the API server. 
 
-Please refer to [configuration example](/examples/configuration/api.yaml) file.
+Please refer to [configuration example](/examples/configuration/api.yaml) file to see additional configurations..
 
 ```
 $ go run main.go -config ./examples/configuration/api.yaml -mode api
 ```
 
-# Test deployment example
+# Deployment example via Helm
 
-See example of [Helm application](/examples/apply/README.md)
+Use this [Helm application](/examples/apply/README.md) in order to test your deployment.
+

@@ -1,8 +1,8 @@
 # Unittests
 
-To run unitests please use the following commands:
+To run unit tests please use the following commands:
 
-API and K8S watcher components:
+For API and Watcher components:
 
 ```
 $ make test

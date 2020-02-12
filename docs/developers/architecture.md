@@ -8,11 +8,11 @@
 
 ## UI Backend
 - Written in Node.js.
-- The component in charge of communcation between the API and the UI.
+- This component is in charge of the communication between the UI and the API.
 
 ## API
 - Written in [Golang](https://golang.org/).
-- The API components communicate with a database **(Read-Only access)**.
+- The API component communicates with the database **(Read-Only access)**.
 - See the [list of available API endpoints](api-endpoints.md).
 
 ## Watcher

@@ -14,7 +14,7 @@ const ApplicationDeployments = () => {
   const onRowClick = (row) => () => {
     // redirect to application deployment page
     history.push({
-      pathname: `/application/${appId}/${row.time}`,
+      pathname: `/application/${row.id}`,
     });
   };
   const filters = useMemo(() => {return {

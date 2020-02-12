@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const app = express();
 const api = require('./api/routes');
-const port = process.env.SERVER_PORT || 3001;
+const port = process.env.SERVER_PORT || 5000;
 const socket = require('./socket');
 const {info} = require('./logging');
 const axios = require('axios');

@@ -103,10 +103,10 @@ function App() {
                   <Route exact path="/applications">
                     <Applications />
                   </Route>
-                  <Route exact path="/application/:appId">
+                  <Route exact path="/application-deployments/:appId">
                     <ApplicationDeployments />
                   </Route>
-                  <Route path="/application/:appId/:deploymentId">
+                  <Route path="/application/:deploymentId">
                     <DeploymentDetails />
                   </Route>
                 </RouterSwitch>

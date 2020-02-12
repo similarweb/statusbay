@@ -9,8 +9,6 @@ import (
 	"statusbay/config"
 	"statusbay/state"
 
-	"strconv"
-
 	"github.com/apex/log"
 	"github.com/gorilla/mux"
 )
@@ -42,7 +40,7 @@ func NewKubernetesRoutes(storage Storage, router *mux.Router, eventPath string) 
 func (kr *RouterKubernetesManager) bindEndpoints() {
 	kr.router.HandleFunc("/api/v1/kubernetes/applications", kr.Applications).Methods("GET")
 	kr.router.HandleFunc("/api/v1/kubernetes/applications/values/{column}", kr.ApplicationsColumnValues).Methods("GET")
-	kr.router.HandleFunc("/api/v1/kubernetes/application/{application_name}/{time}", kr.GetDeployment).Methods("GET")
+	kr.router.HandleFunc("/api/v1/kubernetes/application/{apply_id}", kr.GetDeployment).Methods("GET")
 }
 
 //Applications returns a list of applied application.
@@ -75,6 +73,7 @@ func (route *RouterKubernetesManager) Applications(resp http.ResponseWriter, req
 	for _, row := range *rows {
 
 		response = append(response, ResponseKubernetesApplications{
+			ApplyID:   row.ApplyId,
 			Name:      row.Name,
 			Cluster:   row.Cluster,
 			Namespace: row.Namespace,
@@ -132,15 +131,9 @@ func (route *RouterKubernetesManager) ApplicationsColumnValues(resp http.Respons
 func (route *RouterKubernetesManager) GetDeployment(resp http.ResponseWriter, req *http.Request) {
 
 	params := mux.Vars(req)
-	applicationName := params["application_name"]
+	applyID := params["apply_id"]
 
-	deploymentTime, err := strconv.ParseInt(params["time"], 10, 64)
-	if err != nil {
-		httpresponse.JSONError(resp, http.StatusBadRequest, errors.New("Invalid time parameter"))
-		return
-	}
-
-	deployment, err := route.storage.GetDeployment(applicationName, deploymentTime)
+	deployment, err := route.storage.GetDeployment(applyID)
 	if err != nil {
 		httpresponse.JSONError(resp, http.StatusNotFound, errors.New("Deployment not found"))
 		return

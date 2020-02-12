@@ -11,9 +11,9 @@ import (
 
 // Storage interface
 type Storage interface {
-	CreateApply(data *RegistryRow, status common.DeploymentStatus) (uint, error)
-	UpdateApply(id uint, data *RegistryRow, status common.DeploymentStatus) (bool, error)
-	GetAppliesByStatus(status common.DeploymentStatus) (map[uint]DBSchema, error)
+	CreateApply(data *RegistryRow, status common.DeploymentStatus) (string, error)
+	UpdateApply(applyID string, data *RegistryRow, status common.DeploymentStatus) (bool, error)
+	GetAppliesByStatus(status common.DeploymentStatus) (map[string]DBSchema, error)
 	UpdateAppliesVersionHistory(deploymentName string, hash uint64) bool
 	DeleteAppliedVersion(deploymentName string) bool
 }
@@ -31,8 +31,8 @@ func NewMysql(db *state.MySQLManager) *MySQLStorage {
 	}
 }
 
-// CreateDeployment creating a new deployment
-func (my *MySQLStorage) CreateApply(data *RegistryRow, status common.DeploymentStatus) (uint, error) {
+// CreateApply creating a new apply row
+func (my *MySQLStorage) CreateApply(data *RegistryRow, status common.DeploymentStatus) (string, error) {
 
 	log.WithFields(log.Fields{
 		"name": data.DBSchema.Application,
@@ -40,10 +40,12 @@ func (my *MySQLStorage) CreateApply(data *RegistryRow, status common.DeploymentS
 
 	deploymentDetails, err := json.Marshal(data.DBSchema)
 	if err != nil {
-		return 0, err
+		return "", err
 	}
 
+	applyID := data.GetApplyID()
 	apply := state.TableKubernetes{
+		ApplyId:   applyID,
 		Name:      data.DBSchema.Application,
 		Cluster:   data.DBSchema.Cluster,
 		Namespace: data.DBSchema.Namespace,
@@ -55,22 +57,22 @@ func (my *MySQLStorage) CreateApply(data *RegistryRow, status common.DeploymentS
 
 	if err := my.client.DB.Create(&apply).Error; err != nil {
 		log.WithError(err).WithFields(log.Fields{
-			"name":        data.DBSchema.Application,
-			"deploy_time": data.DBSchema.CreationTimestamp,
+			"name":     data.DBSchema.Application,
+			"apply_id": applyID,
 		}).Error("MySQL: Error when trying to create a new apply")
-		return 0, err
+		return "", err
 	}
 
-	return apply.ID, nil
+	return applyID, nil
 
 }
 
 // UpdateApply update current deployment
-func (my *MySQLStorage) UpdateApply(id uint, data *RegistryRow, status common.DeploymentStatus) (bool, error) {
+func (my *MySQLStorage) UpdateApply(applyID string, data *RegistryRow, status common.DeploymentStatus) (bool, error) {
 
 	log.WithFields(log.Fields{
-		"name": data.DBSchema.Application,
-		"id":   id,
+		"name":     data.DBSchema.Application,
+		"apply_id": applyID,
 	}).Debug("Update apply")
 
 	applyDetails, err := json.Marshal(data.DBSchema)
@@ -78,13 +80,13 @@ func (my *MySQLStorage) UpdateApply(id uint, data *RegistryRow, status common.De
 		return false, err
 	}
 
-	if err := my.client.DB.Model(&state.TableKubernetes{}).Where("id = ?", id).Updates(state.TableKubernetes{
+	if err := my.client.DB.Model(&state.TableKubernetes{}).Where("apply_id = ?", applyID).Updates(state.TableKubernetes{
 		Status:  string(status),
 		Details: string(applyDetails),
 		Time:    data.DBSchema.CreationTimestamp,
 	}).Error; err != nil {
 		log.WithError(err).WithFields(log.Fields{
-			"id": id,
+			"apply_id": applyID,
 		}).Error("MySQL: Error when trying to update apply")
 		return false, err
 	}
@@ -94,12 +96,12 @@ func (my *MySQLStorage) UpdateApply(id uint, data *RegistryRow, status common.De
 }
 
 // GetAppliesByStatus return lits of deployment by given status
-func (my *MySQLStorage) GetAppliesByStatus(status common.DeploymentStatus) (map[uint]DBSchema, error) {
+func (my *MySQLStorage) GetAppliesByStatus(status common.DeploymentStatus) (map[string]DBSchema, error) {
 
 	appRow := &[]state.TableKubernetes{}
-	resources := map[uint]DBSchema{}
+	resources := map[string]DBSchema{}
 
-	if err := my.client.DB.Where(map[string]interface{}{"status": status}).Select("id, details").Find(appRow).Error; err != nil {
+	if err := my.client.DB.Where(map[string]interface{}{"status": status}).Select("apply_id, details").Find(appRow).Error; err != nil {
 		log.WithError(err).WithFields(log.Fields{
 			"status": status,
 		}).Error("MySQL: Error when trying to get applications by status")
@@ -113,7 +115,7 @@ func (my *MySQLStorage) GetAppliesByStatus(status common.DeploymentStatus) (map[
 			log.WithError(err).WithFields(log.Fields{}).Error("MySQL: Could not parsing resource results")
 			continue
 		}
-		resources[resource.ID] = resourceDetails
+		resources[resource.ApplyId] = resourceDetails
 
 	}
 

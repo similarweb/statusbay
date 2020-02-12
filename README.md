@@ -8,7 +8,7 @@ Key features:
 - Watch every step of K8S deployment.
 - Get Slack reports on deployment progress.
 - Out of the box integrations to measure your deployment quality.
-- Deployed on k8s with [Helm][0]
+- Deployed on k8s with [Helm][0].
 - Easily extensible.
 - Streamline the trouble shooting experience in K8S.
 

@@ -14,12 +14,12 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 export default () => {
-  const { appId, deploymentId } = useParams();
+  const { appName, deploymentId } = useParams();
   const classes = useStyles();
   return (
     <Breadcrumbs aria-label="breadcrumb" classes={classes.typography}>
       {
-            appId && (
+            appName && (
             <Link to="/" className={classes.link}>
                     Applications
             </Link>
@@ -27,9 +27,9 @@ export default () => {
         }
 
       {
-            appId && (
-            <Link to={`/application/${appId}`} className={classes.link}>
-              {appId}
+            appName && (
+            <Link to={`/application/${appName}`} className={classes.link}>
+              {appName}
             </Link>
             )
         }

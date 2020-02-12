@@ -202,6 +202,9 @@ const convertDeploymentDetailsData = (data) => {
   return {
     name: data.Name,
     status: data.Status,
+    time: data.Time,
+    namespace: data.Namespace,
+    cluster: data.Cluster,
     kinds: [
       ...Object.entries(data.Details.Resources.Deployments).map(createDeploymentData),
       ...Object.entries(data.Details.Resources.Daemonsets).map(createDaemonSetData),

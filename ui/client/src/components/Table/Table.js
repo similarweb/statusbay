@@ -160,7 +160,7 @@ const Table = ({ hideNameFilter, onRowClick, filters }) => {
         name: '',
         cell: (row) => (
           <Link
-            to={`/application/${row.name}/${row.time}`}
+            to={`/application/${row.id}`}
           >
             <Box display="flex" alignItems="center">
               <Button variant="outlined" color="primary">Details</Button>

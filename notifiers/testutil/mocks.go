@@ -1,11 +1,12 @@
 package testutil
 
 import (
+	"context"
 	"errors"
 	"statusbay/notifiers"
 	"statusbay/notifiers/common"
-	"statusbay/serverutil"
 	watcherCommon "statusbay/watcher/kubernetes/common"
+	"sync"
 )
 
 var (
@@ -54,6 +55,5 @@ func (*NotifierMock) ReportEnded(watcherCommon.DeploymentReport) {
 	panic("implement me")
 }
 
-func (*NotifierMock) Serve() (sf serverutil.StopFunc) {
-	return
+func (*NotifierMock) Serve(ctx context.Context, wg *sync.WaitGroup) {
 }

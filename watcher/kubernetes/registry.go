@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"statusbay/serverutil"
 	"statusbay/watcher/kubernetes/common"
 	"sync"
 	"time"
@@ -91,10 +90,8 @@ func NewRegistryManager(saveInterval time.Duration, checkFinishDelay time.Durati
 }
 
 // Serve will start listening schema registry request
-func (dr *RegistryManager) Serve() serverutil.StopFunc {
+func (dr *RegistryManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 
-	ctx, cancelFn := context.WithCancel(context.Background())
-	stopped := make(chan bool)
 	go func() {
 		for {
 			select {
@@ -102,16 +99,12 @@ func (dr *RegistryManager) Serve() serverutil.StopFunc {
 				dr.save()
 			case <-ctx.Done():
 				log.Warn("Registry save schema has been shut down")
-				stopped <- true
+				wg.Done()
 				return
 			}
 		}
 	}()
 
-	return func() {
-		cancelFn()
-		<-stopped
-	}
 }
 
 // LoadRunningApps TODO:: fix me

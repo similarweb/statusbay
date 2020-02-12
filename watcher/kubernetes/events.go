@@ -2,7 +2,7 @@ package kuberneteswatcher
 
 import (
 	"context"
-	"statusbay/serverutil"
+	"sync"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -38,25 +38,19 @@ func NewEventsManager(kubernetesClientset kubernetes.Interface) *EventsManager {
 }
 
 // Serve will start listening on pods request
-func (em *EventsManager) Serve() serverutil.StopFunc {
+func (em *EventsManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 
-	ctx, cancelFn := context.WithCancel(context.Background())
-	stopped := make(chan bool)
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
 				log.Warn("Event Manager has been shut down")
-				stopped <- true
+				wg.Done()
 				return
 			}
 		}
 	}()
 
-	return func() {
-		cancelFn()
-		<-stopped
-	}
 }
 
 // Watch will start watch resource events

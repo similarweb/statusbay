@@ -1,17 +1,18 @@
 package metrics
 
 import (
+	"context"
 	"statusbay/api/httpresponse"
 	"statusbay/api/metrics/datadog"
 	"statusbay/api/metrics/prometheus"
 	"statusbay/config"
-	"statusbay/serverutil"
+	"sync"
 	"time"
 )
 
 // MetricManagerDescriber descrive the metric interface
 type MetricManagerDescriber interface {
-	Serve() serverutil.StopFunc
+	Serve(ctx context.Context, wg *sync.WaitGroup)
 	GetMetric(query string, from, to time.Time) ([]httpresponse.MetricsQuery, error)
 }
 

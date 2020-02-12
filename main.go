@@ -1,9 +1,9 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"os"
 	"os/signal"
 	"statusbay/api"
@@ -17,6 +17,8 @@ import (
 	kuberneteswatcher "statusbay/watcher/kubernetes"
 	"statusbay/watcher/kubernetes/client"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -46,12 +48,14 @@ func main() {
 	flag.StringVar(&apiserverHost, "apiserverhost", "", "Path to kubeconfig file with authorization and master location information.")
 	flag.Parse()
 
-	var stopper serverutil.StopFunc
+	ctx, cancelFn := context.WithCancel(context.Background())
+	var stopper *serverutil.Runner
+
 	switch mode {
 	case ModeAPI:
-		stopper = startAPIServer(configPath, "./events.yaml")
+		stopper = startAPIServer(ctx, configPath, "./events.yaml")
 	case KubernetesWatcher:
-		stopper = startKubernetesWatcher(configPath, kubeconfig, apiserverHost)
+		stopper = startKubernetesWatcher(ctx, configPath, kubeconfig, apiserverHost)
 	default:
 		flag.Usage()
 		os.Exit(1)
@@ -62,11 +66,11 @@ func main() {
 	signal.Notify(stop, os.Interrupt)
 
 	<-stop // block until we are requested to stop
-	stopper()
+	stopper.StopFunc(cancelFn)
 
 }
 
-func startKubernetesWatcher(configPath, kubeconfig, apiserverHost string) serverutil.StopFunc {
+func startKubernetesWatcher(ctx context.Context, configPath, kubeconfig, apiserverHost string) *serverutil.Runner {
 
 	watcherConfig, err := config.LoadKubernetesConfig(configPath)
 	if err != nil {
@@ -124,11 +128,16 @@ func startKubernetesWatcher(configPath, kubeconfig, apiserverHost string) server
 	//Statefulset manager
 	statefulsetManager := kuberneteswatcher.NewStatefulsetManager(kubernetesClientset, eventManager, registryManager, serviceManager, controllerRevisionManager, watcherConfig.Applies.MaxApplyTime)
 
+	servers := []serverutil.Server{
+		eventManager, podsManager, deploymentManager, daemonsetManager, statefulsetManager, replicasetManager, registryManager, serviceManager, reporter,
+	}
+
 	// Run a list of backround process for the server
-	return serverutil.RunAll(eventManager, podsManager, deploymentManager, daemonsetManager, statefulsetManager, replicasetManager, registryManager, serviceManager, reporter).StopFunc
+
+	return serverutil.RunAll(ctx, servers)
 }
 
-func startAPIServer(configPath, eventConfigPath string) serverutil.StopFunc {
+func startAPIServer(ctx context.Context, configPath, eventConfigPath string) *serverutil.Runner {
 
 	apiConfig, err := config.LoadConfigAPI(configPath)
 	if err != nil {
@@ -145,8 +154,6 @@ func startAPIServer(configPath, eventConfigPath string) serverutil.StopFunc {
 	// TODO:: should be more generic solution, we can start with this solution when we use only one orchestration
 	kubernetesStorage := apiKubernetes.NewMysql(mysqlManager)
 
-	var metricClient metrics.MetricManagerDescriber
-
 	metricsProviders := metrics.Load(apiConfig.MetricsProvider)
 
 	alertsProviders := alerts.Load(apiConfig.AlertProvider)
@@ -154,7 +161,14 @@ func startAPIServer(configPath, eventConfigPath string) serverutil.StopFunc {
 	//Start the server
 	server := api.NewServer(kubernetesStorage, "8080", eventConfigPath, metricsProviders, alertsProviders)
 
+	servers := []serverutil.Server{
+		server,
+	}
+
+	for _, metric := range metricsProviders {
+		servers = append(servers, metric)
+	}
 	//run lis of backround process for the server
-	return serverutil.RunAll(server, metricClient).StopFunc
+	return serverutil.RunAll(ctx, servers)
 
 }

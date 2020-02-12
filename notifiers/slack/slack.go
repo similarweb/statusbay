@@ -3,15 +3,16 @@ package slack
 import (
 	"context"
 	"fmt"
+	"statusbay/notifiers/common"
+	watcherCommon "statusbay/watcher/kubernetes/common"
+	"strings"
+	"sync"
+	"time"
+
 	"github.com/apex/log"
 	"github.com/mitchellh/mapstructure"
 	slackApi "github.com/nlopes/slack"
 	"github.com/pkg/errors"
-	"statusbay/notifiers/common"
-	"statusbay/serverutil"
-	watcherCommon "statusbay/watcher/kubernetes/common"
-	"strings"
-	"time"
 )
 
 var (
@@ -143,11 +144,9 @@ func (sl *Manager) ReportEnded(message watcherCommon.DeploymentReport) {
 }
 
 // Serve will periodically check slack for a change in the list of existing users
-func (sl *Manager) Serve() serverutil.StopFunc {
+func (sl *Manager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 	sl.updateUsers()
 
-	ctx, cancelFn := context.WithCancel(context.Background())
-	stopped := make(chan bool)
 	go func() {
 		for {
 			select {
@@ -155,15 +154,12 @@ func (sl *Manager) Serve() serverutil.StopFunc {
 				sl.updateUsers()
 			case <-ctx.Done():
 				log.Warn("Slack Loop has been shut down")
-				stopped <- true
+				wg.Done()
 				return
 			}
 		}
 	}()
-	return func() {
-		cancelFn()
-		<-stopped
-	}
+
 }
 
 // updateUsers updates the list of users available in slack

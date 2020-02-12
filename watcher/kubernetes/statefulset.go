@@ -2,8 +2,8 @@ package kuberneteswatcher
 
 import (
 	"context"
-	"statusbay/serverutil"
 	"statusbay/watcher/kubernetes/common"
+	"sync"
 	"time"
 
 	"github.com/mitchellh/hashstructure"
@@ -49,15 +49,14 @@ func NewStatefulsetManager(k8sClient kubernetes.Interface, eventManager *EventsM
 }
 
 //Serve Will serve the watch channels of statefulset
-func (ssm *StatefulsetManager) Serve() serverutil.StopFunc {
-	ctx, cancelFn := context.WithCancel(context.Background())
-	stopped := make(chan bool)
+func (ssm *StatefulsetManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
+
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
 				log.Warn("Statefulsets Manager has been shut down")
-				stopped <- true
+				wg.Done()
 				return
 			}
 		}
@@ -75,10 +74,7 @@ func (ssm *StatefulsetManager) Serve() serverutil.StopFunc {
 		}
 	}
 	ssm.watchStatefulsets(ctx)
-	return func() {
-		cancelFn()
-		<-stopped
-	}
+
 }
 
 func (ssm *StatefulsetManager) watchStatefulsets(ctx context.Context) {

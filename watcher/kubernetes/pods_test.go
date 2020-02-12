@@ -4,6 +4,7 @@ import (
 	"context"
 	kuberneteswatcher "statusbay/watcher/kubernetes"
 	"statusbay/watcher/kubernetes/common"
+	"sync"
 	"testing"
 	"time"
 
@@ -27,11 +28,13 @@ func createPodMock(client *fake.Clientset, name string, status v1.PodStatus, del
 func NewPodManagerMock() (*fake.Clientset, *kuberneteswatcher.PodsManager) {
 
 	client := fake.NewSimpleClientset()
-
 	eventManager := kuberneteswatcher.NewEventsManager(client)
-
 	podManager := kuberneteswatcher.NewPodsManager(client, eventManager)
-	podManager.Serve()
+
+	var wg *sync.WaitGroup
+	ctx := context.Background()
+
+	podManager.Serve(ctx, wg)
 	return client, podManager
 
 }

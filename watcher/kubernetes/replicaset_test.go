@@ -4,6 +4,7 @@ import (
 	"context"
 	kuberneteswatcher "statusbay/watcher/kubernetes"
 	"statusbay/watcher/kubernetes/common"
+	"sync"
 	"testing"
 	"time"
 
@@ -36,8 +37,12 @@ func NewReplicasetMock(client *fake.Clientset) *kuberneteswatcher.ReplicaSetMana
 
 	podManager := kuberneteswatcher.NewPodsManager(client, eventManager)
 	replicasetManager := kuberneteswatcher.NewReplicasetManager(client, eventManager, podManager)
-	podManager.Serve()
-	replicasetManager.Serve()
+
+	var wg *sync.WaitGroup
+	ctx := context.Background()
+
+	podManager.Serve(ctx, wg)
+	replicasetManager.Serve(ctx, wg)
 	return replicasetManager
 
 }

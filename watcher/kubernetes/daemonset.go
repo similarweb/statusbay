@@ -3,8 +3,8 @@ package kuberneteswatcher
 
 import (
 	"context"
-	"statusbay/serverutil"
 	"statusbay/watcher/kubernetes/common"
+	"sync"
 	"time"
 
 	"github.com/mitchellh/hashstructure"
@@ -47,15 +47,14 @@ func NewDaemonsetManager(k8sClient kubernetes.Interface, eventManager *EventsMan
 	}
 }
 
-func (dsm *DaemonsetManager) Serve() serverutil.StopFunc {
-	ctx, cancelFn := context.WithCancel(context.Background())
-	stopped := make(chan bool)
+func (dsm *DaemonsetManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
+
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
 				log.Warn("Daemonset Manager has been shut down")
-				stopped <- true
+				wg.Done()
 				return
 			}
 		}
@@ -78,10 +77,6 @@ func (dsm *DaemonsetManager) Serve() serverutil.StopFunc {
 		}
 	}
 	dsm.watchDaemonsets(ctx)
-	return func() {
-		cancelFn()
-		<-stopped
-	}
 
 }
 

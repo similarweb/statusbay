@@ -8,7 +8,6 @@
     "client": "PORT=4999 npm run start --prefix client",
     "dev": "concurrently -n server,client -c red,green \"npm run server\" \"npm run client\" ",
     "deploy:client": "npm run build --prefix client",
-    "deploy:server": "npm run start --prefix server",
     "install": "npm i --prefix client && npm i --prefix server",
     "test": "npm test --prefix client && npm test --prefix server"
   },

@@ -2,6 +2,7 @@ package kuberneteswatcher
 
 import (
 	"context"
+	"crypto/sha1"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -36,8 +37,7 @@ type DBSchema struct {
 
 // RegistryRow defined row data of deployment
 type RegistryRow struct {
-	// registory
-	id                               uint
+	applyID                          string
 	finish                           bool
 	status                           common.DeploymentStatus
 	ctx                              context.Context
@@ -121,13 +121,13 @@ func (dr *RegistryManager) LoadRunningApplies() []*RegistryRow {
 	apps, _ := dr.storage.GetAppliesByStatus(common.DeploymentStatusRunning)
 	log.WithField("count", len(apps)).Info("Loading running job from DB")
 
-	for id, appSchema := range apps {
+	for applyID, appSchema := range apps {
 
 		encodedID := generateID(appSchema.Application, appSchema.Namespace, dr.clusterName)
 		ctx, cancelFn := context.WithCancel(context.Background())
 
 		row := RegistryRow{
-			id:       id,
+			applyID:  applyID,
 			ctx:      ctx,
 			cancelFn: cancelFn,
 			finish:   false,
@@ -161,7 +161,7 @@ func (dr *RegistryManager) NewApplication(
 	ctx, cancelFn := context.WithCancel(context.Background())
 
 	row := RegistryRow{
-		id:                               0,
+		applyID:                          "",
 		ctx:                              ctx,
 		cancelFn:                         cancelFn,
 		finish:                           false,
@@ -226,6 +226,17 @@ func (dr *RegistryManager) Get(name, namespace string) *RegistryRow {
 		return row
 	}
 	return nil
+
+}
+
+// GetApplyID generate a unique for a specific apply
+func (wbr *RegistryRow) GetApplyID() string {
+
+	encodedID := generateID(wbr.DBSchema.Application, wbr.DBSchema.Namespace, wbr.DBSchema.Cluster)
+	h := sha1.New()
+
+	h.Write([]byte(fmt.Sprintf("%s-%d", encodedID, wbr.DBSchema.CreationTimestamp)))
+	return fmt.Sprintf("%x", h.Sum(nil))
 
 }
 
@@ -715,16 +726,16 @@ func (dr *RegistryManager) save() {
 	for key, data := range dr.registryData {
 		go func(key string, data *RegistryRow, deleteRows *[]string) {
 			defer wg.Done()
-			if data.id == 0 {
+			if data.applyID == "" {
 
-				id, err := dr.storage.CreateApply(data, data.status)
+				applyID, err := dr.storage.CreateApply(data, data.status)
 				if err != nil {
 					*deleteRows = append(*deleteRows, key)
 					return
 				}
-				data.id = id
+				data.applyID = applyID
 			} else {
-				dr.storage.UpdateApply(data.id, data, data.status)
+				dr.storage.UpdateApply(data.applyID, data, data.status)
 			}
 
 			log.WithFields(log.Fields{

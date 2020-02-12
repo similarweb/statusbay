@@ -343,7 +343,7 @@ func TestSave(t *testing.T) {
 	registryRow.AddDeployment("nginx-deployment2", "pe", labels, annotations, 1, 3)
 
 	time.Sleep(time.Second * 5)
-	id := uint(1)
+	id := "1"
 
 	t.Run("save_new_deployment", func(t *testing.T) {
 		testCases := []struct {
@@ -398,8 +398,8 @@ func TestDeploymentFinishSuccessful(t *testing.T) {
 	data.UpdateReplicasetStatus("replicaset-name", replicasetStatus)
 
 	time.Sleep(time.Second * 10)
-	if storage.MockWriteDeployment[1].Status != common.DeploymentSuccessful {
-		t.Errorf("unexpected deployment status, got %s expected %s", storage.MockWriteDeployment[1].Status, common.DeploymentSuccessful)
+	if storage.MockWriteDeployment["1"].Status != common.DeploymentSuccessful {
+		t.Errorf("unexpected deployment status, got %s expected %s", storage.MockWriteDeployment["1"].Status, common.DeploymentSuccessful)
 	}
 	// TODO ask elad to explain
 	//if len(mockSlack.PostMessageRequest) != 4 {
@@ -428,16 +428,31 @@ func TestDeploymentFinishProgressDeadLine(t *testing.T) {
 	data.UpdateReplicasetStatus("replicaset-name", replicasetStatus)
 
 	time.Sleep(time.Second * 8)
-	if storage.MockWriteDeployment[1].Status != common.DeploymentStatusFailed {
-		t.Fatalf("unexpected deployment status, got %s expected %s", storage.MockWriteDeployment[1].Status, common.DeploymentStatusFailed)
+	if storage.MockWriteDeployment["1"].Status != common.DeploymentStatusFailed {
+		t.Fatalf("unexpected deployment status, got %s expected %s", storage.MockWriteDeployment["1"].Status, common.DeploymentStatusFailed)
 	}
 
-	if storage.MockWriteDeployment[1].Schema.DeploymentDescription != kuberneteswatcher.DeploymentStatusDescriptionProgressDeadline {
-		t.Fatalf("unexpected deployment message description, got %s expected %s", storage.MockWriteDeployment[1].Schema.DeploymentDescription, kuberneteswatcher.DeploymentStatusDescriptionProgressDeadline)
+	if storage.MockWriteDeployment["1"].Schema.DeploymentDescription != kuberneteswatcher.DeploymentStatusDescriptionProgressDeadline {
+		t.Fatalf("unexpected deployment message description, got %s expected %s", storage.MockWriteDeployment["1"].Schema.DeploymentDescription, kuberneteswatcher.DeploymentStatusDescriptionProgressDeadline)
 	}
 	// TODO ask elad to explain
 	//if len(mockSlack.PostMessageRequest) != 4 {
 	//	t.Fatalf("unexpected slack reporters, got %d expected %d", len(mockSlack.PostMessageRequest), 4)
 	//}
 
+}
+
+func TestGetApplyID(t *testing.T) {
+
+	registry, _ := NewRegistryMock()
+
+	fakeDeployment := GetFakeDeployment(1)
+	registryRow := registry.NewApplication("nginx", fakeDeployment.GetNamespace(), fakeDeployment.GetAnnotations(), common.DeploymentStatusRunning)
+	registryRow.DBSchema.CreationTimestamp = 12345
+	applyID := registryRow.GetApplyID()
+
+	if applyID != "8fe4325f717a39f8bdcf772cc81e201102851fb8" {
+		t.Fatalf("unexpected apply ID, got %s expected %s", applyID, "8fe4325f717a39f8bdcf772cc81e201102851fb8")
+
+	}
 }

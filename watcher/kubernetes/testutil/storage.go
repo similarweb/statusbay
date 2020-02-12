@@ -3,54 +3,55 @@ package testutil
 import (
 	kuberneteswatcher "statusbay/watcher/kubernetes"
 	"statusbay/watcher/kubernetes/common"
+	"strconv"
 )
 
 type MockStorageDeployment struct {
-	ID     uint
-	Status common.DeploymentStatus
-	Schema kuberneteswatcher.DBSchema
+	ApplyID string
+	Status  common.DeploymentStatus
+	Schema  kuberneteswatcher.DBSchema
 }
 
 type MockStorage struct {
-	MockUpdateDeployment  map[uint]MockStorageDeployment
-	MockWriteDeployment   map[uint]MockStorageDeployment
+	MockUpdateDeployment  map[string]MockStorageDeployment
+	MockWriteDeployment   map[string]MockStorageDeployment
 	MockDeploymentHistory map[string]uint64
 	MockFile              string
 }
 
 func NewMockStorage() *MockStorage {
 	return &MockStorage{
-		MockUpdateDeployment:  map[uint]MockStorageDeployment{},
-		MockWriteDeployment:   map[uint]MockStorageDeployment{},
+		MockUpdateDeployment:  map[string]MockStorageDeployment{},
+		MockWriteDeployment:   map[string]MockStorageDeployment{},
 		MockDeploymentHistory: map[string]uint64{},
 	}
 }
-func (m *MockStorage) CreateApply(data *kuberneteswatcher.RegistryRow, status common.DeploymentStatus) (uint, error) {
+func (m *MockStorage) CreateApply(data *kuberneteswatcher.RegistryRow, status common.DeploymentStatus) (string, error) {
 
-	id := uint(len(m.MockWriteDeployment) + 1)
+	id := strconv.Itoa(len(m.MockWriteDeployment) + 1)
 	m.MockWriteDeployment[id] = MockStorageDeployment{
-		ID:     id,
-		Status: status,
-		Schema: data.DBSchema,
+		ApplyID: id,
+		Status:  status,
+		Schema:  data.DBSchema,
 	}
 
 	return id, nil
 }
 
-func (m *MockStorage) UpdateApply(id uint, data *kuberneteswatcher.RegistryRow, status common.DeploymentStatus) (bool, error) {
+func (m *MockStorage) UpdateApply(applyID string, data *kuberneteswatcher.RegistryRow, status common.DeploymentStatus) (bool, error) {
 
-	m.MockWriteDeployment[id] = MockStorageDeployment{
-		ID:     id,
-		Status: status,
-		Schema: data.DBSchema,
+	m.MockWriteDeployment[applyID] = MockStorageDeployment{
+		ApplyID: applyID,
+		Status:  status,
+		Schema:  data.DBSchema,
 	}
 
 	return true, nil
 }
 
-func (m *MockStorage) GetAppliesByStatus(status common.DeploymentStatus) (map[uint]kuberneteswatcher.DBSchema, error) {
+func (m *MockStorage) GetAppliesByStatus(status common.DeploymentStatus) (map[string]kuberneteswatcher.DBSchema, error) {
 
-	return map[uint]kuberneteswatcher.DBSchema{}, nil
+	return map[string]kuberneteswatcher.DBSchema{}, nil
 
 }
 

@@ -126,7 +126,7 @@ func TestDeploymentsWatch(t *testing.T) {
 
 	time.Sleep(time.Second)
 
-	application := storage.MockWriteDeployment[1]
+	application := storage.MockWriteDeployment["1"]
 
 	deployment := application.Schema.Resources.Deployments["test-deployment"]
 

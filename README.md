@@ -8,14 +8,14 @@ Key features:
 - Watch every step of K8S deployment.
 - Get Slack reports on deployment progress.
 - Out of the box integrations to measure your deployment quality.
-- Run on K8S (using [Helm][0]).
+- Deployed on k8s with [Helm][0].
 - Easily extensible.
 - Streamline the trouble shooting experience in K8S.
 
 ### What is StatusBay?
 StatusBay is an open source tool that provides the missing visibility into the K8S deployment process. 
 It does that by subscribing to K8S cluster(s), collecting all the relevant events from K8S and providing a step by step "zoom-in" into the deployment process.
-The main goal is to ease the experience of troubleshooting and debugging a service in K8S and provide confidence while making changes. 
+The main goal is to ease the experience of troubleshooting and debugging services in K8S and provide confidence while making changes. 
 
 StatusBay is designed to be dynamic and extensible, you can easily integrate with different metric providers to monitor the quality of the deployment over time. 
 
@@ -36,16 +36,16 @@ We've also created an API to provide an easy way to access the data and built a 
 * [Working with Multiple Clusters](/docs/clusters/README.md): If you have multiple K8S clusters and you wish to have a unified deployment view, take a look at this guide.
 * [Integrations](/docs/integrations.md): List of StatusBay supported integrations.
 * [External Logging System](/docs/external-logs.md): Ship StatusBay logs to your centralized logging system.
-* [Telemetry metrics](/docs/telemetry.md): StatusBay exposes metrics for you to pick up, see the telemetry read me to get stated.
+* [Telemetry metrics](/docs/telemetry.md): StatusBay exposes metrics for you to pick up, see the telemetry read me to get started.
 
 ## How does it work?
 
-StatusBay **watcher** subscribes to K8S cluster event stream and watch for resource changes (CREATE/UPDATE/DELETE).
-Upon a change, such as a new application deployment, it starts monitoring the progress of all the resource kinds (deployment, statefulset, daemonset, etc) associated with that deployment, notifies the relevant persona on success/failure/timeout and provides detailed report through the UI.
+StatusBay **watcher** subscribes to K8S cluster event stream and watches for resource changes (CREATE/UPDATE/DELETE).
+Upon a change, such as new application deployment, it starts monitoring the progress of all the resource kinds (deployment, statefulset, daemonset, etc) associated with that deployment, notifies the relevant persona on success/failure/timeout and provides detailed report through the UI.
 
 **Example Scenario**:
 
-Someone has deployed a Nginx through Helm or Kubectl.
+Someone has deployed an Nginx through Helm or Kubectl.
 ```bash
 $ helm install {{NGINX_APP}} .
 
@@ -56,7 +56,7 @@ $ kubectl create deployment --image nginx my-nginx
 
 The watcher will immediately start monitoring the deployment named `my-nginx` and report to the user using the notifications channels configured (slack, email, etc).
 
-The following annotations can be attached to a deployment in order to configure the different features StatusBay has to offer.
+The following annotations can be attached to deployment to configure the different features StatusBay has to offer.
 
 #### [Read more on StatusBay deployment configuration annotations](/docs/how-to-use.md)
 

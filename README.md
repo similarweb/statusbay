@@ -2,7 +2,7 @@
 
 ![Go](https://github.com/similarweb/statusbay/workflows/Go/badge.svg?event=push)
 
-<img src="https://github.com/similarweb/statusbay/raw/master/docs/images/logo.png" width="100">
+<img src="https://github.com/similarweb/statusbay/raw/master/docs/images/logo.png" width="400">
 
 ---
 

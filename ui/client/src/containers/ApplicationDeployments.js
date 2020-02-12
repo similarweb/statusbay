@@ -9,7 +9,7 @@ import Table from '../components/Table/Table';
 import PageContent from '../components/Layout/PageContent';
 
 const ApplicationDeployments = () => {
-  const { appId } = useParams();
+  const { appName } = useParams();
   const history = useHistory();
   const onRowClick = (row) => () => {
     // redirect to application deployment page
@@ -17,17 +17,17 @@ const ApplicationDeployments = () => {
       pathname: `/application/${row.id}`,
     });
   };
-  const filters = useMemo(() => {return {
+  const filters = useMemo(() => ({
     distinct: true,
-    name: appId
-  }}, []);
+    name: appName,
+  }), []);
   return (
     <PageContent>
       <Box m={3}>
         <PageTitle>
                   Application:
           {' '}
-          {appId}
+          {appName}
         </PageTitle>
       </Box>
       <Box>

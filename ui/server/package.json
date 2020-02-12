@@ -19,7 +19,8 @@
     "moment": "^2.24.0",
     "noderus": "^0.4.2",
     "socket.io": "^2.3.0",
-    "winston": "^3.2.1"
+    "winston": "^3.2.1",
+    "winston-gelf": "^1.7.0"
   },
   "devDependencies": {
     "@storybook/addon-actions": "^5.2.8",

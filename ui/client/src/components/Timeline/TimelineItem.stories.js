@@ -1,16 +1,11 @@
 import React from 'react';
 import TimelineItem from './TimelineItem';
+import mock from "./mock";
 
 export default {
   title: 'UI|Time line/Timeline item',
 };
 
-const data = {
-  desired: 1,
-  current: 2,
-  updated: 3,
-  ready: 4,
-  available: 5,
-  unavailable: 6,
-};
-export const story = () => <TimelineItem data={data} />;
+
+
+export const story = () => <TimelineItem title={mock[0].title} time={mock[0].time} error={mock[0].error} content={mock[0].content}  />;

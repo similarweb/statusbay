@@ -6,8 +6,5 @@ import Theme from "../src/Themes/default";
 import '../src/i18n/index';
 
 addDecorator(withKnobs);
-addDecorator(muiTheme(Theme('light')));
-// addDecorator(storyFn => <div style={{ textAlign: 'center' }}>{storyFn()}</div>);
-
-// automatically import all files ending in *.stories.js
+// addDecorator(muiTheme(Theme('light')));
 configure(require.context('../src', true, /\.stories\.js$/), module);

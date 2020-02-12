@@ -1,5 +1,5 @@
 const detailsController = require('../api/controllers/deployment-details');
-const { info, error } = require('../logging');
+const { info, error } = require('../logger');
 const { convertDeploymentDetailsData } = require('../services/data-transformers');
 
 const init = (io) => {

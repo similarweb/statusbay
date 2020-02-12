@@ -2,6 +2,9 @@
 
 ![Go](https://github.com/similarweb/statusbay/workflows/Go/badge.svg?event=push)
 
+<img src="https://github.com/similarweb/statusbay/raw/master/docs/images/logo.png" width="100">
+
+---
 
 ## Deployment visibility like a pro
 Key features:

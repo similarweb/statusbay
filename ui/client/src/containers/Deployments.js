@@ -12,7 +12,7 @@ export default () => {
   const onRowClick = (row) => () => {
     // redirect to details page
     history.push({
-      pathname: `/application/${row.name}/${row.time}`,
+      pathname: `/application/${row.id}`,
     });
   };
   return (

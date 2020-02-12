@@ -18,6 +18,7 @@ export const transformTableData = (results, totalCount) => ({
     Namespace,
     DeployBy,
     Time,
+    ApplyID,
   }) => ({
     name: Name,
     status: Status,
@@ -25,5 +26,6 @@ export const transformTableData = (results, totalCount) => ({
     namespace: Namespace,
     deployBy: DeployBy,
     time: Time,
+    id: ApplyID,
   })),
 });

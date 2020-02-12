@@ -229,7 +229,7 @@ func (dr *RegistryManager) Get(name, namespace string) *RegistryRow {
 
 }
 
-// GetApplyID generate a uniqe for a specific apply
+// GetApplyID generate a unique for a specific apply
 func (wbr *RegistryRow) GetApplyID() string {
 
 	encodedID := generateID(wbr.DBSchema.Application, wbr.DBSchema.Namespace, wbr.DBSchema.Cluster)

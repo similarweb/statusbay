@@ -2,12 +2,14 @@ require('dotenv').config();
 const express = require('express');
 const app = express();
 const api = require('./api/routes');
-const port = process.env.SERVER_PORT || 3001;
+const port = process.env.SERVER_PORT || 5000;
 const socket = require('./socket');
-const {info} = require('./logging');
+const {info} = require('./logger');
 const axios = require('axios');
+const config = require('./config');
 
-if (process.env.NODE_ENV === 'development' && !process.env.API_URL) {
+// if apiBaseUrl isn't set, use the mock data
+if (!config.apiBaseUrl) {
     require('./mock');
 }
 

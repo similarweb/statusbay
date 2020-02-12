@@ -1,5 +1,5 @@
 const applicationsController = require('../api/controllers/applications');
-const { info, error } = require('../logging');
+const { info, error } = require('../logger');
 
 const init = (io) => {
   const emitOnce = async (socket, filters) => {

@@ -1,11 +1,11 @@
 import API from './index';
 
 export const getMetaData = async () => {
-  const { data: { allClusters, allNamespaces } } = await API('/api/metadata');
+  const { data: { allClusters, allNamespaces, allStatuses } } = await API('/api/metadata');
   return {
     clusters: allClusters,
     namespaces: allNamespaces,
-    statuses: ['successful', 'failed', 'running', 'timeout', 'deleted'],
+    statuses: allStatuses,
   };
 };
 

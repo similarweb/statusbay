@@ -18,7 +18,7 @@ const prepareParams = ({
                          name = false,
                          nameSpace = [],
                          status = [],
-                         userName = false,
+                         deployBy = false,
                          distinct = false
                        } = {}) => {
   const query = {
@@ -32,7 +32,7 @@ const prepareParams = ({
     name,
     namespace: nameSpace.join(','),
     status: status.join(','),
-    userName,
+    deployby: deployBy,
     distinct
   };
   return querystring.stringify(Object.fromEntries(Object.entries(query)

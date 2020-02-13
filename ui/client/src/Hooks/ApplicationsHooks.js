@@ -14,7 +14,7 @@ const prepareFilters = (filters) => {
   const [sortByFiled, sortDirection] = parseSortBy(sortBy);
   return {
     name,
-    userName: deployBy,
+    deployBy,
     cluster,
     nameSpace: namespace,
     status,

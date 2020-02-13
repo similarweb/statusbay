@@ -1,6 +1,7 @@
  const applications = require('../api/controllers/applications');
 const clusters = require('../api/controllers/clusters');
 const nameSpaces = require('../api/controllers/name-spaces');
+const statuses = require('../api/controllers/statuses');
 const deploymentDetails = require('../api/controllers/deployment-details');
 const config = require('../config');
 const fetcher = require('../services/fetcher');
@@ -9,6 +10,7 @@ const mockApps = require('./applications.mock');
 const mockDeployments = require('./deployments.mock');
 const mockClusters = require('./clusters.mock');
 const mockNameSpaces = require('./name-spaces.mock');
+const mockStatuses = require('./statuses.mock');
 const mockDeploymentDetails = require('./deployment-details.mock');
 const {getQuery} = require('../services/helpers');
 
@@ -44,6 +46,9 @@ mock.onGet(`${config.apiBaseUrl}${clusters.urlPath}`)
     .reply(200, mockClusters.getAll());
 mock.onGet(`${config.apiBaseUrl}${nameSpaces.urlPath}`)
     .reply(200, mockNameSpaces.getAll());
+ mock.onGet(`${config.apiBaseUrl}${statuses.urlPath}`)
+ .reply(200, mockStatuses.getAll());
+
 
  mock.onGet(new RegExp(`${config.apiBaseUrl}${applications.urlPath}/*`))
  .reply((config) => {

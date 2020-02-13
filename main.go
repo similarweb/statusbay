@@ -49,13 +49,13 @@ func main() {
 	flag.Parse()
 
 	ctx, cancelFn := context.WithCancel(context.Background())
-	var stopper *serverutil.Runner
+	var runner *serverutil.Runner
 
 	switch mode {
 	case ModeAPI:
-		stopper = startAPIServer(ctx, configPath, "./events.yaml")
+		runner = startAPIServer(ctx, configPath, "./events.yaml")
 	case KubernetesWatcher:
-		stopper = startKubernetesWatcher(ctx, configPath, kubeconfig, apiserverHost)
+		runner = startKubernetesWatcher(ctx, configPath, kubeconfig, apiserverHost)
 	default:
 		flag.Usage()
 		os.Exit(1)
@@ -66,7 +66,7 @@ func main() {
 	signal.Notify(stop, os.Interrupt)
 
 	<-stop // block until we are requested to stop
-	stopper.StopFunc(cancelFn)
+	runner.StopFunc(cancelFn)
 
 }
 

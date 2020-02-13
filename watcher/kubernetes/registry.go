@@ -148,8 +148,8 @@ func (dr *RegistryManager) NewApplication(
 	defer dr.newAppLock.Unlock()
 
 	encodedID := generateID(appName, namespace, dr.clusterName)
-	reportTo := GetMetadataByPrefix(annotations, fmt.Sprintf("%s/%s", ANNOTATION_PREFIX, "report-"))
-	deployBy := GetMetadata(annotations, fmt.Sprintf("%s/%s", ANNOTATION_PREFIX, "report-deploy-by"))
+	reportTo := GetMetadataByPrefix(annotations, fmt.Sprintf("%s/%s", annotationPrefix, fmt.Sprintf("%s-", annotationReportPrefix)))
+	deployBy := GetMetadata(annotations, fmt.Sprintf("%s/%s", annotationPrefix, annotationReportDeployBy))
 	deployTime := time.Now().Unix()
 	ctx, cancelFn := context.WithCancel(context.Background())
 

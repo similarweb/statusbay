@@ -171,6 +171,7 @@ const Table = ({ hideNameFilter, onRowClick, filters }) => {
       },
     ],
   };
+  const showNoData = !loading && (!tableData || tableData.rows.length === 0);
   return (
     <Box m={2}>
       <Paper>
@@ -250,7 +251,7 @@ const Table = ({ hideNameFilter, onRowClick, filters }) => {
             )
           }
           {
-            !loading && !tableData && <Box m={2}><NoData /></Box>
+            showNoData && <Box m={2}><NoData /></Box>
           }
         </TableContainer>
       </Paper>

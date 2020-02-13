@@ -92,7 +92,7 @@ type ResponseKubernetesDeployment struct {
 	Cluster   string                 `json:"Cluster"`
 	Namespace string                 `json:"Namespace"`
 	Status    string                 `json:"Status"`
-	Time      string                 `json:"Time"`
+	Time      int64                  `json:"Time"`
 	Details   ResponseDeploymentData `json:"Details"`
 }
 

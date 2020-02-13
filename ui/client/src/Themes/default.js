@@ -4,6 +4,9 @@ import { green } from '@material-ui/core/colors';
 export default (type) => createMuiTheme({
   palette: {
     type,
+    primary: {
+      main: '#3546B3'
+    },
     secondary: {
       main: green[500],
       contrastText: '#ffffff',

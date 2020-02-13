@@ -1,6 +1,6 @@
 const detailsController = require('../api/controllers/deployment-details');
 const { info, error } = require('../logger');
-const { convertDeploymentDetailsData } = require('../services/data-transformers');
+const { convertDeploymentDetailsData } = require('../services/data-transformers/deploymet-details');
 
 const init = (io) => {
   const deploymentDetails = io.of('/deployment-details');
@@ -20,6 +20,7 @@ const init = (io) => {
     info('User connected to deploymentDetails NS');
     socket.on('init', async (id) => {
       info(`deploymentDetails init: ${id}`);
+      emitOnce(socket, id);
       intervalId = setInterval(async () => {
         emitOnce(socket, id);
       }, 2000)

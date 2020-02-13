@@ -6,7 +6,7 @@ import PageContent from '../components/Layout/PageContent';
 const Applications = () => {
   const history = useHistory();
   const onRowClick = (row) => (event) => {
-    // redirect to application deployments page    
+    // redirect to application deployments page
     history.push({
       pathname: `/application/${row.id}`,
     });
@@ -15,9 +15,7 @@ const Applications = () => {
     distinct: false
   }}, []);
   return (
-    <PageContent>
-      <Table onRowClick={onRowClick} filters={filters} title="Applications" showHistoryBtn={true} />
-    </PageContent>
+    <Table onRowClick={onRowClick} filters={filters} title="Applications" showHistoryBtn={true} />
   );
 };
 

@@ -126,6 +126,10 @@ func (my *MySQLStorage) builderApplications(queryFillter FilterApplications) *go
 		queryBuilder = queryBuilder.Where("name LIKE ?", fmt.Sprintf("%%%s%%", queryFillter.Name))
 	}
 
+	if queryFillter.DeployBy != "" {
+		queryBuilder = queryBuilder.Where("deploy_by LIKE ?", fmt.Sprintf("%%%s%%", queryFillter.DeployBy))
+	}
+
 	// By Default SortBy will sort by desc direction
 	if queryFillter.SortBy != "" {
 		queryBuilder = queryBuilder.Order(fmt.Sprintf("%s %s", queryFillter.SortBy, queryFillter.SortDirection))

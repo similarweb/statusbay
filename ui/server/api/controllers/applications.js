@@ -12,12 +12,12 @@ const prepareParams = ({
                          rowsPerPage = 10,
                          sortBy = "Name",
                          sortDirection = "desc",
-                         cluster = false,
+                         cluster = [],
                          from = false,
                          to = false,
                          name = false,
-                         nameSpace = false,
-                         status = false,
+                         nameSpace = [],
+                         status = [],
                          deployBy = false,
                          distinct = false
                        } = {}) => {

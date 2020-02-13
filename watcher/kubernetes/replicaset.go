@@ -2,7 +2,7 @@ package kuberneteswatcher
 
 import (
 	"context"
-	"statusbay/serverutil"
+	"sync"
 
 	log "github.com/sirupsen/logrus"
 
@@ -43,10 +43,8 @@ func NewReplicasetManager(kubernetesClientset kubernetes.Interface, eventManager
 }
 
 // Serve will start listening replicaset request
-func (rm *ReplicaSetManager) Serve() serverutil.StopFunc {
+func (rm *ReplicaSetManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 
-	ctx, cancelFn := context.WithCancel(context.Background())
-	stopped := make(chan bool)
 	go func() {
 		for {
 			select {
@@ -54,16 +52,12 @@ func (rm *ReplicaSetManager) Serve() serverutil.StopFunc {
 				rm.watch(replicaSets)
 			case <-ctx.Done():
 				log.Warn("Replicaset Manager has been shut down")
-				stopped <- true
+				wg.Done()
 				return
 			}
 		}
 	}()
 
-	return func() {
-		cancelFn()
-		<-stopped
-	}
 }
 
 // watch will start watch on replicaset changes

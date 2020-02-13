@@ -1,6 +1,7 @@
 package kubernetes_test
 
 import (
+	"context"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -10,6 +11,7 @@ import (
 	"statusbay/api/kubernetes"
 	"statusbay/api/kubernetes/testutil"
 	"statusbay/api/metrics"
+	"sync"
 	"testing"
 )
 
@@ -26,10 +28,12 @@ func MockServer(t *testing.T, storageMockFile string, metrics map[string]metrics
 }
 
 func TestApplicationsData(t *testing.T) {
+	var wg *sync.WaitGroup
+	ctx := context.Background()
 
 	ms := MockServer(t, "", nil, nil)
 	ms.api.BindEndpoints()
-	ms.api.Serve()
+	ms.api.Serve(ctx, wg)
 
 	testsResponseCount := []struct {
 		endpoint              string
@@ -68,10 +72,12 @@ func TestApplicationsData(t *testing.T) {
 }
 
 func TestApplicationsFiltersData(t *testing.T) {
+	var wg *sync.WaitGroup
+	ctx := context.Background()
 
 	ms := MockServer(t, "", nil, nil)
 	ms.api.BindEndpoints()
-	ms.api.Serve()
+	ms.api.Serve(ctx, wg)
 
 	testsResponseCount := []struct {
 		endpoint              string

@@ -1,7 +1,9 @@
 package datadog
 
 import (
+	"context"
 	testutil "statusbay/api/metrics/datadog/testutils"
+	"sync"
 	"testing"
 	"time"
 )
@@ -15,11 +17,13 @@ func MockDatadog(cacheExpiration, cacheCleanupInterval time.Duration) *Datadog {
 }
 
 func TestGetMetric(t *testing.T) {
+	var wg *sync.WaitGroup
+	ctx := context.Background()
 
 	cacheExpiration := time.Second * 2
 	cacheCleanupInterval := time.Second * 3
 	datadog := MockDatadog(cacheExpiration, cacheCleanupInterval)
-	datadog.Serve()
+	datadog.Serve(ctx, wg)
 
 	from := time.Unix(1557942490, 0)
 	to := time.Unix(1557942490, 0)
@@ -53,11 +57,13 @@ func TestGetMetric(t *testing.T) {
 }
 
 func TestCache(t *testing.T) {
+	var wg *sync.WaitGroup
+	ctx := context.Background()
 
 	cacheExpiration := time.Second * 2
 	cacheCleanupInterval := time.Second * 3
 	datadog := MockDatadog(cacheExpiration, cacheCleanupInterval)
-	datadog.Serve()
+	datadog.Serve(ctx, wg)
 
 	from := time.Unix(1557942490, 0)
 	to := time.Unix(1557942490, 0)

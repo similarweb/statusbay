@@ -5,6 +5,7 @@ import (
 	"fmt"
 	kuberneteswatcher "statusbay/watcher/kubernetes"
 	"statusbay/watcher/kubernetes/common"
+	"sync"
 	"testing"
 	"time"
 
@@ -42,7 +43,10 @@ func TestServiceWatch(t *testing.T) {
 	client := fake.NewSimpleClientset()
 
 	serviceManager := NewServiceManagerMockMock(client)
-	serviceManager.Serve()
+
+	var wg *sync.WaitGroup
+
+	serviceManager.Serve(ctx, wg)
 
 	createServiceMock(client, "service-1")
 

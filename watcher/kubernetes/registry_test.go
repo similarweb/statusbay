@@ -1,11 +1,13 @@
 package kuberneteswatcher_test
 
 import (
+	"context"
 	"fmt"
 	notifierCommon "statusbay/notifiers/common"
 	kuberneteswatcher "statusbay/watcher/kubernetes"
 	"statusbay/watcher/kubernetes/common"
 	"statusbay/watcher/kubernetes/testutil"
+	"sync"
 	"testing"
 	"time"
 
@@ -36,8 +38,12 @@ func NewRegistryMock() (*kuberneteswatcher.RegistryManager, *testutil.MockStorag
 	storageMock := testutil.NewMockStorage()
 	reporter := kuberneteswatcher.NewReporter([]notifierCommon.Notifier{})
 	registry := kuberneteswatcher.NewRegistryManager(saveInterval, checkFinishDelay, collectDataAfterApplyFinish, storageMock, reporter, "mock-cluster")
-	registry.Serve()
-	reporter.Serve()
+
+	var wg *sync.WaitGroup
+	ctx := context.Background()
+
+	registry.Serve(ctx, wg)
+	reporter.Serve(ctx, wg)
 	return registry, storageMock
 
 }

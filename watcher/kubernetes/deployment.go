@@ -2,7 +2,7 @@ package kuberneteswatcher
 
 import (
 	"context"
-	"statusbay/serverutil"
+	"sync"
 	"time"
 
 	"statusbay/watcher/kubernetes/common"
@@ -67,16 +67,14 @@ func NewDeploymentManager(kubernetesClientset kubernetes.Interface, eventManager
 }
 
 // Serve will start listening on deployment request
-func (dm *DeploymentManager) Serve() serverutil.StopFunc {
+func (dm *DeploymentManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 
-	ctx, cancelFn := context.WithCancel(context.Background())
-	stopped := make(chan bool)
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
 				log.Warn("Deployment Manager has been shut down")
-				stopped <- true
+				wg.Done()
 				return
 			}
 		}
@@ -92,10 +90,7 @@ func (dm *DeploymentManager) Serve() serverutil.StopFunc {
 	}
 
 	dm.watchDeployments(ctx)
-	return func() {
-		cancelFn()
-		<-stopped
-	}
+
 }
 
 // watchDeployments start watch on all Kubernetes deployments

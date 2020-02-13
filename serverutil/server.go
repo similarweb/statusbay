@@ -15,8 +15,7 @@ type Server interface {
 
 // Runner is used to stop/start multiple servers
 type Runner struct {
-	stoppers []StopFunc
-	wg       sync.WaitGroup
+	wg sync.WaitGroup
 }
 
 // RunAll will run all given servers and return a Runner instance

@@ -151,7 +151,7 @@ func (pm *PodsManager) watch(watchData WatchData) {
 					if container.State.Terminated != nil {
 
 						message := container.State.Terminated.Reason
-						containerLog.WithField("message", message).Debug("Container statue is termenated")
+						containerLog.WithField("message", message).Debug("Container status is terminated")
 						if container.State.Terminated.Message != "" {
 							message = fmt.Sprintf("%s - %s", message, container.State.Terminated.Message)
 						}

@@ -167,14 +167,14 @@ func (ssm *StatefulsetManager) watchStatefulsets(ctx context.Context) {
 //  watchStatefulset will watch a specific statefulset and its related resources (controller revision + pods)
 func (ssm *StatefulsetManager) watchStatefulset(ctx context.Context, cancelFn context.CancelFunc, lg log.Entry, registryStatefulset *StatefulsetData, listOptions metaV1.ListOptions, namespace string, maxWatchTime int64) {
 
-	satefulsetLog := lg.WithField("statefulset_name", registryStatefulset.GetName())
+	statefulsetLog := lg.WithField("statefulset_name", registryStatefulset.GetName())
 
-	satefulsetLog.Info("Starting Statefulset watcher")
-	satefulsetLog.WithField("list_option", listOptions.String()).Debug("List option for statefulset filtering")
+	statefulsetLog.Info("Starting Statefulset watcher")
+	statefulsetLog.WithField("list_option", listOptions.String()).Debug("List option for statefulset filtering")
 
 	watcher, err := ssm.client.AppsV1().StatefulSets(namespace).Watch(listOptions)
 	if err != nil {
-		satefulsetLog.WithError(err).Error("Could not start statefulset watcher")
+		statefulsetLog.WithError(err).Error("Could not start statefulset watcher")
 		return
 	}
 	firstInit := true
@@ -182,13 +182,13 @@ func (ssm *StatefulsetManager) watchStatefulset(ctx context.Context, cancelFn co
 		select {
 		case event, watch := <-watcher.ResultChan():
 			if !watch {
-				satefulsetLog.Warn("Statefulset watcher was stopped. Channel was closed")
+				statefulsetLog.Warn("Statefulset watcher was stopped. Channel was closed")
 				cancelFn()
 				return
 			}
 			statefulset, isOk := event.Object.(*appsV1.StatefulSet)
 			if !isOk {
-				satefulsetLog.WithField("object", event.Object).Warn("Failed to parse statefulset watcher data")
+				statefulsetLog.WithField("object", event.Object).Warn("Failed to parse statefulset watcher data")
 				continue
 			}
 			if firstInit {
@@ -201,10 +201,10 @@ func (ssm *StatefulsetManager) watchStatefulset(ctx context.Context, cancelFn co
 				}
 
 				// Start watching on Events of statefulset
-				ssm.watchEvents(ctx, *satefulsetLog, registryStatefulset, eventListOptions, namespace)
+				ssm.watchEvents(ctx, *statefulsetLog, registryStatefulset, eventListOptions, namespace)
 
 				// Use the Controller revision to find the pods with specific controller-revision-hash for the statefulset
-				ssm.controllerRevManager.WatchControllerRevisionPodsRetry(ctx, *satefulsetLog,
+				ssm.controllerRevManager.WatchControllerRevisionPodsRetry(ctx, *statefulsetLog,
 					registryStatefulset,
 					statefulset.ObjectMeta.Generation,
 					statefulset.Spec.Selector.MatchLabels,
@@ -219,12 +219,12 @@ func (ssm *StatefulsetManager) watchStatefulset(ctx context.Context, cancelFn co
 					RegistryData: registryStatefulset,
 					Namespace:    statefulset.Namespace,
 					Ctx:          ctx,
-					LogEntry:     *satefulsetLog,
+					LogEntry:     *statefulsetLog,
 				}
 			}
 			registryStatefulset.UpdateApplyStatus(statefulset.Status)
 		case <-ctx.Done():
-			satefulsetLog.Debug("Statefulset watcher was stopped. Got ctx done signal")
+			statefulsetLog.Debug("Statefulset watcher was stopped. Got ctx done signal")
 			watcher.Stop()
 			return
 		}

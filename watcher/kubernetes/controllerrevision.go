@@ -74,7 +74,7 @@ func (cr *ControllerRevisionManager) WatchControllerRevisionPodsRetry(ctx contex
 		break
 	}
 	if err != nil {
-		logEntry.Error("Stopping retrying backoff Fail")
+		logEntry.Error("backoff timed out, stopping")
 		return err
 
 	}

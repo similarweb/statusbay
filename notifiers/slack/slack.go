@@ -9,11 +9,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/apex/log"
 	"github.com/mitchellh/mapstructure"
 	slackApi "github.com/nlopes/slack"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 var (

@@ -9,8 +9,8 @@ import (
 	"statusbay/config"
 	"statusbay/state"
 
-	"github.com/apex/log"
 	"github.com/gorilla/mux"
+	log "github.com/sirupsen/logrus"
 )
 
 type RouterKubernetesManager struct {

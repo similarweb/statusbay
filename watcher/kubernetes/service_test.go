@@ -5,6 +5,7 @@ import (
 	"fmt"
 	kuberneteswatcher "statusbay/watcher/kubernetes"
 	"statusbay/watcher/kubernetes/common"
+	"sync"
 	"testing"
 	"time"
 
@@ -42,7 +43,10 @@ func TestServiceWatch(t *testing.T) {
 	client := fake.NewSimpleClientset()
 
 	serviceManager := NewServiceManagerMockMock(client)
-	serviceManager.Serve()
+
+	var wg *sync.WaitGroup
+
+	serviceManager.Serve(ctx, wg)
 
 	createServiceMock(client, "service-1")
 
@@ -55,7 +59,7 @@ func TestServiceWatch(t *testing.T) {
 
 	time.Sleep(time.Second * 5)
 
-	deployment := storageMock.MockWriteDeployment[1].Schema.Resources.Deployments["application"]
+	deployment := storageMock.MockWriteDeployment["1"].Schema.Resources.Deployments["application"]
 
 	// TODO.. complete the test when the task https://trello.com/c/VheJxFTE/42-add-deployment-service-to-the-db is completed
 	fmt.Println(deployment)

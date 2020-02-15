@@ -2,12 +2,13 @@ package kuberneteswatcher
 
 import (
 	"context"
-	"statusbay/serverutil"
+	"sync"
 	"time"
+
+	"statusbay/watcher/kubernetes/common"
 
 	"github.com/mitchellh/hashstructure"
 	log "github.com/sirupsen/logrus"
-	"statusbay/watcher/kubernetes/common"
 
 	appsV1 "k8s.io/api/apps/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -66,16 +67,14 @@ func NewDeploymentManager(kubernetesClientset kubernetes.Interface, eventManager
 }
 
 // Serve will start listening on deployment request
-func (dm *DeploymentManager) Serve() serverutil.StopFunc {
+func (dm *DeploymentManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 
-	ctx, cancelFn := context.WithCancel(context.Background())
-	stopped := make(chan bool)
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
 				log.Warn("Deployment Manager has been shut down")
-				stopped <- true
+				wg.Done()
 				return
 			}
 		}
@@ -91,10 +90,7 @@ func (dm *DeploymentManager) Serve() serverutil.StopFunc {
 	}
 
 	dm.watchDeployments(ctx)
-	return func() {
-		cancelFn()
-		<-stopped
-	}
+
 }
 
 // watchDeployments start watch on all Kubernetes deployments
@@ -130,11 +126,9 @@ func (dm *DeploymentManager) watchDeployments(ctx context.Context) {
 					log.WithField("object", event.Object).Warn("Failed to parse deployment watch data")
 					continue
 				}
-				deploymentName := deployment.GetName()
-				applicationName := GetMetadata(deployment.GetAnnotations(), "statusbay.io/application-name")
-				if applicationName != "" {
-					deploymentName = applicationName
-				}
+
+				deploymentName := GetApplicationName(deployment.GetAnnotations(), deployment.GetName())
+
 				if event.Type == eventwatch.Modified || event.Type == eventwatch.Added || event.Type == eventwatch.Deleted {
 
 					if event.Type == eventwatch.Deleted {
@@ -147,17 +141,18 @@ func (dm *DeploymentManager) watchDeployments(ctx context.Context) {
 					}
 
 					applicationRegistry := dm.registryManager.Get(deploymentName, deployment.GetNamespace())
+
+					// extract annotation for progressDeadLine since Daemonset don't have hat feature.
+					progressDeadLine := GetProgressDeadlineApply(deployment.GetAnnotations(), dm.maxDeploymentTime)
+
 					if applicationRegistry == nil {
 
 						deploymentStatus := common.DeploymentStatusRunning
 						if event.Type == eventwatch.Deleted {
 							deploymentStatus = common.DeploymentStatusDeleted
 						}
-
 						applicationRegistry = dm.registryManager.NewApplication(deploymentName,
-							deployment.GetName(),
 							deployment.GetNamespace(),
-							"cluster-name",
 							deployment.GetAnnotations(),
 							deploymentStatus)
 					}
@@ -167,14 +162,10 @@ func (dm *DeploymentManager) watchDeployments(ctx context.Context) {
 						deployment.GetLabels(),
 						deployment.GetAnnotations(),
 						*deployment.Spec.Replicas,
-						int64(*deployment.Spec.ProgressDeadlineSeconds))
+						progressDeadLine)
 					deploymentWatchListOptions := metaV1.ListOptions{LabelSelector: labels.SelectorFromSet(deployment.GetLabels()).String()}
 
 					maxWatchTime := dm.maxDeploymentTime
-
-					if int64(*deployment.Spec.ProgressDeadlineSeconds) > dm.maxDeploymentTime {
-						maxWatchTime = int64(*deployment.Spec.ProgressDeadlineSeconds)
-					}
 
 					go dm.watchDeployment(applicationRegistry.ctx,
 						applicationRegistry.cancelFn,

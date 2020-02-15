@@ -1,11 +1,13 @@
 package kuberneteswatcher_test
 
 import (
+	"context"
 	"fmt"
 	notifierCommon "statusbay/notifiers/common"
 	kuberneteswatcher "statusbay/watcher/kubernetes"
 	"statusbay/watcher/kubernetes/common"
 	"statusbay/watcher/kubernetes/testutil"
+	"sync"
 	"testing"
 	"time"
 
@@ -20,7 +22,7 @@ func createMockDeploymentData(registry *kuberneteswatcher.RegistryManager, statu
 	labels := map[string]string{}
 	annotations := map[string]string{}
 
-	registryRow := registry.NewApplication("nginx", fakeDeployment.GetName(), fakeDeployment.GetNamespace(), "cluster-name", fakeDeployment.GetAnnotations(), status)
+	registryRow := registry.NewApplication("nginx", fakeDeployment.GetNamespace(), fakeDeployment.GetAnnotations(), status)
 	registryDeploymentData := registryRow.AddDeployment("application", "pe", labels, annotations, 1, 3)
 
 	return registryDeploymentData
@@ -35,9 +37,13 @@ func NewRegistryMock() (*kuberneteswatcher.RegistryManager, *testutil.MockStorag
 
 	storageMock := testutil.NewMockStorage()
 	reporter := kuberneteswatcher.NewReporter([]notifierCommon.Notifier{})
-	registry := kuberneteswatcher.NewRegistryManager(saveInterval, checkFinishDelay, collectDataAfterApplyFinish, storageMock, reporter)
-	registry.Serve()
-	reporter.Serve()
+	registry := kuberneteswatcher.NewRegistryManager(saveInterval, checkFinishDelay, collectDataAfterApplyFinish, storageMock, reporter, "mock-cluster")
+
+	var wg *sync.WaitGroup
+	ctx := context.Background()
+
+	registry.Serve(ctx, wg)
+	reporter.Serve(ctx, wg)
 	return registry, storageMock
 
 }
@@ -47,7 +53,7 @@ func TestNewApplicationDeployment(t *testing.T) {
 	registry, _ := NewRegistryMock()
 
 	fakeDeployment := GetFakeDeployment(300)
-	registryRow := registry.NewApplication("nginx", fakeDeployment.GetName(), fakeDeployment.GetNamespace(), "cluster-name", fakeDeployment.GetAnnotations(), common.DeploymentStatusRunning)
+	registryRow := registry.NewApplication("nginx", fakeDeployment.GetNamespace(), fakeDeployment.GetAnnotations(), common.DeploymentStatusRunning)
 
 	testCases := []struct {
 		description string
@@ -115,7 +121,7 @@ func TestAddDeployment(t *testing.T) {
 	registry, _ := NewRegistryMock()
 
 	fakeDeployment := GetFakeDeployment(300)
-	registryRow := registry.NewApplication("nginx", fakeDeployment.GetName(), fakeDeployment.GetNamespace(), "cluster-name", fakeDeployment.GetAnnotations(), common.DeploymentStatusRunning)
+	registryRow := registry.NewApplication("nginx", fakeDeployment.GetNamespace(), fakeDeployment.GetAnnotations(), common.DeploymentStatusRunning)
 
 	labels := map[string]string{
 		"statusbay.io/report-deploy-by":      "elad.kaplan@similarweb.com",
@@ -186,7 +192,7 @@ func TestDeploymentData(t *testing.T) {
 	registry, _ := NewRegistryMock()
 
 	fakeDeployment := GetFakeDeployment(300)
-	registryRow := registry.NewApplication("nginx", fakeDeployment.GetName(), fakeDeployment.GetNamespace(), "cluster-name", fakeDeployment.GetAnnotations(), common.DeploymentStatusRunning)
+	registryRow := registry.NewApplication("nginx", fakeDeployment.GetNamespace(), fakeDeployment.GetAnnotations(), common.DeploymentStatusRunning)
 
 	labels := map[string]string{
 		"statusbay.io/report-deploy-by":      "elad.kaplan@similarweb.com",
@@ -331,7 +337,7 @@ func TestSave(t *testing.T) {
 	registry, storage := NewRegistryMock()
 
 	fakeDeployment := GetFakeDeployment(300)
-	registryRow := registry.NewApplication("nginx", fakeDeployment.GetName(), fakeDeployment.GetNamespace(), "cluster-name", fakeDeployment.GetAnnotations(), common.DeploymentStatusRunning)
+	registryRow := registry.NewApplication("nginx", fakeDeployment.GetNamespace(), fakeDeployment.GetAnnotations(), common.DeploymentStatusRunning)
 
 	labels := map[string]string{
 		"statusbay.io/report-deploy-by":      "elad.kaplan@similarweb.com",
@@ -343,7 +349,7 @@ func TestSave(t *testing.T) {
 	registryRow.AddDeployment("nginx-deployment2", "pe", labels, annotations, 1, 3)
 
 	time.Sleep(time.Second * 5)
-	id := uint(1)
+	id := "1"
 
 	t.Run("save_new_deployment", func(t *testing.T) {
 		testCases := []struct {
@@ -379,7 +385,7 @@ func TestDeploymentFinishSuccessful(t *testing.T) {
 	registry, storage := NewRegistryMock()
 
 	fakeDeployment := GetFakeDeployment(300)
-	registryRow := registry.NewApplication("nginx", fakeDeployment.GetName(), fakeDeployment.GetNamespace(), "cluster-name", fakeDeployment.GetAnnotations(), common.DeploymentStatusRunning)
+	registryRow := registry.NewApplication("nginx", fakeDeployment.GetNamespace(), fakeDeployment.GetAnnotations(), common.DeploymentStatusRunning)
 
 	labels := map[string]string{
 		"statusbay.io/report-deploy-by":      "elad.kaplan@similarweb.com",
@@ -398,8 +404,8 @@ func TestDeploymentFinishSuccessful(t *testing.T) {
 	data.UpdateReplicasetStatus("replicaset-name", replicasetStatus)
 
 	time.Sleep(time.Second * 10)
-	if storage.MockWriteDeployment[1].Status != common.DeploymentSuccessful {
-		t.Errorf("unexpected deployment status, got %s expected %s", storage.MockWriteDeployment[1].Status, common.DeploymentSuccessful)
+	if storage.MockWriteDeployment["1"].Status != common.DeploymentSuccessful {
+		t.Errorf("unexpected deployment status, got %s expected %s", storage.MockWriteDeployment["1"].Status, common.DeploymentSuccessful)
 	}
 	// TODO ask elad to explain
 	//if len(mockSlack.PostMessageRequest) != 4 {
@@ -413,7 +419,7 @@ func TestDeploymentFinishProgressDeadLine(t *testing.T) {
 	var progressDeadlineSeconds int32
 	progressDeadlineSeconds = 1
 	fakeDeployment := GetFakeDeployment(progressDeadlineSeconds)
-	registryRow := registry.NewApplication("nginx", fakeDeployment.GetName(), fakeDeployment.GetNamespace(), "cluster-name", fakeDeployment.GetAnnotations(), common.DeploymentStatusRunning)
+	registryRow := registry.NewApplication("nginx", fakeDeployment.GetNamespace(), fakeDeployment.GetAnnotations(), common.DeploymentStatusRunning)
 
 	labels := map[string]string{}
 	annotations := map[string]string{}
@@ -428,16 +434,31 @@ func TestDeploymentFinishProgressDeadLine(t *testing.T) {
 	data.UpdateReplicasetStatus("replicaset-name", replicasetStatus)
 
 	time.Sleep(time.Second * 8)
-	if storage.MockWriteDeployment[1].Status != common.DeploymentStatusFailed {
-		t.Fatalf("unexpected deployment status, got %s expected %s", storage.MockWriteDeployment[1].Status, common.DeploymentStatusFailed)
+	if storage.MockWriteDeployment["1"].Status != common.DeploymentStatusFailed {
+		t.Fatalf("unexpected deployment status, got %s expected %s", storage.MockWriteDeployment["1"].Status, common.DeploymentStatusFailed)
 	}
 
-	if storage.MockWriteDeployment[1].Schema.DeploymentDescription != kuberneteswatcher.DeploymentStatusDescriptionProgressDeadline {
-		t.Fatalf("unexpected deployment message description, got %s expected %s", storage.MockWriteDeployment[1].Schema.DeploymentDescription, kuberneteswatcher.DeploymentStatusDescriptionProgressDeadline)
+	if storage.MockWriteDeployment["1"].Schema.DeploymentDescription != kuberneteswatcher.DeploymentStatusDescriptionProgressDeadline {
+		t.Fatalf("unexpected deployment message description, got %s expected %s", storage.MockWriteDeployment["1"].Schema.DeploymentDescription, kuberneteswatcher.DeploymentStatusDescriptionProgressDeadline)
 	}
 	// TODO ask elad to explain
 	//if len(mockSlack.PostMessageRequest) != 4 {
 	//	t.Fatalf("unexpected slack reporters, got %d expected %d", len(mockSlack.PostMessageRequest), 4)
 	//}
 
+}
+
+func TestGetApplyID(t *testing.T) {
+
+	registry, _ := NewRegistryMock()
+
+	fakeDeployment := GetFakeDeployment(1)
+	registryRow := registry.NewApplication("nginx", fakeDeployment.GetNamespace(), fakeDeployment.GetAnnotations(), common.DeploymentStatusRunning)
+	registryRow.DBSchema.CreationTimestamp = 12345
+	applyID := registryRow.GetApplyID()
+
+	if applyID != "8fe4325f717a39f8bdcf772cc81e201102851fb8" {
+		t.Fatalf("unexpected apply ID, got %s expected %s", applyID, "8fe4325f717a39f8bdcf772cc81e201102851fb8")
+
+	}
 }

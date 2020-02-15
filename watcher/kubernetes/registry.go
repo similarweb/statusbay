@@ -2,10 +2,11 @@ package kuberneteswatcher
 
 import (
 	"context"
+	"crypto/sha1"
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"statusbay/serverutil"
+	"os"
 	"statusbay/watcher/kubernetes/common"
 	"sync"
 	"time"
@@ -35,8 +36,7 @@ type DBSchema struct {
 
 // RegistryRow defined row data of deployment
 type RegistryRow struct {
-	// registory
-	id                               uint
+	applyID                          string
 	finish                           bool
 	status                           common.DeploymentStatus
 	ctx                              context.Context
@@ -47,6 +47,7 @@ type RegistryRow struct {
 
 // RegistryManager defined multiple rows data
 type RegistryManager struct {
+	clusterName                 string
 	registryData                map[string]*RegistryRow
 	saveInterval                time.Duration
 	checkFinishDelay            time.Duration
@@ -67,8 +68,14 @@ func (dr *RegistryManager) DeleteAppliedVersion(name, namespace string) bool {
 }
 
 // NewRegistryManager create new schema registry instance
-func NewRegistryManager(saveInterval time.Duration, checkFinishDelay time.Duration, collectDataAfterApplyFinish time.Duration, storage Storage, reporter *ReporterManager) *RegistryManager {
+func NewRegistryManager(saveInterval time.Duration, checkFinishDelay time.Duration, collectDataAfterApplyFinish time.Duration, storage Storage, reporter *ReporterManager, clusterName string) *RegistryManager {
+	if clusterName == "" {
+		log.Panic("cluster name is mandatory field")
+		os.Exit(1)
+	}
+
 	return &RegistryManager{
+		clusterName:                 clusterName,
 		saveInterval:                saveInterval,
 		checkFinishDelay:            checkFinishDelay,
 		collectDataAfterApplyFinish: collectDataAfterApplyFinish,
@@ -83,10 +90,8 @@ func NewRegistryManager(saveInterval time.Duration, checkFinishDelay time.Durati
 }
 
 // Serve will start listening schema registry request
-func (dr *RegistryManager) Serve() serverutil.StopFunc {
+func (dr *RegistryManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 
-	ctx, cancelFn := context.WithCancel(context.Background())
-	stopped := make(chan bool)
 	go func() {
 		for {
 			select {
@@ -94,16 +99,12 @@ func (dr *RegistryManager) Serve() serverutil.StopFunc {
 				dr.save()
 			case <-ctx.Done():
 				log.Warn("Registry save schema has been shut down")
-				stopped <- true
+				wg.Done()
 				return
 			}
 		}
 	}()
 
-	return func() {
-		cancelFn()
-		<-stopped
-	}
 }
 
 // LoadRunningApps TODO:: fix me
@@ -113,13 +114,13 @@ func (dr *RegistryManager) LoadRunningApplies() []*RegistryRow {
 	apps, _ := dr.storage.GetAppliesByStatus(common.DeploymentStatusRunning)
 	log.WithField("count", len(apps)).Info("Loading running job from DB")
 
-	for id, appSchema := range apps {
+	for applyID, appSchema := range apps {
 
-		encodedID := generateID(appSchema.Application, appSchema.Namespace)
+		encodedID := generateID(appSchema.Application, appSchema.Namespace, dr.clusterName)
 		ctx, cancelFn := context.WithCancel(context.Background())
 
 		row := RegistryRow{
-			id:       id,
+			applyID:  applyID,
 			ctx:      ctx,
 			cancelFn: cancelFn,
 			finish:   false,
@@ -140,22 +141,20 @@ func (dr *RegistryManager) LoadRunningApplies() []*RegistryRow {
 // NewApplication will creates a new deployment row
 func (dr *RegistryManager) NewApplication(
 	appName string,
-	_ string,
 	namespace string,
-	clusterName string,
 	annotations map[string]string,
 	status common.DeploymentStatus) *RegistryRow {
 	dr.newAppLock.Lock()
 	defer dr.newAppLock.Unlock()
 
-	encodedID := generateID(appName, namespace)
-	reportTo := GetMetadataByPrefix(annotations, fmt.Sprintf("%s/%s", METAPREFIX, "report-"))
-	deployBy := GetMetadata(annotations, fmt.Sprintf("%s/%s", METAPREFIX, "report-deploy-by"))
+	encodedID := generateID(appName, namespace, dr.clusterName)
+	reportTo := GetMetadataByPrefix(annotations, fmt.Sprintf("%s/%s", ANNOTATION_PREFIX, "report-"))
+	deployBy := GetMetadata(annotations, fmt.Sprintf("%s/%s", ANNOTATION_PREFIX, "report-deploy-by"))
 	deployTime := time.Now().Unix()
 	ctx, cancelFn := context.WithCancel(context.Background())
 
 	row := RegistryRow{
-		id:                               0,
+		applyID:                          "",
 		ctx:                              ctx,
 		cancelFn:                         cancelFn,
 		finish:                           false,
@@ -163,7 +162,7 @@ func (dr *RegistryManager) NewApplication(
 		collectDataAfterDeploymentFinish: dr.collectDataAfterApplyFinish,
 		DBSchema: DBSchema{
 			Application:           appName,
-			Cluster:               clusterName,
+			Cluster:               dr.clusterName,
 			Namespace:             namespace,
 			CreationTimestamp:     deployTime,
 			ReportTo:              reportTo,
@@ -204,7 +203,7 @@ func (dr *RegistryManager) NewApplication(
 		"deploy_by":   deployBy,
 		"report_to":   reportTo,
 		"namespace":   namespace,
-		"cluster":     clusterName,
+		"cluster":     dr.clusterName,
 	}).Info("New application deployment started")
 
 	go row.isFinish(dr.checkFinishDelay)
@@ -215,11 +214,22 @@ func (dr *RegistryManager) NewApplication(
 // Get will return deployment row that exists in memory
 func (dr *RegistryManager) Get(name, namespace string) *RegistryRow {
 
-	encodedID := generateID(name, namespace)
+	encodedID := generateID(name, namespace, dr.clusterName)
 	if row, found := dr.registryData[encodedID]; found {
 		return row
 	}
 	return nil
+
+}
+
+// GetApplyID generate a unique for a specific apply
+func (wbr *RegistryRow) GetApplyID() string {
+
+	encodedID := generateID(wbr.DBSchema.Application, wbr.DBSchema.Namespace, wbr.DBSchema.Cluster)
+	h := sha1.New()
+
+	h.Write([]byte(fmt.Sprintf("%s-%d", encodedID, wbr.DBSchema.CreationTimestamp)))
+	return fmt.Sprintf("%x", h.Sum(nil))
 
 }
 
@@ -709,16 +719,16 @@ func (dr *RegistryManager) save() {
 	for key, data := range dr.registryData {
 		go func(key string, data *RegistryRow, deleteRows *[]string) {
 			defer wg.Done()
-			if data.id == 0 {
+			if data.applyID == "" {
 
-				id, err := dr.storage.CreateApply(data, data.status)
+				applyID, err := dr.storage.CreateApply(data, data.status)
 				if err != nil {
 					*deleteRows = append(*deleteRows, key)
 					return
 				}
-				data.id = id
+				data.applyID = applyID
 			} else {
-				dr.storage.UpdateApply(data.id, data, data.status)
+				dr.storage.UpdateApply(data.applyID, data, data.status)
 			}
 
 			log.WithFields(log.Fields{
@@ -753,6 +763,6 @@ func (dr *RegistryManager) save() {
 }
 
 // generateID will create a id for the deployment
-func generateID(name, namespace string) string {
-	return base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s-%s", name, namespace)))
+func generateID(name, namespace, cluster string) string {
+	return base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s-%s-%s", name, namespace, cluster)))
 }

@@ -2,9 +2,8 @@ package kuberneteswatcher
 
 import (
 	"context"
-	"statusbay/serverutil"
 	"statusbay/watcher/kubernetes/common"
-	"strconv"
+	"sync"
 	"time"
 
 	"github.com/mitchellh/hashstructure"
@@ -50,15 +49,14 @@ func NewStatefulsetManager(k8sClient kubernetes.Interface, eventManager *EventsM
 }
 
 //Serve Will serve the watch channels of statefulset
-func (ssm *StatefulsetManager) Serve() serverutil.StopFunc {
-	ctx, cancelFn := context.WithCancel(context.Background())
-	stopped := make(chan bool)
+func (ssm *StatefulsetManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
+
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
 				log.Warn("Statefulsets Manager has been shut down")
-				stopped <- true
+				wg.Done()
 				return
 			}
 		}
@@ -76,10 +74,7 @@ func (ssm *StatefulsetManager) Serve() serverutil.StopFunc {
 		}
 	}
 	ssm.watchStatefulsets(ctx)
-	return func() {
-		cancelFn()
-		<-stopped
-	}
+
 }
 
 func (ssm *StatefulsetManager) watchStatefulsets(ctx context.Context) {
@@ -110,17 +105,9 @@ func (ssm *StatefulsetManager) watchStatefulsets(ctx context.Context) {
 					log.WithField("object", event.Object).Warn("Failed to parse statefulset watcher data")
 					continue
 				}
-				statefulsetName := statefulset.GetName()
-				applicationName := GetMetadata(statefulset.GetAnnotations(), "statusbay.io/application-name")
-				if applicationName != "" {
-					statefulsetName = applicationName
-				}
-				// extract annotation for progressDeadLine since statefulset don't have this feature
-				progressDeadLineAnnotations := GetMetadata(statefulset.GetAnnotations(), "statusbay.io/progress-deadline-seconds")
-				progressDeadLine, err := strconv.ParseInt(progressDeadLineAnnotations, 10, 64)
-				if err != nil {
-					progressDeadLine = int64(ssm.maxDeploymentTime)
-				}
+
+				statefulsetName := GetApplicationName(statefulset.GetAnnotations(), statefulset.GetName())
+
 				if event.Type == eventwatch.Modified || event.Type == eventwatch.Added || event.Type == eventwatch.Deleted {
 					// handle modified event
 					if event.Type == eventwatch.Deleted {
@@ -132,6 +119,10 @@ func (ssm *StatefulsetManager) watchStatefulsets(ctx context.Context) {
 						}
 					}
 					appRegistry := ssm.registryManager.Get(statefulsetName, statefulset.GetNamespace())
+
+					// extract annotation for progressDeadLine since statefulset don't have this feature
+					progressDeadLine := GetProgressDeadlineApply(statefulset.GetAnnotations(), ssm.maxDeploymentTime)
+
 					if appRegistry == nil {
 						statefulsetStatus := common.DeploymentStatusRunning
 						if event.Type == eventwatch.Deleted {
@@ -139,9 +130,7 @@ func (ssm *StatefulsetManager) watchStatefulsets(ctx context.Context) {
 						}
 
 						appRegistry = ssm.registryManager.NewApplication(statefulsetName,
-							statefulset.GetName(),
 							statefulset.GetNamespace(),
-							"cluster-name",
 							statefulset.GetAnnotations(),
 							statefulsetStatus)
 					}
@@ -154,18 +143,14 @@ func (ssm *StatefulsetManager) watchStatefulsets(ctx context.Context) {
 						progressDeadLine)
 					statefulsetWatchListOptions := metaV1.ListOptions{
 						LabelSelector: labels.SelectorFromSet(statefulset.GetLabels()).String()}
-					maxWatchTime := ssm.maxDeploymentTime
 
-					if progressDeadLine > ssm.maxDeploymentTime {
-						maxWatchTime = progressDeadLine
-					}
 					go ssm.watchStatefulset(
 						appRegistry.ctx,
 						appRegistry.cancelFn,
 						registryApply,
 						statefulsetWatchListOptions,
 						statefulset.GetNamespace(),
-						maxWatchTime)
+						progressDeadLine)
 				} else {
 					log.WithFields(log.Fields{
 						"event_type":  event.Type,

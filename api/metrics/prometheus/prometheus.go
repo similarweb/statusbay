@@ -3,10 +3,10 @@ package prometheus
 import (
 	"context"
 	"strconv"
+	"sync"
 	"time"
 
 	"statusbay/api/httpresponse"
-	"statusbay/serverutil"
 
 	"github.com/prometheus/client_golang/api"
 	v1 "github.com/prometheus/client_golang/api/prometheus/v1"
@@ -45,23 +45,19 @@ func NewPrometheusManager(address string, v1api ClientDescriber) *Prometheus {
 }
 
 // Serve will start listening metric request
-func (pm *Prometheus) Serve() serverutil.StopFunc {
-	ctx, cancelFn := context.WithCancel(context.Background())
-	stopped := make(chan bool)
+func (pm *Prometheus) Serve(ctx context.Context, wg *sync.WaitGroup) {
+
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
 				log.Warn("Prometheus has been shut down")
-				stopped <- true
+				wg.Done()
 				return
 			}
 		}
 	}()
-	return func() {
-		cancelFn()
-		<-stopped
-	}
+
 }
 
 // GetMetric communicates with Prometheus

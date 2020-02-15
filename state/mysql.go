@@ -18,7 +18,7 @@ type MySQLManager struct {
 
 // TableKubernetes define deployment table schema
 type TableKubernetes struct {
-	ID        uint   `gorm:"primary_key"`
+	ApplyId   string `gorm:"unique_index;not null"`
 	Name      string `gorm:"not null"`
 	Cluster   string `gorm:"not null"`
 	Namespace string `gorm:"not null"`

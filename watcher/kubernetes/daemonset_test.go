@@ -1,6 +1,8 @@
 package kuberneteswatcher_test
 
 import (
+	"context"
+	"sync"
 	"testing"
 	"time"
 
@@ -68,10 +70,13 @@ func NewDaemonSetManagerMock(client *fake.Clientset) (*kuberneteswatcher.Daemons
 	controllerRevisionManager := NewControllerRevisionManagerMock(client, podManager)
 	daemonsetManager := kuberneteswatcher.NewDaemonsetManager(client, eventManager, registryManager, serviceManager, controllerRevisionManager, maxDeploymentTime)
 
-	eventManager.Serve()
-	serviceManager.Serve()
-	podManager.Serve()
-	daemonsetManager.Serve()
+	var wg *sync.WaitGroup
+	ctx := context.Background()
+
+	eventManager.Serve(ctx, wg)
+	serviceManager.Serve(ctx, wg)
+	podManager.Serve(ctx, wg)
+	daemonsetManager.Serve(ctx, wg)
 	return daemonsetManager, storage, controllerRevisionManager
 }
 
@@ -121,7 +126,7 @@ func TestDaemonsetWatch(t *testing.T) {
 
 	NotValidControllerRevisionHashlabelKey := controllerRevisionManager.Error
 	// verify daemonset deployed
-	application := storage.MockWriteDeployment[1]
+	application := storage.MockWriteDeployment["1"]
 	_ = application.Schema.Resources.Daemonsets["test-daemonset"]
 
 	t.Run("controller_revision_valid_hash_label_key", func(t *testing.T) {

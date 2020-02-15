@@ -1,6 +1,6 @@
 # Contributing
 
-Standard branch name concentions (gitflow):
+Standard branch name conventions (gitflow):
 
 ```
 hotfix/your_fix_name

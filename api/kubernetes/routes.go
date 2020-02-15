@@ -9,8 +9,6 @@ import (
 	"statusbay/config"
 	"statusbay/state"
 
-	"strconv"
-
 	"github.com/apex/log"
 	"github.com/gorilla/mux"
 )
@@ -21,6 +19,7 @@ type RouterKubernetesManager struct {
 	eventMarksConfig config.KubernetesMarksEvents
 }
 
+//NewKubernetesRoutes sets up the Kubernetes router to handle API endpoints
 func NewKubernetesRoutes(storage Storage, router *mux.Router, eventPath string) *RouterKubernetesManager {
 
 	eventMarksConfig, err := config.LoadKubernetesMarksConfig(eventPath)
@@ -37,12 +36,14 @@ func NewKubernetesRoutes(storage Storage, router *mux.Router, eventPath string) 
 	return kubernetesRoutes
 }
 
+//bindEndpoints List of API endpoints
 func (kr *RouterKubernetesManager) bindEndpoints() {
 	kr.router.HandleFunc("/api/v1/kubernetes/applications", kr.Applications).Methods("GET")
 	kr.router.HandleFunc("/api/v1/kubernetes/applications/values/{column}", kr.ApplicationsColumnValues).Methods("GET")
-	kr.router.HandleFunc("/api/v1/kubernetes/application/{job_id}/{time}", kr.GetDeployment).Methods("GET")
+	kr.router.HandleFunc("/api/v1/kubernetes/application/{apply_id}", kr.GetDeployment).Methods("GET")
 }
 
+//Applications returns a list of applied application.
 func (route *RouterKubernetesManager) Applications(resp http.ResponseWriter, req *http.Request) {
 
 	// Applications' filter
@@ -72,6 +73,7 @@ func (route *RouterKubernetesManager) Applications(resp http.ResponseWriter, req
 	for _, row := range *rows {
 
 		response = append(response, ResponseKubernetesApplications{
+			ApplyID:   row.ApplyId,
 			Name:      row.Name,
 			Cluster:   row.Cluster,
 			Namespace: row.Namespace,
@@ -90,6 +92,7 @@ func (route *RouterKubernetesManager) Applications(resp http.ResponseWriter, req
 	httpresponse.JSONWrite(resp, http.StatusOK, r)
 }
 
+//ApplicationsColumnValues returns a unique column values
 func (route *RouterKubernetesManager) ApplicationsColumnValues(resp http.ResponseWriter, req *http.Request) {
 
 	errs := url.Values{}
@@ -124,21 +127,16 @@ func (route *RouterKubernetesManager) ApplicationsColumnValues(resp http.Respons
 	httpresponse.JSONWrite(resp, http.StatusOK, values)
 }
 
+//GetDeployment returns a specific deployment details.
 func (route *RouterKubernetesManager) GetDeployment(resp http.ResponseWriter, req *http.Request) {
 
 	params := mux.Vars(req)
-	applicationName := params["name"]
+	applyID := params["apply_id"]
 
-	deploymentTime, err := strconv.ParseInt(params["time"], 10, 64)
-	if err != nil {
-		httpresponse.JSONError(resp, http.StatusBadRequest, errors.New("Invalid time parameter"))
-		return
-	}
-
-	deployment, err := route.storage.GetDeployment(applicationName, deploymentTime)
+	deployment, err := route.storage.GetDeployment(applyID)
 	if err != nil {
 		httpresponse.JSONError(resp, http.StatusNotFound, errors.New("Deployment not found"))
-
+		return
 	}
 
 	var kubernetesDeploymentResponse ResponseDeploymentData
@@ -147,12 +145,14 @@ func (route *RouterKubernetesManager) GetDeployment(resp http.ResponseWriter, re
 	if err != nil {
 		log.WithError(err).WithFields(log.Fields{}).Error("Could not parse deployment detail.")
 		httpresponse.JSONError(resp, http.StatusNotFound, errors.New("Could not parse deployment detail."))
+		return
 	}
 
 	MarkApplicationDeploymentEvents(&kubernetesDeploymentResponse, route.eventMarksConfig)
 
 	response := ResponseKubernetesDeployment{
 		Name:      deployment.Name,
+		Time:      deployment.Time,
 		Status:    deployment.Status,
 		Cluster:   deployment.Cluster,
 		Namespace: deployment.Namespace,

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	kuberneteswatcher "statusbay/watcher/kubernetes"
+	"sync"
 
 	appsV1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -25,11 +26,14 @@ type MockControllerRevisionManager struct {
 func NewControllerRevisionManagerMock(client *fake.Clientset, podsManager *kuberneteswatcher.PodsManager) *MockControllerRevisionManager {
 	var podManager *kuberneteswatcher.PodsManager
 	podManager = podsManager
+
+	var wg *sync.WaitGroup
+	ctx := context.Background()
 	if podManager == nil {
 		eventManager := kuberneteswatcher.NewEventsManager(client)
 		podManager = kuberneteswatcher.NewPodsManager(client, eventManager)
-		podManager.Serve()
-		eventManager.Serve()
+		podManager.Serve(ctx, wg)
+		eventManager.Serve(ctx, wg)
 	}
 	//controllerRevisionManager := kuberneteswatcher.NewControllerRevisionManager(client, podManager)
 	return &MockControllerRevisionManager{

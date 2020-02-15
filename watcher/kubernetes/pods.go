@@ -3,7 +3,6 @@ package kuberneteswatcher
 import (
 	"context"
 	"fmt"
-	"statusbay/serverutil"
 	"sync"
 	"time"
 
@@ -53,10 +52,8 @@ func (pm *PodsManager) loadPodFirstInit(key string) bool {
 }
 
 // Serve will start listening on pods request
-func (pm *PodsManager) Serve() serverutil.StopFunc {
+func (pm *PodsManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 
-	ctx, cancelFn := context.WithCancel(context.Background())
-	stopped := make(chan bool)
 	go func() {
 		for {
 			select {
@@ -64,16 +61,12 @@ func (pm *PodsManager) Serve() serverutil.StopFunc {
 				pm.watch(data)
 			case <-ctx.Done():
 				log.Warn("Pods Manager has been shut down")
-				stopped <- true
+				wg.Done()
 				return
 			}
 		}
 	}()
 
-	return func() {
-		cancelFn()
-		<-stopped
-	}
 }
 
 // watch will start watch on pods changes

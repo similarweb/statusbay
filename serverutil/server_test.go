@@ -3,6 +3,7 @@ package serverutil_test
 import (
 	"context"
 	"statusbay/serverutil"
+	"sync"
 	"testing"
 	"time"
 )
@@ -22,26 +23,20 @@ func MockServeStruct() *ServeStruct {
 
 }
 
-func (m *ServeStruct) Serve() serverutil.StopFunc {
+func (m *ServeStruct) Serve(ctx context.Context, wg *sync.WaitGroup) {
 
-	ctx, cancelFn := context.WithCancel(context.Background())
-	stopped := make(chan bool)
 	go func() {
 		m.init = true
 		for {
 			select {
 			case <-ctx.Done():
 				m.isStop = true
-				stopped <- true
+				wg.Done()
 				return
 			}
 		}
 	}()
 
-	return func() {
-		cancelFn()
-		<-stopped
-	}
 }
 func TestServe(t *testing.T) {
 
@@ -51,7 +46,11 @@ func TestServe(t *testing.T) {
 		t.Fatalf("unexpected serve init, got %t expected %t", serverStruct.isStop, false)
 	}
 
-	serverutil.RunAll(serverStruct)
+	servers := []serverutil.Server{
+		serverStruct,
+	}
+	ctx := context.Background()
+	serverutil.RunAll(ctx, servers)
 	time.Sleep(time.Second)
 	if !serverStruct.init {
 		t.Fatalf("unexpected init serve funtion, got %t expected %t", serverStruct.isStop, true)

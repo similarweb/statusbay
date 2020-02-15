@@ -11,7 +11,7 @@ import (
 type Storage interface {
 	Applications(queryFillter FilterApplications) (*[]state.TableKubernetes, error)
 	ApplicationsCount(queryFillter FilterApplications) (int64, error)
-	GetDeployment(name string, time int64) (state.TableKubernetes, error)
+	GetDeployment(applyID string) (state.TableKubernetes, error)
 	GetUniqueFieldValues(tableName, columnName string) ([]string, error)
 }
 
@@ -33,7 +33,7 @@ func (my *MySQLStorage) ApplicationsCount(queryFillter FilterApplications) (int6
 	queryBuilder := my.builderApplications(queryFillter)
 	var count int64
 
-	if err := queryBuilder.Table(dummy.TableName()).Select("count(id)").Count(&count).Error; err != nil {
+	if err := queryBuilder.Table(dummy.TableName()).Select("count(apply_id)").Count(&count).Error; err != nil {
 		log.WithError(err).Error("MYSQL: could not fetch application list for count")
 		return 0, err
 	}
@@ -80,15 +80,14 @@ func (my *MySQLStorage) GetUniqueFieldValues(tableName, columnName string) ([]st
 	return values, nil
 }
 
-func (my *MySQLStorage) GetDeployment(name string, time int64) (state.TableKubernetes, error) {
+func (my *MySQLStorage) GetDeployment(applyID string) (state.TableKubernetes, error) {
 
 	var empty state.TableKubernetes
 	deploymentRow := &state.TableKubernetes{}
 
-	if err := my.client.DB.Where(&state.TableKubernetes{Name: name}).Where(&state.TableKubernetes{Time: time}).First(deploymentRow).Error; err != nil {
+	if err := my.client.DB.Where(&state.TableKubernetes{ApplyId: applyID}).First(deploymentRow).Error; err != nil {
 		log.WithError(err).WithFields(log.Fields{
-			"application": name,
-			"time":        time,
+			"apply_id": applyID,
 		}).Error("MySQL: Error when trying to get deployment")
 		return empty, err
 	}
@@ -121,6 +120,14 @@ func (my *MySQLStorage) builderApplications(queryFillter FilterApplications) *go
 			queryBuilder = queryBuilder.Or(&state.TableKubernetes{Namespace: namespace})
 		}
 
+	}
+
+	if queryFillter.Name != "" {
+		queryBuilder = queryBuilder.Where("name LIKE ?", fmt.Sprintf("%%%s%%", queryFillter.Name))
+	}
+
+	if queryFillter.DeployBy != "" {
+		queryBuilder = queryBuilder.Where("deploy_by LIKE ?", fmt.Sprintf("%%%s%%", queryFillter.DeployBy))
 	}
 
 	// By Default SortBy will sort by desc direction

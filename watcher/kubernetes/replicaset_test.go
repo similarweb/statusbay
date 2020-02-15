@@ -4,6 +4,7 @@ import (
 	"context"
 	kuberneteswatcher "statusbay/watcher/kubernetes"
 	"statusbay/watcher/kubernetes/common"
+	"sync"
 	"testing"
 	"time"
 
@@ -36,8 +37,12 @@ func NewReplicasetMock(client *fake.Clientset) *kuberneteswatcher.ReplicaSetMana
 
 	podManager := kuberneteswatcher.NewPodsManager(client, eventManager)
 	replicasetManager := kuberneteswatcher.NewReplicasetManager(client, eventManager, podManager)
-	podManager.Serve()
-	replicasetManager.Serve()
+
+	var wg *sync.WaitGroup
+	ctx := context.Background()
+
+	podManager.Serve(ctx, wg)
+	replicasetManager.Serve(ctx, wg)
 	return replicasetManager
 
 }
@@ -78,7 +83,7 @@ func NewReplicasetMock(client *fake.Clientset) *kuberneteswatcher.ReplicaSetMana
 // 	event1 := &v1.Event{Message: "message", ObjectMeta: metav1.ObjectMeta{Name: "a", CreationTimestamp: metav1.Time{Time: time.Now()}}}
 // 	client.CoreV1().Events("pe").Create(event1)
 
-// 	deployment := storageMock.MockWriteDeployment[1].Schema.Resources.Deployments["application"]
+// 	deployment := storageMock.MockWriteDeployment["1"].Schema.Resources.Deployments["application"]
 
 // 	t.Run("replicaset", func(t *testing.T) {
 
@@ -132,7 +137,7 @@ func TestInvalidSelector(t *testing.T) {
 	time.Sleep(time.Second * 1)
 
 	time.Sleep(2 * time.Second)
-	deployment := storageMock.MockWriteDeployment[1].Schema.Resources.Deployments["application"]
+	deployment := storageMock.MockWriteDeployment["1"].Schema.Resources.Deployments["application"]
 	if len(deployment.Pods) != 0 {
 		t.Fatalf("unexpected pod count watch event count, got %d expected %d", len(deployment.Pods), 0)
 	}

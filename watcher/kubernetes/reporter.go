@@ -2,10 +2,11 @@ package kuberneteswatcher
 
 import (
 	"context"
-	log "github.com/sirupsen/logrus"
 	notifierCommon "statusbay/notifiers/common"
-	"statusbay/serverutil"
 	"statusbay/watcher/kubernetes/common"
+	"sync"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // ReporterManager defined reporter metadata
@@ -35,21 +36,12 @@ func NewReporter(availableNotifiers []notifierCommon.Notifier) *ReporterManager 
 }
 
 // Serve will start to reporter listener
-func (re *ReporterManager) Serve() serverutil.StopFunc {
+func (re *ReporterManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 
-	ctx, ctxCancel := context.WithCancel(context.Background())
-	var notifierStoppers []serverutil.StopFunc
 	for _, notifier := range re.availableNotifiers {
-		notifierStoppers = append(notifierStoppers, notifier.Serve())
-	}
-	cancelFn := func() {
-		ctxCancel()
-		for _, notifierCancelFunc := range notifierStoppers {
-			notifierCancelFunc()
-		}
+		notifier.Serve(ctx, wg)
 	}
 
-	stopped := make(chan bool)
 	go func() {
 		for {
 			select {
@@ -61,17 +53,13 @@ func (re *ReporterManager) Serve() serverutil.StopFunc {
 				re.deploymentFinish(request)
 			case <-ctx.Done():
 				log.Warn("Reporter has been shut down")
-				stopped <- true
+				wg.Done()
 				return
 			}
 		}
 	}()
 	log.Info("Reporter started")
 
-	return func() {
-		cancelFn()
-		<-stopped
-	}
 }
 
 // deploymentStarted will send slack message to channel/user when the deployment is started
@@ -91,6 +79,6 @@ func (re *ReporterManager) deploymentDeleted(message common.DeploymentReport) {
 // deploymentFinish will send slack message to channel/user when the deployment is finished
 func (re *ReporterManager) deploymentFinish(message common.DeploymentReport) {
 	for _, notifier := range re.availableNotifiers {
-		notifier.ReportDeleted(message)
+		notifier.ReportEnded(message)
 	}
 }

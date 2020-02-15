@@ -3,7 +3,7 @@ package kuberneteswatcher
 import (
 	"context"
 	"fmt"
-	"statusbay/serverutil"
+	"sync"
 
 	log "github.com/sirupsen/logrus"
 	"k8s.io/client-go/kubernetes"
@@ -25,11 +25,9 @@ func NewPvcManager(kubernetesClientset kubernetes.Interface, eventManager *Event
 	}
 }
 
-// Serve will start listening on PVC requests
-func (pm *PvcManager) Serve() serverutil.StopFunc {
+// Serve will start listening on pods request
+func (pm *PvcManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 
-	ctx, cancelFn := context.WithCancel(context.Background())
-	stopped := make(chan bool)
 	go func() {
 		for {
 			select {
@@ -37,16 +35,12 @@ func (pm *PvcManager) Serve() serverutil.StopFunc {
 				pm.watchEvents(data)
 			case <-ctx.Done():
 				log.Warn("Pvc Manager has been shut down")
-				stopped <- true
+				wg.Done()
 				return
 			}
 		}
 	}()
 
-	return func() {
-		cancelFn()
-		<-stopped
-	}
 }
 
 // watchEvents will start watch on pod event messages changes
@@ -70,7 +64,9 @@ func (pm *PvcManager) watchEvents(watchData WatchData) {
 		for {
 			select {
 			case event := <-eventChan:
+				log.Info("--------------------------------------")
 				log.Info(event)
+				log.Info("--------------------------------------")
 			case <-watchData.Ctx.Done():
 				log.WithFields(log.Fields{
 					fmt.Sprintf("%T", watchData): watchData.RegistryData.GetName(),

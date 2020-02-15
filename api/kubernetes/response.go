@@ -10,6 +10,7 @@ type ResponseKubernetesApplicationsCount struct {
 }
 
 type ResponseKubernetesApplications struct {
+	ApplyID   string `json:"ApplyID"`
 	Name      string `json:"Name"`
 	Status    string `json:"Status"`
 	Cluster   string `json:"Cluster"`
@@ -17,14 +18,7 @@ type ResponseKubernetesApplications struct {
 	DeployBy  string `json:"DeployBy"`
 	Time      int64  `json:"Time"`
 }
-type ResponseMessageDeploy struct {
-	UID               string            `json:"ID"`
-	Kind              string            `json:"Kind"`
-	Namespace         string            `json:"Namespace"`
-	Name              string            `json:"Name"`
-	CreationTimestamp time.Time         `json:"CreationTimestamp"`
-	Labels            map[string]string `json:"Labels"`
-}
+
 type ResponseMetaData struct {
 	Name         string            `json:"Name"`
 	Namespace    string            `json:"Namespace"`
@@ -98,7 +92,7 @@ type ResponseKubernetesDeployment struct {
 	Cluster   string                 `json:"Cluster"`
 	Namespace string                 `json:"Namespace"`
 	Status    string                 `json:"Status"`
-	Time      string                 `json:"Time"`
+	Time      int64                  `json:"Time"`
 	Details   ResponseDeploymentData `json:"Details"`
 }
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/gorilla/handlers"
@@ -13,7 +14,6 @@ import (
 	"statusbay/api/alerts"
 	"statusbay/api/kubernetes"
 	"statusbay/api/metrics"
-	"statusbay/serverutil"
 )
 
 const (
@@ -51,29 +51,23 @@ func NewServer(kubernetesStorage kubernetes.Storage, port string, kubernetesMark
 }
 
 // Serve starts the HTTP server and listens until StopFunc is called
-func (server *Server) Serve() serverutil.StopFunc {
-	ctx, cancelFn := context.WithCancel(context.Background())
+func (server *Server) Serve(ctx context.Context, wg *sync.WaitGroup) {
+
 	server.BindEndpoints()
 	log.WithField("bind_address", server.httpserver.Addr).Info("Starting statusbay server")
-	stopped := make(chan bool)
 	go func() {
 		<-ctx.Done()
-		serverCtx, serverCancelFn := context.WithTimeout(context.Background(), DrainTimeout)
-		err := server.httpserver.Shutdown(serverCtx)
+		err := server.httpserver.Shutdown(ctx)
 		if err != nil {
 			log.WithError(err).Error("error occured while shutting down manager HTTP server")
 		}
-		serverCancelFn()
-		stopped <- true
+		log.Warn("HTTP server has been shut down")
+		wg.Done()
 	}()
 	go func() {
 		server.httpserver.ListenAndServe()
 	}()
-	return func() {
-		cancelFn()
-		<-stopped
-		log.Warn("HTTP server has been drained and shut down")
-	}
+
 }
 
 // BindEndpoints sets up the router to handle API endpoints

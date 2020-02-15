@@ -1,6 +1,6 @@
 {{- $root := . -}}
 {{range $i, $e := until (int .Values.deployment.count) }}
-{{-  $name := printf "%s-%d" $root.Values.deployment.name  $i  -}}
+{{-  $name := printf "%s-%d" $root.Values.deployment.name  $i  }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -12,7 +12,6 @@ metadata:
 {{ toYaml $root.Values.deployment.annotations | indent 4}}
 spec:
   replicas: {{ $root.Values.deployment.replicas}}
-  progressDeadlineSeconds: {{ $root.Values.deployment.progressDeadlineSeconds}}
   selector:
     matchLabels:
       component: {{ $name }}

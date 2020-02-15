@@ -111,10 +111,10 @@ func (ssm *StatefulsetManager) watchStatefulsets(ctx context.Context) {
 				if event.Type == eventwatch.Modified || event.Type == eventwatch.Added || event.Type == eventwatch.Deleted {
 					// handle modified event
 					if event.Type == eventwatch.Deleted {
-						ssm.registryManager.DeleteAppliedVersion(statefulset.GetName(), statefulset.GetNamespace())
+						ssm.registryManager.DeleteAppliedVersion(statefulset.GetName(), statefulset.GetNamespace(), "statefulset")
 					} else {
 						hash, _ := hashstructure.Hash(statefulset.Spec, nil)
-						if !ssm.registryManager.UpdateAppliesVersionHistory(statefulset.GetName(), statefulset.GetNamespace(), hash) {
+						if !ssm.registryManager.UpdateAppliesVersionHistory(statefulset.GetName(), statefulset.GetNamespace(), "statefulset", hash) {
 							continue
 						}
 					}

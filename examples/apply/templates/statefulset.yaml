@@ -8,6 +8,8 @@ metadata:
   name: {{ $name }}
   labels:
     component: {{ $name }}
+  annotations:
+{{ toYaml $root.Values.statefulset.annotations | indent 4}}
 spec:
   serviceName: {{ $name }}
   selector:

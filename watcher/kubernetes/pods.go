@@ -3,6 +3,7 @@ package kuberneteswatcher
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -115,16 +116,20 @@ func (pm *PodsManager) watch(watchData WatchData) {
 					}).String(),
 					}
 					go pm.watchEvents(watchData.Ctx, watchData.RegistryData, eventListOptions, pod.Namespace, pod.GetName())
-					PvcEventListOptions := metaV1.ListOptions{FieldSelector: labels.SelectorFromSet(map[string]string{
-						"involvedObject.name": pod.GetName(),
-						"involvedObject.kind": "PersistentVolumeClaims",
-					}).String()}
 
-					pm.pvcManager.Watch <- WatchData{
-						ListOptions:  PvcEventListOptions,
-						RegistryData: watchData.RegistryData,
-						Namespace:    pod.Namespace,
-						Ctx:          watchData.Ctx,
+					for _, volume := range pod.Spec.Volumes {
+						pvcName := volume.VolumeSource.PersistentVolumeClaim.ClaimName
+						if strings.Contains(pvcName, pod.GetName()) {
+							PvcEventListOptions := metaV1.ListOptions{FieldSelector: labels.SelectorFromSet(map[string]string{
+								"involvedObject.name": pvcName,
+								"involvedObject.kind": "PersistentVolumeClaim"}).String()}
+							pm.pvcManager.Watch <- WatchData{
+								ListOptions:  PvcEventListOptions,
+								RegistryData: watchData.RegistryData,
+								Namespace:    pod.Namespace,
+								Ctx:          watchData.Ctx,
+							}
+						}
 					}
 
 				}

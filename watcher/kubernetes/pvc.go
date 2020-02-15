@@ -48,7 +48,7 @@ func (pm *PvcManager) watchEvents(watchData WatchData) {
 
 	log.WithFields(log.Fields{
 		fmt.Sprintf("%T", watchData): watchData.RegistryData.GetName(),
-		"pod":                        watchData.RegistryData.GetName,
+		"pod":                        watchData.RegistryData.GetName(),
 		"namespace":                  watchData.Namespace,
 	}).Info("Started watching on Pvc events")
 
@@ -70,7 +70,7 @@ func (pm *PvcManager) watchEvents(watchData WatchData) {
 			case <-watchData.Ctx.Done():
 				log.WithFields(log.Fields{
 					fmt.Sprintf("%T", watchData): watchData.RegistryData.GetName(),
-					"pod":                        watchData.RegistryData.GetName,
+					"pod":                        watchData.RegistryData.GetName(),
 					"namespace":                  watchData.Namespace,
 				}).Info("Stopped watching Pvc events")
 				return

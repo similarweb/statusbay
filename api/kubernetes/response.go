@@ -80,15 +80,15 @@ type DaemonsetDataResponse struct {
 
 type StatefulsetDataResponse struct {
 	Statefulset       ResponseMetaData                `json:"MetaData"`
-	StatefulsetEvents []ResponseEventMessages         `json:"tatefulsetEvents"`
+	StatefulsetEvents []ResponseEventMessages         `json:"statefulsetEvents"`
 	Pods              map[string]ResponseDeploymenPod `json:"Pods"`
 	Status            ResponseDeploymentStatus        `json:"Status"`
 }
 
 type ResponseResourcesData struct {
-	Deployment  map[string]DeploymentDataResponse  `json:"Deployments"`
-	Daemonsets  map[string]DaemonsetDataResponse   `json:"Daemonsets"`
-	Statefulset map[string]StatefulsetDataResponse `json:"Statefulsets"`
+	Deployments  map[string]DeploymentDataResponse  `json:"Deployments"`
+	Daemonsets   map[string]DaemonsetDataResponse   `json:"Daemonsets"`
+	Statefulsets map[string]StatefulsetDataResponse `json:"Statefulsets"`
 }
 
 type ResponseDeploymentData struct {

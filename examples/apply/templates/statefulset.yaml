@@ -25,12 +25,16 @@ spec:
       - name: {{ $name }}
         image: "{{ $root.Values.statefulset.image.repository }}:{{ $root.Values.statefulset.image.tag }}"
         imagePullPolicy: {{ $root.Values.statefulset.image.pullPolicy }}
+        livenessProbe:
+{{- toYaml $root.Values.statefulset.livenessProbe | nindent 10 }}
+        readinessProbe:
+{{- toYaml $root.Values.statefulset.readinessProbe | nindent 10 }}
         ports:
         - containerPort: 80
           name: {{ $name }}
         volumeMounts:
         - name: data
-          mountPath: /usr/share/nginx/html
+          mountPath: /usr/share/nginx/html2
   volumeClaimTemplates:
   - metadata:
       name: data

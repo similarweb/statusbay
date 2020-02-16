@@ -86,6 +86,15 @@ statefulset:
       storageClass: "-" 
       size: 1Gi
 
+  livenessProbe:
+    httpGet:
+      path: /
+      port: 80
+  readinessProbe:
+    httpGet:
+      path: /
+      port: 80
+
   annotations:
     statusbay.io/progress-deadline-seconds: "30"
     statusbay.io/application-name: "statusbay-application"

@@ -73,7 +73,7 @@ type Replicaset struct {
 type DeploymentData struct {
 	Deployment              MetaData                `json:"MetaData"`
 	Status                  appsV1.DeploymentStatus `json:"Status"`
-	DeploymentEvents        []EventMessages         `json:"DeploymentEvents"`
+	Events                  []EventMessages         `json:"Events"`
 	Replicaset              map[string]Replicaset   `json:"Replicaset"`
 	Pods                    map[string]DeploymenPod `json:"Pods"`
 	ProgressDeadlineSeconds int64
@@ -83,7 +83,7 @@ type DeploymentData struct {
 type DaemonsetData struct {
 	Metadata                MetaData                `json:"MetaData"`
 	Status                  appsV1.DaemonSetStatus  `json:"Status"`
-	DaemonsetEvents         []EventMessages         `json:"DaemonsetEvents"`
+	Events                  []EventMessages         `json:"Events"`
 	Pods                    map[string]DeploymenPod `json:"Pods"`
 	ProgressDeadlineSeconds int64
 }
@@ -92,7 +92,7 @@ type DaemonsetData struct {
 type StatefulsetData struct {
 	Statefulset             MetaData                 `json:"MetaData"`
 	Status                  appsV1.StatefulSetStatus `json:"Status"`
-	StatefulsetEvents       []EventMessages          `json:"StatefulsetEvents"`
+	Events                  []EventMessages          `json:"Events"`
 	Pods                    map[string]DeploymenPod  `json:"Pods"`
 	ProgressDeadlineSeconds int64
 }

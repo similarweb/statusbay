@@ -73,7 +73,7 @@ type DeploymentDataResponse struct {
 
 type DaemonsetDataResponse struct {
 	Metadata ResponseMetaData                `json:"MetaData"`
-	Events   []ResponseEventMessages         `json:"DaemonsetEvents"`
+	Events   []ResponseEventMessages         `json:"Events"`
 	Pods     map[string]ResponseDeploymenPod `json:"Pods"`
 	Status   ResponseDeploymentStatus        `json:"Status"`
 }

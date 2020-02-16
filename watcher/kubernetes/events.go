@@ -2,7 +2,7 @@ package kuberneteswatcher
 
 import (
 	"context"
-	"statusbay/serverutil"
+	"sync"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -23,6 +23,9 @@ type WatchEvents struct {
 
 	// Option to close the channel when context to done
 	Ctx context.Context
+
+	// LogEntry for write application logs
+	LogEntry log.Entry
 }
 
 // EventsManager defined pods manager struct
@@ -38,25 +41,19 @@ func NewEventsManager(kubernetesClientset kubernetes.Interface) *EventsManager {
 }
 
 // Serve will start listening on pods request
-func (em *EventsManager) Serve() serverutil.StopFunc {
+func (em *EventsManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 
-	ctx, cancelFn := context.WithCancel(context.Background())
-	stopped := make(chan bool)
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
 				log.Warn("Event Manager has been shut down")
-				stopped <- true
+				wg.Done()
 				return
 			}
 		}
 	}()
 
-	return func() {
-		cancelFn()
-		<-stopped
-	}
 }
 
 // Watch will start watch resource events
@@ -64,38 +61,25 @@ func (em *EventsManager) Watch(watchData WatchEvents) <-chan EventMessages {
 
 	responses := make(chan EventMessages, 0)
 
-	log.WithFields(log.Fields{
-		"list_option": watchData.ListOptions.String(),
-		"namespace":   watchData.Namespace,
-	}).Debug("Watch event started")
+	watchData.LogEntry.WithField("list_option", watchData.ListOptions.String()).Debug("Watch event started")
 
 	go func() {
 		watcher, err := em.client.CoreV1().Events("").Watch(watchData.ListOptions)
 		if err != nil {
-			log.WithError(err).WithFields(log.Fields{
-				"list_option": watchData.ListOptions.String(),
-				"namespace":   watchData.Namespace,
-			}).Error("Failed to watch on events")
+			watchData.LogEntry.Error("Failed to watch on events")
 			return
 		}
 		for {
 			select {
 			case event, watch := <-watcher.ResultChan():
 				if !watch {
-					log.WithFields(log.Fields{
-						"list_options": watchData.ListOptions.String(),
-						"timeout":      watchData.ListOptions.TimeoutSeconds,
-					}).Warn("Stop watching on events, got timeout")
+					watchData.LogEntry.WithField("timeout", watchData.ListOptions.TimeoutSeconds).Warn("Stop watching on events, got timeout")
 					return
 				}
 
 				eventData, ok := event.Object.(*v1.Event)
 				if !ok {
-					log.WithFields(log.Fields{
-						"list_option": watchData.ListOptions.String(),
-						"namespace":   watchData.Namespace,
-						"object":      event.Object,
-					}).Warn("Failed to parse event object")
+					watchData.LogEntry.Warn("Failed to parse event object")
 					continue
 				}
 				diff := time.Now().Sub(eventData.GetCreationTimestamp().Time).Seconds()
@@ -109,19 +93,15 @@ func (em *EventsManager) Watch(watchData WatchEvents) <-chan EventMessages {
 						ReportingController: eventData.ReportingController,
 					}
 				} else {
-					log.WithFields(log.Fields{
-						"Message":     eventData.Message,
-						"time":        eventData.GetCreationTimestamp(),
-						"list_option": watchData.ListOptions.String(),
-						"namespace":   watchData.Namespace,
-						"object":      event.Object,
-					}).Debug("Event to old")
+					watchData.LogEntry.WithFields(log.Fields{
+						"Message": eventData.Message,
+						"time":    eventData.GetCreationTimestamp(),
+						"object":  event.Object,
+					}).Debug("The event to old, and not related to the current apply")
 				}
 
 			case <-watchData.Ctx.Done():
-				log.WithFields(log.Fields{
-					"list_options": watchData.ListOptions.String(),
-				}).Debug("Stop events watch. Got ctx done signal")
+				watchData.LogEntry.Debug("Stop events watch. Got ctx done signal")
 				watcher.Stop()
 				return
 			}

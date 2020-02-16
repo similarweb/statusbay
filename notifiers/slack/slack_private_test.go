@@ -3,9 +3,11 @@ package slack
 import (
 	"errors"
 	"fmt"
-	"github.com/nlopes/slack"
 	"statusbay/notifiers/common"
 	watcherCommon "statusbay/watcher/kubernetes/common"
+
+	"github.com/nlopes/slack"
+	log "github.com/sirupsen/logrus"
 
 	"testing"
 )
@@ -345,13 +347,14 @@ func TestSend(t *testing.T) {
 			channelId: "email1",
 		},
 	}
+	lg := log.WithField("test", "TestSend")
 
 	t.Run("fails to send messages", func(t *testing.T) {
 		mockClient := &MockApiClient{err: errors.New("")}
 		slackManager := Manager{client: mockClient}
 
 		for _, message := range messagesToSend {
-			slackManager.send(message.channelId, slack.Attachment{})
+			slackManager.send(message.channelId, slack.Attachment{}, *lg)
 		}
 
 		if len(mockClient.sentMessages) != 0 {
@@ -364,7 +367,7 @@ func TestSend(t *testing.T) {
 		slackManager := Manager{client: mockClient}
 
 		for _, message := range messagesToSend {
-			slackManager.send(message.channelId, slack.Attachment{})
+			slackManager.send(message.channelId, slack.Attachment{}, *lg)
 		}
 
 		if len(messagesToSend) != len(mockClient.sentMessages) {
@@ -381,6 +384,7 @@ func TestSend(t *testing.T) {
 }
 
 func TestReportFuncs(t *testing.T) {
+	lg := log.WithField("test", "TestReportFuncs")
 	t.Run("sending success message from an unknown user", func(t *testing.T) {
 		mockClient := &MockApiClient{}
 		slackManager := Manager{
@@ -406,6 +410,7 @@ func TestReportFuncs(t *testing.T) {
 		slackManager.ReportStarted(watcherCommon.DeploymentReport{
 			To:       []string{"test1", "test1", "test2", ""},
 			DeployBy: "unknown",
+			LogEntry: *lg,
 		})
 
 		if mockClient.sentMessages == nil {
@@ -448,6 +453,7 @@ func TestReportFuncs(t *testing.T) {
 		slackManager.ReportEnded(watcherCommon.DeploymentReport{
 			To:       []string{"test1", "test1", ""},
 			DeployBy: "email1",
+			LogEntry: *lg,
 		})
 
 		if mockClient.sentMessages == nil {
@@ -490,6 +496,7 @@ func TestReportFuncs(t *testing.T) {
 		slackManager.ReportDeleted(watcherCommon.DeploymentReport{
 			To:       []string{"test1", "test1", ""},
 			DeployBy: "email1",
+			LogEntry: *lg,
 		})
 
 		if mockClient.sentMessages == nil {

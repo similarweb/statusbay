@@ -1,8 +1,9 @@
 package common
 
 import (
-	"statusbay/serverutil"
+	"context"
 	"statusbay/watcher/kubernetes/common"
+	"sync"
 )
 
 const (
@@ -20,5 +21,5 @@ type Notifier interface {
 	ReportStarted(message common.DeploymentReport)
 	ReportDeleted(message common.DeploymentReport)
 	ReportEnded(message common.DeploymentReport)
-	Serve() serverutil.StopFunc
+	Serve(ctx context.Context, wg *sync.WaitGroup)
 }

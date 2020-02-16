@@ -3,13 +3,19 @@
 package slack
 
 import (
-	"github.com/nlopes/slack"
+	"context"
+	"sync"
 	"testing"
 	"time"
+
+	"github.com/nlopes/slack"
 )
 
 func TestServe(t *testing.T) {
+	var wg *sync.WaitGroup
+	ctx := context.Background()
 	t.Run("checking if the cancel function works", func(t *testing.T) {
+
 		mockClient := &MockApiClient{
 			users: []slack.User{
 				{
@@ -23,19 +29,18 @@ func TestServe(t *testing.T) {
 		}
 
 		UpdateSlackUserInterval = time.Nanosecond
-		cancelFunc := slackManager.Serve()
+		slackManager.Serve(ctx, wg)
 
 		mockClient.users = nil
 		time.Sleep(time.Millisecond)
 
-		cancelFunc()
-
 		if slackManager.emailToUser == nil {
-			t.Errorf("expected the goroutine to stop running and stop updating the users.")
+			t.Errorf("expected the goroutine to stop running and stop updating the users")
 		}
 	})
 
 	t.Run("check if user list is continuously being updated", func(t *testing.T) {
+
 		mockClient := &MockApiClient{}
 		slackManager := Manager{
 			client:      mockClient,
@@ -47,8 +52,7 @@ func TestServe(t *testing.T) {
 		// start with no users
 		mockClient.users = nil
 
-		cancelFunc := slackManager.Serve()
-		defer cancelFunc()
+		slackManager.Serve(ctx, wg)
 
 		time.Sleep(time.Millisecond)
 		if len(slackManager.emailToUser) != 0 {

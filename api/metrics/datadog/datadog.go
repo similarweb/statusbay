@@ -5,12 +5,12 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
-	"github.com/zorkian/go-datadog-api"
 	"sync"
 	"time"
 
+	"github.com/zorkian/go-datadog-api"
+
 	"statusbay/api/httpresponse"
-	"statusbay/serverutil"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -54,9 +54,8 @@ func NewDatadogManager(cacheCleanupInterval, cacheExpiration time.Duration, apiK
 }
 
 // Serve will start listening metric request
-func (dd *Datadog) Serve() serverutil.StopFunc {
-	ctx, cancelFn := context.WithCancel(context.Background())
-	stopped := make(chan bool)
+func (dd *Datadog) Serve(ctx context.Context, wg *sync.WaitGroup) {
+
 	go func() {
 		for {
 			select {
@@ -64,15 +63,12 @@ func (dd *Datadog) Serve() serverutil.StopFunc {
 				dd.DeleteCacheExpired()
 			case <-ctx.Done():
 				log.Warn("Datatog has been shut down")
-				stopped <- true
+				wg.Done()
 				return
 			}
 		}
 	}()
-	return func() {
-		cancelFn()
-		<-stopped
-	}
+
 }
 
 // GetMetric comunicate with Datadog

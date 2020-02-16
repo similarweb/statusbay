@@ -1,8 +1,9 @@
 package testutil
 
 import (
+	"context"
 	"statusbay/api/httpresponse"
-	"statusbay/serverutil"
+	"sync"
 	"time"
 )
 
@@ -22,7 +23,6 @@ func (m *MockMetrics) GetMetric(query string, from, to time.Time) ([]httprespons
 	return response, nil
 }
 
-func (dd *MockMetrics) Serve() serverutil.StopFunc {
+func (dd *MockMetrics) Serve(ctx context.Context, wg *sync.WaitGroup) {
 
-	return func() {}
 }

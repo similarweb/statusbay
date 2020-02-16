@@ -3,15 +3,17 @@ package slack
 import (
 	"context"
 	"fmt"
-	"github.com/apex/log"
+	"statusbay/notifiers/common"
+	watcherCommon "statusbay/watcher/kubernetes/common"
+	"strings"
+	"sync"
+	"time"
+
 	"github.com/mitchellh/mapstructure"
 	slackApi "github.com/nlopes/slack"
 	"github.com/pkg/errors"
-	"statusbay/notifiers/common"
-	"statusbay/serverutil"
-	watcherCommon "statusbay/watcher/kubernetes/common"
-	"strings"
-	"time"
+	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -101,16 +103,19 @@ func (sl *Manager) sendToAll(stage ReportStage, message watcherCommon.Deployment
 					{
 						Title: "Application Name:",
 						Value: message.Name,
-						Short: false,
+						Short: true,
+					},
+					{
+						Title: "Cluster:",
+						Value: message.ClusterName,
+						Short: true,
 					},
 				},
 			}
-			sl.send(toChannel, attachment)
+			sl.send(toChannel, attachment, message.LogEntry)
 
 		} else {
-			log.WithFields(log.Fields{
-				"to": to,
-			}).Debug("Slack id not found")
+			message.LogEntry.WithField("to", to).Debug("Slack id not found")
 		}
 
 	}
@@ -143,11 +148,9 @@ func (sl *Manager) ReportEnded(message watcherCommon.DeploymentReport) {
 }
 
 // Serve will periodically check slack for a change in the list of existing users
-func (sl *Manager) Serve() serverutil.StopFunc {
+func (sl *Manager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 	sl.updateUsers()
 
-	ctx, cancelFn := context.WithCancel(context.Background())
-	stopped := make(chan bool)
 	go func() {
 		for {
 			select {
@@ -155,15 +158,12 @@ func (sl *Manager) Serve() serverutil.StopFunc {
 				sl.updateUsers()
 			case <-ctx.Done():
 				log.Warn("Slack Loop has been shut down")
-				stopped <- true
+				wg.Done()
 				return
 			}
 		}
 	}()
-	return func() {
-		cancelFn()
-		<-stopped
-	}
+
 }
 
 // updateUsers updates the list of users available in slack
@@ -198,17 +198,14 @@ func (sl *Manager) getUserIdByEmail(email string) (string, error) {
 }
 
 // send sends a slack notification to user
-func (sl *Manager) send(channelID string, attachment slackApi.Attachment) {
+func (sl *Manager) send(channelID string, attachment slackApi.Attachment, lg logrus.Entry) {
 	_, _, err := sl.client.PostMessage(channelID, slackApi.MsgOptionAttachments(attachment), slackApi.MsgOptionAsUser(true))
 	if err != nil {
 
-		log.WithError(err).WithFields(log.Fields{
-			"channel_id": channelID,
-		}).Error("Error when trying to send post message")
+		lg.WithError(err).WithField("channel_id", channelID).Debug("Error when trying to send post message")
+
 	}
-	log.WithFields(log.Fields{
-		"channel_id": channelID,
-	}).Debug("Slack message was sent")
+	lg.WithField("channel_id", channelID).Debug("Slack message was sent")
 }
 
 // GetChannelId returns the channel id. if is it email, search the user channel id by his email

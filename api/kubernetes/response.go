@@ -29,15 +29,6 @@ type ResponseMetaData struct {
 	Metrics      []ResponseMetrics `json:"Metrics"`
 }
 
-type DeploymentDataResponse struct {
-	Deployment       ResponseMetaData                `json:"MetaData"`
-	DeploymentEvents []ResponseEventMessages         `json:"DeploymentEvents"`
-	Metrics          []ResponseMetricsQuery          `json:"Metrics"`
-	Pods             map[string]ResponseDeploymenPod `json:"Pods"`
-	Replicaset       map[string]ResponseReplicaset   `json:"Replicaset"`
-	Status           ResponseDeploymentStatus        `json:"Status"`
-}
-
 type ResponseDeploymenPod struct {
 	Phase             *string                 `json:"Phase"`
 	CreationTimestamp time.Time               `json:"CreationTimestamp"`
@@ -62,13 +53,6 @@ type ResponseMetricsQuery struct {
 	SubTitle string `json:"SubTitle"`
 }
 
-type DaemonsetDataResponse struct {
-	Metadata ResponseMetaData                `json:"MetaData"`
-	Events   []ResponseEventMessages         `json:"DaemonsetEvents"`
-	Pods     map[string]ResponseDeploymenPod `json:"Pods"`
-	Status   ResponseDeploymentStatus        `json:"Status"`
-}
-
 type ResponseDeploymentStatus struct {
 	ObservedGeneration  int64 `json:"ObservedGeneration"`
 	Replicas            int32 `json:"Replicas"`
@@ -78,9 +62,33 @@ type ResponseDeploymentStatus struct {
 	UnavailableReplicas int32 `json:"UnavailableReplicas"`
 }
 
+type DeploymentDataResponse struct {
+	Deployment ResponseMetaData                `json:"MetaData"`
+	Events     []ResponseEventMessages         `json:"Events"`
+	Metrics    []ResponseMetricsQuery          `json:"Metrics"`
+	Pods       map[string]ResponseDeploymenPod `json:"Pods"`
+	Replicaset map[string]ResponseReplicaset   `json:"Replicaset"`
+	Status     ResponseDeploymentStatus        `json:"Status"`
+}
+
+type DaemonsetDataResponse struct {
+	Metadata ResponseMetaData                `json:"MetaData"`
+	Events   []ResponseEventMessages         `json:"Events"`
+	Pods     map[string]ResponseDeploymenPod `json:"Pods"`
+	Status   ResponseDeploymentStatus        `json:"Status"`
+}
+
+type StatefulsetDataResponse struct {
+	Statefulset ResponseMetaData                `json:"MetaData"`
+	Events      []ResponseEventMessages         `json:"Events"`
+	Pods        map[string]ResponseDeploymenPod `json:"Pods"`
+	Status      ResponseDeploymentStatus        `json:"Status"`
+}
+
 type ResponseResourcesData struct {
-	Deployment map[string]DeploymentDataResponse `json:"Deployments"`
-	Daemonsets map[string]DaemonsetDataResponse  `json:"Daemonsets"`
+	Deployments  map[string]DeploymentDataResponse  `json:"Deployments"`
+	Daemonsets   map[string]DaemonsetDataResponse   `json:"Daemonsets"`
+	Statefulsets map[string]StatefulsetDataResponse `json:"Statefulsets"`
 }
 
 type ResponseDeploymentData struct {

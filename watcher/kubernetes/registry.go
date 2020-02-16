@@ -16,6 +16,11 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
+const (
+	// applyVersionFormat describe the format of apply versions
+	applyVersionFormat = "%s-%s-%s-%s"
+)
+
 type Resources struct {
 	Deployments  map[string]*DeploymentData  `json:"Deployments"`
 	Daemonsets   map[string]*DaemonsetData   `json:"Daemonsets"`
@@ -59,12 +64,12 @@ type RegistryManager struct {
 	lastDeploymentHistory       map[string]time.Time
 }
 
-func (dr *RegistryManager) UpdateAppliesVersionHistory(name, namespace string, hash uint64) bool {
-	return dr.storage.UpdateAppliesVersionHistory(fmt.Sprintf("%s-%s", namespace, name), hash)
+func (dr *RegistryManager) UpdateAppliesVersionHistory(name, namespace, resourceName string, hash uint64) bool {
+	return dr.storage.UpdateAppliesVersionHistory(fmt.Sprintf(applyVersionFormat, resourceName, namespace, name, dr.clusterName), hash)
 }
 
-func (dr *RegistryManager) DeleteAppliedVersion(name, namespace string) bool {
-	return dr.storage.DeleteAppliedVersion(fmt.Sprintf("%s-%s", namespace, name))
+func (dr *RegistryManager) DeleteAppliedVersion(name, namespace, resourceName string) bool {
+	return dr.storage.DeleteAppliedVersion(fmt.Sprintf(applyVersionFormat, resourceName, namespace, name, dr.clusterName))
 }
 
 // NewRegistryManager create new schema registry instance
@@ -139,17 +144,13 @@ func (dr *RegistryManager) LoadRunningApplies() []*RegistryRow {
 }
 
 // NewApplication will creates a new deployment row
-func (dr *RegistryManager) NewApplication(
-	appName string,
-	namespace string,
-	annotations map[string]string,
-	status common.DeploymentStatus) *RegistryRow {
+func (dr *RegistryManager) NewApplication(appName string, namespace string, annotations map[string]string, status common.DeploymentStatus) *RegistryRow {
 	dr.newAppLock.Lock()
 	defer dr.newAppLock.Unlock()
 
 	encodedID := generateID(appName, namespace, dr.clusterName)
-	reportTo := GetMetadataByPrefix(annotations, fmt.Sprintf("%s/%s", ANNOTATION_PREFIX, "report-"))
-	deployBy := GetMetadata(annotations, fmt.Sprintf("%s/%s", ANNOTATION_PREFIX, "report-deploy-by"))
+	reportTo := GetMetadataByPrefix(annotations, fmt.Sprintf("%s/%s-", annotationPrefix, annotationPrefixAllReporter))
+	deployBy := GetMetadata(annotations, fmt.Sprintf("%s/%s", annotationPrefix, annotationReportDeployBy))
 	deployTime := time.Now().Unix()
 	ctx, cancelFn := context.WithCancel(context.Background())
 
@@ -176,35 +177,35 @@ func (dr *RegistryManager) NewApplication(
 		},
 	}
 
+	lg := row.Log()
+
 	dr.registryData[encodedID] = &row
 	switch status {
 	case common.DeploymentStatusRunning:
 		dr.reporter.DeploymentStarted <- common.DeploymentReport{
-			To:       reportTo,
-			DeployBy: deployBy,
-			Name:     appName,
-			URI:      row.GetURI(),
-			Status:   status,
+			To:          reportTo,
+			DeployBy:    deployBy,
+			Name:        appName,
+			URI:         row.GetURI(),
+			Status:      status,
+			LogEntry:    lg,
+			ClusterName: dr.clusterName,
 		}
 	case common.DeploymentStatusDeleted:
 		dr.reporter.DeploymentDeleted <- common.DeploymentReport{
-			To:       reportTo,
-			DeployBy: deployBy,
-			Name:     appName,
-			URI:      row.GetURI(),
-			Status:   status,
+			To:          reportTo,
+			DeployBy:    deployBy,
+			Name:        appName,
+			URI:         row.GetURI(),
+			Status:      status,
+			LogEntry:    lg,
+			ClusterName: dr.clusterName,
 		}
 	default:
-		log.WithField("status", status).Info("Reporter status not supported")
+		lg.WithField("status", status).Info("Reporter status not supported")
 	}
 
-	log.WithFields(log.Fields{
-		"application": appName,
-		"deploy_by":   deployBy,
-		"report_to":   reportTo,
-		"namespace":   namespace,
-		"cluster":     dr.clusterName,
-	}).Info("New application deployment started")
+	lg.Info("New application created in registry")
 
 	go row.isFinish(dr.checkFinishDelay)
 	return &row
@@ -222,7 +223,20 @@ func (dr *RegistryManager) Get(name, namespace string) *RegistryRow {
 
 }
 
-// GetApplyID generate a unique for a specific apply
+// Log returns the main log entry
+func (wbr *RegistryRow) Log() log.Entry {
+
+	lg := log.WithFields(log.Fields{
+		"application": wbr.DBSchema.Application,
+		"namespace":   wbr.DBSchema.Namespace,
+		"cluster":     wbr.DBSchema.Cluster,
+		"apply_id":    wbr.GetApplyID(),
+	})
+
+	return *lg
+}
+
+// GetApplyID generate a uniqe for a specific apply
 func (wbr *RegistryRow) GetApplyID() string {
 
 	encodedID := generateID(wbr.DBSchema.Application, wbr.DBSchema.Namespace, wbr.DBSchema.Cluster)
@@ -235,7 +249,7 @@ func (wbr *RegistryRow) GetApplyID() string {
 
 // AddDeployment add new deployment under application
 func (wbr *RegistryRow) AddDeployment(name, namespace string, labels map[string]string, annotations map[string]string, desiredState int32, maxDeploymentTime int64) *DeploymentData {
-
+	lg := wbr.Log()
 	data := DeploymentData{
 		Deployment: MetaData{
 			Name:         name,
@@ -252,18 +266,16 @@ func (wbr *RegistryRow) AddDeployment(name, namespace string, labels map[string]
 	}
 	wbr.DBSchema.Resources.Deployments[name] = &data
 
-	log.WithFields(log.Fields{
-		"application":   wbr.DBSchema.Application,
-		"namespace":     wbr.DBSchema.Namespace,
-		"deployment_id": name,
-	}).Info("Deployment associated to application")
+	lg.WithFields(log.Fields{
+		"deployment": name,
+	}).Info("Deployment was associated to the application")
 
 	return &data
 }
 
 // AddDaemonset add new daemonset under application
 func (wbr *RegistryRow) AddDaemonset(name, namespace string, labels map[string]string, annotations map[string]string, desiredState int32, maxDeploymentTime int64) *DaemonsetData {
-
+	lg := wbr.Log()
 	data := DaemonsetData{
 		Metadata: MetaData{
 			Name:         name,
@@ -279,18 +291,16 @@ func (wbr *RegistryRow) AddDaemonset(name, namespace string, labels map[string]s
 	}
 	wbr.DBSchema.Resources.Daemonsets[name] = &data
 
-	log.WithFields(log.Fields{
-		"application":  wbr.DBSchema.Application,
-		"namespace":    wbr.DBSchema.Namespace,
-		"daemonset_id": name,
-	}).Info("Daemonset associated to application")
+	lg.WithFields(log.Fields{
+		"daemonset": name,
+	}).Info("Daemonset was associated to the application")
 
 	return &data
 }
 
 // AddStatefulset add a new statefulset under application settings
 func (wbr *RegistryRow) AddStatefulset(name, namespace string, labels map[string]string, annotations map[string]string, desiredState int32, maxDeploymentTime int64) *StatefulsetData {
-
+	lg := wbr.Log()
 	data := StatefulsetData{
 		Statefulset: MetaData{
 			Name:         name,
@@ -304,10 +314,8 @@ func (wbr *RegistryRow) AddStatefulset(name, namespace string, labels map[string
 	}
 	wbr.DBSchema.Resources.Statefulsets[name] = &data
 
-	log.WithFields(log.Fields{
-		"application":    wbr.DBSchema.Application,
-		"namespace":      wbr.DBSchema.Namespace,
-		"statefulset_id": name,
+	lg.WithFields(log.Fields{
+		"statefulset": name,
 	}).Info("Statefulset was associated to the application")
 
 	return &data
@@ -321,6 +329,7 @@ func (wbr *RegistryRow) GetURI() string {
 
 // isDeploymentFinish will check for Deployment resource and see if it finished or errord due to timeout.
 func (wbr *RegistryRow) isDeploymentFinish() (bool, error) {
+	lg := wbr.Log()
 	isFinished := false
 	diff := time.Now().Sub(time.Unix(wbr.DBSchema.CreationTimestamp, 0)).Seconds()
 	if len(wbr.DBSchema.Resources.Deployments) == 0 {
@@ -339,20 +348,15 @@ func (wbr *RegistryRow) isDeploymentFinish() (bool, error) {
 			readyReplicasCount = readyReplicasCount + replica.Status.ReadyReplicas
 		}
 		if deployment.ProgressDeadlineSeconds < int64(diff) {
-			log.WithFields(log.Fields{
+			lg.WithFields(log.Fields{
 				"progress_deadline_seconds": deployment.ProgressDeadlineSeconds,
 				"deploy_time":               diff,
-				"application":               wbr.DBSchema.Application,
-				"deployment":                deployment.Deployment.Name,
-				"namespace":                 deployment.Deployment.Namespace,
-			}).Error("Failed due to progress deadline")
+			}).Error("Deployment Failed due to progress deadline")
 			return isFinished, errors.New("ProgrogressDeadline has passed")
 		}
 
 	}
-	log.WithFields(log.Fields{
-		"application":          wbr.DBSchema.Application,
-		"namespace":            wbr.DBSchema.Namespace,
+	lg.WithFields(log.Fields{
 		"replicaset_count":     countOfRunningReplicas,
 		"desired_state_count":  desiredStateCount,
 		"ready_replicas_count": readyReplicasCount,
@@ -360,13 +364,11 @@ func (wbr *RegistryRow) isDeploymentFinish() (bool, error) {
 	}).Info("Deployment status")
 	deploymentsNum := len(wbr.DBSchema.Resources.Deployments)
 	if deploymentsNum == countOfRunningReplicas && desiredStateCount == readyReplicasCount || wbr.status == common.DeploymentStatusDeleted {
-		log.WithFields(log.Fields{
-			"application":          wbr.DBSchema.Application,
-			"namespace":            wbr.DBSchema.Namespace,
+		lg.WithFields(log.Fields{
 			"replicaset_count":     countOfRunningReplicas,
 			"desired_state_count":  desiredStateCount,
 			"ready_replicas_count": readyReplicasCount,
-		}).Info("Deployment was finished")
+		}).Info("Deployment apply has finished successfully")
 
 		// Wating few minutes to collect more event after deployment finished
 		isFinished = true
@@ -377,6 +379,7 @@ func (wbr *RegistryRow) isDeploymentFinish() (bool, error) {
 
 //isDaemonSetFinish  a DaemonSet is finished if: DesiredNumberScheduled == CurrentNumberScheduled AND DesiredNumberScheduled == UpdatedNumberScheduled
 func (wbr *RegistryRow) isDaemonSetFinish() (bool, error) {
+	lg := wbr.Log()
 	isFinished := false
 	if len(wbr.DBSchema.Resources.Daemonsets) == 0 {
 		isFinished = true
@@ -392,31 +395,24 @@ func (wbr *RegistryRow) isDaemonSetFinish() (bool, error) {
 		totalCurrentPods = totalCurrentPods + daemonset.Status.CurrentNumberScheduled
 
 		if daemonset.ProgressDeadlineSeconds < int64(diff) {
-			log.WithFields(log.Fields{
+			lg.WithFields(log.Fields{
 				"progress_deadline_seconds": daemonset.ProgressDeadlineSeconds,
 				"deploy_time":               diff,
-				"application":               wbr.DBSchema.Application,
-				"daemonset":                 daemonset.Metadata.Name,
-				"namespace":                 daemonset.Metadata.Namespace,
-			}).Error("Failed due to progress deadline")
+			}).Error("DaemonSet failed due to progress deadline")
 			return isFinished, errors.New("ProgrogressDeadline has passed")
 		}
 	}
-	log.WithFields(log.Fields{
-		"application":                   wbr.DBSchema.Application,
-		"namespace":                     wbr.DBSchema.Namespace,
+	lg.WithFields(log.Fields{
 		"total_daemonsets_desired_pods": totalDesiredPods,
 		"current_pods_count":            totalCurrentPods,
 		"total_daemonsets":              len(wbr.DBSchema.Resources.Daemonsets),
 	}).Debug("DaemonSet status")
 	if totalDesiredPods == totalCurrentPods && totalDesiredPods == totalUpdatedPodsOnNodes || wbr.status == common.DeploymentStatusDeleted {
-		log.WithFields(log.Fields{
-			"application":                   wbr.DBSchema.Application,
-			"namespace":                     wbr.DBSchema.Namespace,
+		lg.WithFields(log.Fields{
 			"total_daemonsets_desired_pods": totalDesiredPods,
 			"current_pods_count":            totalCurrentPods,
 			"total_daemonsets":              len(wbr.DBSchema.Resources.Daemonsets),
-		}).Info("DaemonSet apply was finished")
+		}).Info("Daemonset apply has finished successfully")
 		// Wating few minutes to collect more event after deployment finished
 		isFinished = true
 		return isFinished, nil
@@ -430,6 +426,7 @@ func (wbr *RegistryRow) isDaemonSetFinish() (bool, error) {
 - Counts of pods which are committed to the state should be equal to running pods running.
 */
 func (wbr *RegistryRow) isStatefulSetFinish() (bool, error) {
+	lg := wbr.Log()
 	isFinished := false
 	diff := time.Now().Sub(time.Unix(wbr.DBSchema.CreationTimestamp, 0)).Seconds()
 	if len(wbr.DBSchema.Resources.Statefulsets) == 0 {
@@ -447,33 +444,26 @@ func (wbr *RegistryRow) isStatefulSetFinish() (bool, error) {
 		countOfPodsInState = int32(len(statefulset.Pods))
 
 		if statefulset.ProgressDeadlineSeconds < int64(diff) {
-			log.WithFields(log.Fields{
+			lg.WithFields(log.Fields{
 				"progress_deadline_seconds": statefulset.ProgressDeadlineSeconds,
 				"deploy_time":               diff,
-				"application":               wbr.DBSchema.Application,
-				"statefulset":               statefulset.Statefulset.Name,
-				"namespace":                 statefulset.Statefulset.Namespace,
-			}).Error("Failed due to progress deadline")
+			}).Error("Statefulset failed due to progress deadline")
 			return isFinished, errors.New("ProgressDeadLine has passed")
 		}
 	}
-	log.WithFields(log.Fields{
-		"application":                      wbr.DBSchema.Application,
-		"namespace":                        wbr.DBSchema.Namespace,
+	lg.WithFields(log.Fields{
 		"total_statefulsets_desired_pods":  totalDesiredPods,
 		"total_statefulsets_in_state_pods": countOfPodsInState,
 		"current_pods_count":               countOfRunningPods,
 		"total_statefulsets":               len(wbr.DBSchema.Resources.Statefulsets),
 	}).Info("Statefulset status")
 	if totalDesiredPods == readyPodsCount && countOfPodsInState == countOfRunningPods || wbr.status == common.DeploymentStatusDeleted {
-		log.WithFields(log.Fields{
-			"application":                      wbr.DBSchema.Application,
-			"namespace":                        wbr.DBSchema.Namespace,
+		lg.WithFields(log.Fields{
 			"total_statefulset_desired_pods":   totalDesiredPods,
 			"total_statefulsets_in_state_pods": countOfPodsInState,
 			"current_pods_count":               countOfRunningPods,
 			"total_statefulsets":               len(wbr.DBSchema.Resources.Statefulsets),
-		}).Info("Statefulset apply has finished")
+		}).Info("Statefulset apply has finished successfully")
 		// Wating few minutes to collect more event after deployment finished
 		isFinished = true
 		return isFinished, nil
@@ -483,15 +473,14 @@ func (wbr *RegistryRow) isStatefulSetFinish() (bool, error) {
 
 // isFinish will check (by interval number) when the deployment finished by replicaset status
 func (wbr *RegistryRow) isFinish(checkFinishDelay time.Duration) {
-	log.WithFields(log.Fields{
-		"application":        wbr.DBSchema.Application,
-		"namespace":          wbr.DBSchema.Namespace,
+	lg := wbr.Log()
+	lg.WithFields(log.Fields{
 		"deployment_count":   len(wbr.DBSchema.Resources.Deployments),
 		"daemonsets_count":   len(wbr.DBSchema.Resources.Daemonsets),
 		"statefulsets_count": len(wbr.DBSchema.Resources.Statefulsets),
-		"applied_by":         len(wbr.DBSchema.DeployBy),
+		"applied_by":         wbr.DBSchema.DeployBy,
 		"check_delay":        checkFinishDelay,
-	}).Info("starting to watch on registry row")
+	}).Debug("starting to watch on registry row to check if all resources status")
 	time.Sleep(checkFinishDelay)
 
 	if wbr.status == common.DeploymentStatusDeleted {
@@ -511,9 +500,7 @@ func (wbr *RegistryRow) isFinish(checkFinishDelay time.Duration) {
 			if dsErr != nil || depErr != nil || ssErr != nil {
 				wbr.Stop(common.DeploymentStatusFailed, DeploymentStatusDescriptionProgressDeadline)
 				wbr.cancelFn()
-				log.WithFields(log.Fields{
-					"application":       wbr.DBSchema.Application,
-					"namespace":         wbr.DBSchema.Namespace,
+				lg.WithFields(log.Fields{
 					"deployment_error":  depErr,
 					"daemonset_error":   dsErr,
 					"statefulset_error": ssErr,
@@ -524,10 +511,7 @@ func (wbr *RegistryRow) isFinish(checkFinishDelay time.Duration) {
 				wbr.cancelFn()
 			}
 		case <-wbr.ctx.Done():
-			log.WithFields(log.Fields{
-				"application": wbr.DBSchema.Application,
-				"namespace":   wbr.DBSchema.Namespace,
-			}).Debug("isFinish function watch was stopped. Got ctx done signal")
+			lg.Debug("isFinish function watch was stopped. Got ctx done signal")
 			return
 
 		}
@@ -536,10 +520,8 @@ func (wbr *RegistryRow) isFinish(checkFinishDelay time.Duration) {
 
 // Stop will marked the row as finish
 func (wbr *RegistryRow) Stop(status common.DeploymentStatus, message DeploymentStatusDescription) {
-	log.WithFields(log.Fields{
-		"Name":   wbr.DBSchema.Application,
-		"status": status,
-	}).Debug("Marked as done")
+	lg := wbr.Log()
+	lg.WithField("status", status).Debug("Marked apply as done")
 
 	time.Sleep(wbr.collectDataAfterDeploymentFinish)
 	wbr.DBSchema.DeploymentDescription = message
@@ -554,7 +536,7 @@ func (dd *DeploymentData) UpdateDeploymentStatus(status appsV1.DeploymentStatus)
 
 // UpdateDeploymentEvents will append events to deployment
 func (dd *DeploymentData) UpdateDeploymentEvents(event EventMessages) {
-	dd.DeploymentEvents = append(dd.DeploymentEvents, event)
+	dd.Events = append(dd.Events, event)
 }
 
 // InitReplicaset create new list of replicaset
@@ -588,7 +570,7 @@ func (dd *DeploymentData) UpdateReplicasetStatus(name string, status appsV1.Repl
 
 func NewPodToPods(pods map[string]DeploymenPod, pod *v1.Pod) error {
 	if _, found := pods[pod.GetName()]; found {
-		log.WithField("pod", pod.GetName()).Debug("Pod already exists in pod list")
+
 		return errors.New("Pod already exists in pod list")
 	}
 	phase := string(pod.Status.Phase)
@@ -654,7 +636,7 @@ func (dsd *DaemonsetData) UpdateApplyStatus(status appsV1.DaemonSetStatus) {
 
 // UpdateDaemonsetEvents will add event to a daemonset
 func (dsd *DaemonsetData) UpdateDaemonsetEvents(event EventMessages) {
-	dsd.DaemonsetEvents = append(dsd.DaemonsetEvents, event)
+	dsd.Events = append(dsd.Events, event)
 }
 
 // UpdatePodEvents will set pod events
@@ -679,7 +661,7 @@ func (dsd *DaemonsetData) GetName() string {
 
 // UpdateStatefulsetEvents will append events to StatefulsetEvents list
 func (ssd *StatefulsetData) UpdateStatefulsetEvents(event EventMessages) {
-	ssd.StatefulsetEvents = append(ssd.StatefulsetEvents, event)
+	ssd.Events = append(ssd.Events, event)
 }
 
 // UpdatePod will set pod events to statefulset
@@ -739,11 +721,13 @@ func (dr *RegistryManager) save() {
 
 				if data.status != common.DeploymentStatusDeleted {
 					dr.reporter.DeploymentFinished <- common.DeploymentReport{
-						To:       data.DBSchema.ReportTo,
-						DeployBy: data.DBSchema.DeployBy,
-						Name:     data.DBSchema.Application,
-						URI:      data.GetURI(),
-						Status:   data.status,
+						To:          data.DBSchema.ReportTo,
+						DeployBy:    data.DBSchema.DeployBy,
+						Name:        data.DBSchema.Application,
+						URI:         data.GetURI(),
+						Status:      data.status,
+						LogEntry:    data.Log(),
+						ClusterName: dr.clusterName,
 					}
 				}
 

@@ -9,14 +9,20 @@ import (
 )
 
 const (
-	//ANNOTATION_PREFIX is statusbay prefix annotations
-	ANNOTATION_PREFIX = "statusbay.io"
+	// annotationPrefix is StatusBay prefix annotations
+	annotationPrefix = "statusbay.io"
 
-	//ANNOTATION_PROGRESS_DEADLINE_SECONDS is statusbay progress deadline seconds
-	ANNOTATION_PROGRESS_DEADLINE_SECONDS = "progress-deadline-seconds"
+	// annotationProgressDeadlineSeconds is StatusBay progress deadline seconds
+	annotationProgressDeadlineSeconds = "progress-deadline-seconds"
 
-	//ANNOTATION_APPLICATION_NAME is statusbay application name
-	ANNOTATION_APPLICATION_NAME = "application-name"
+	// annotationApplicationName is StatusBay application name
+	annotationApplicationName = "application-name"
+
+	// annotationReportDeployBy is owner of the deployment
+	annotationReportDeployBy = "report-deploy-by"
+
+	// annotationPrefixAllReporter prefix of all reporters integrations
+	annotationPrefixAllReporter = "report"
 )
 
 // GetMetadataByPrefix will return anitasion values key prefix
@@ -59,7 +65,7 @@ func GetMetadata(annotations map[string]string, search string) string {
 func GetMetricsDataFromAnnotations(annotations map[string]string) []Metrics {
 
 	metrics := []Metrics{}
-	prefix := fmt.Sprintf("%s/metrics-", ANNOTATION_PREFIX)
+	prefix := fmt.Sprintf("%s/metrics-", annotationPrefix)
 
 	for key, val := range annotations {
 		if strings.HasPrefix(key, prefix) {
@@ -89,7 +95,7 @@ func GetMetricsDataFromAnnotations(annotations map[string]string) []Metrics {
 func GetAlertsDataFromAnnotations(annotations map[string]string) []Alerts {
 
 	alerts := []Alerts{}
-	prefix := fmt.Sprintf("%s/alerts-", ANNOTATION_PREFIX)
+	prefix := fmt.Sprintf("%s/alerts-", annotationPrefix)
 
 	for key, val := range annotations {
 		if strings.HasPrefix(key, prefix) {
@@ -110,7 +116,7 @@ func GetAlertsDataFromAnnotations(annotations map[string]string) []Alerts {
 //GetProgressDeadlineApply returns the maximum apply progress. if the field not exists in annotation list default value will returned
 func GetProgressDeadlineApply(annotations map[string]string, defaultValue int64) int64 {
 
-	progressDeadLineAnnotations := GetMetadata(annotations, fmt.Sprintf("%s/%s", ANNOTATION_PREFIX, ANNOTATION_PROGRESS_DEADLINE_SECONDS))
+	progressDeadLineAnnotations := GetMetadata(annotations, fmt.Sprintf("%s/%s", annotationPrefix, annotationProgressDeadlineSeconds))
 	progressDeadLine, err := strconv.ParseInt(progressDeadLineAnnotations, 10, 64)
 	if err != nil {
 		progressDeadLine = int64(defaultValue)
@@ -122,7 +128,7 @@ func GetProgressDeadlineApply(annotations map[string]string, defaultValue int64)
 //GetApplicationName return the application name from the given annotation. if the annotation name not found the default value will return
 func GetApplicationName(annotations map[string]string, defaultValue string) string {
 
-	applicationName := GetMetadata(annotations, fmt.Sprintf("%s/%s", ANNOTATION_PREFIX, ANNOTATION_APPLICATION_NAME))
+	applicationName := GetMetadata(annotations, fmt.Sprintf("%s/%s", annotationPrefix, annotationApplicationName))
 	if applicationName == "" {
 		applicationName = defaultValue
 	}

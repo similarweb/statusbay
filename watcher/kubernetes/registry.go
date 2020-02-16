@@ -149,8 +149,8 @@ func (dr *RegistryManager) NewApplication(appName string, namespace string, anno
 	defer dr.newAppLock.Unlock()
 
 	encodedID := generateID(appName, namespace, dr.clusterName)
-	reportTo := GetMetadataByPrefix(annotations, fmt.Sprintf("%s/%s", ANNOTATION_PREFIX, "report-"))
-	deployBy := GetMetadata(annotations, fmt.Sprintf("%s/%s", ANNOTATION_PREFIX, "report-deploy-by"))
+	reportTo := GetMetadataByPrefix(annotations, fmt.Sprintf("%s/%s-", annotationPrefix, annotationPrefixAllReporter))
+	deployBy := GetMetadata(annotations, fmt.Sprintf("%s/%s", annotationPrefix, annotationReportDeployBy))
 	deployTime := time.Now().Unix()
 	ctx, cancelFn := context.WithCancel(context.Background())
 
@@ -183,21 +183,23 @@ func (dr *RegistryManager) NewApplication(appName string, namespace string, anno
 	switch status {
 	case common.DeploymentStatusRunning:
 		dr.reporter.DeploymentStarted <- common.DeploymentReport{
-			To:       reportTo,
-			DeployBy: deployBy,
-			Name:     appName,
-			URI:      row.GetURI(),
-			Status:   status,
-			LogEntry: lg,
+			To:          reportTo,
+			DeployBy:    deployBy,
+			Name:        appName,
+			URI:         row.GetURI(),
+			Status:      status,
+			LogEntry:    lg,
+			ClusterName: dr.clusterName,
 		}
 	case common.DeploymentStatusDeleted:
 		dr.reporter.DeploymentDeleted <- common.DeploymentReport{
-			To:       reportTo,
-			DeployBy: deployBy,
-			Name:     appName,
-			URI:      row.GetURI(),
-			Status:   status,
-			LogEntry: lg,
+			To:          reportTo,
+			DeployBy:    deployBy,
+			Name:        appName,
+			URI:         row.GetURI(),
+			Status:      status,
+			LogEntry:    lg,
+			ClusterName: dr.clusterName,
 		}
 	default:
 		lg.WithField("status", status).Info("Reporter status not supported")
@@ -534,7 +536,7 @@ func (dd *DeploymentData) UpdateDeploymentStatus(status appsV1.DeploymentStatus)
 
 // UpdateDeploymentEvents will append events to deployment
 func (dd *DeploymentData) UpdateDeploymentEvents(event EventMessages) {
-	dd.DeploymentEvents = append(dd.DeploymentEvents, event)
+	dd.Events = append(dd.Events, event)
 }
 
 // InitReplicaset create new list of replicaset
@@ -634,7 +636,7 @@ func (dsd *DaemonsetData) UpdateApplyStatus(status appsV1.DaemonSetStatus) {
 
 // UpdateDaemonsetEvents will add event to a daemonset
 func (dsd *DaemonsetData) UpdateDaemonsetEvents(event EventMessages) {
-	dsd.DaemonsetEvents = append(dsd.DaemonsetEvents, event)
+	dsd.Events = append(dsd.Events, event)
 }
 
 // UpdatePodEvents will set pod events
@@ -659,7 +661,7 @@ func (dsd *DaemonsetData) GetName() string {
 
 // UpdateStatefulsetEvents will append events to StatefulsetEvents list
 func (ssd *StatefulsetData) UpdateStatefulsetEvents(event EventMessages) {
-	ssd.StatefulsetEvents = append(ssd.StatefulsetEvents, event)
+	ssd.Events = append(ssd.Events, event)
 }
 
 // UpdatePod will set pod events to statefulset
@@ -719,12 +721,13 @@ func (dr *RegistryManager) save() {
 
 				if data.status != common.DeploymentStatusDeleted {
 					dr.reporter.DeploymentFinished <- common.DeploymentReport{
-						To:       data.DBSchema.ReportTo,
-						DeployBy: data.DBSchema.DeployBy,
-						Name:     data.DBSchema.Application,
-						URI:      data.GetURI(),
-						Status:   data.status,
-						LogEntry: data.Log(),
+						To:          data.DBSchema.ReportTo,
+						DeployBy:    data.DBSchema.DeployBy,
+						Name:        data.DBSchema.Application,
+						URI:         data.GetURI(),
+						Status:      data.status,
+						LogEntry:    data.Log(),
+						ClusterName: dr.clusterName,
 					}
 				}
 

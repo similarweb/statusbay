@@ -23,7 +23,7 @@ func TestMarkApplicationDeploymentEvents(t *testing.T) {
 		Resources: ResponseResourcesData{
 			Deployments: map[string]DeploymentDataResponse{
 				"deployment": {
-					DeploymentEvents: []ResponseEventMessages{
+					Events: []ResponseEventMessages{
 						{Message: "Scaled"},
 						{Message: "foo"},
 					},
@@ -64,7 +64,7 @@ func TestMarkApplicationDeploymentEvents(t *testing.T) {
 		{
 			"deployment",
 			func(d ResponseDeploymentData) []ResponseEventMessages {
-				return d.Resources.Deployments["deployment"].DeploymentEvents
+				return d.Resources.Deployments["deployment"].Events
 			},
 			1,
 		},
@@ -110,7 +110,7 @@ func TestMarkApplicationDeploymentEventContent(t *testing.T) {
 		Resources: ResponseResourcesData{
 			Deployments: map[string]DeploymentDataResponse{
 				"deployment": {
-					DeploymentEvents: []ResponseEventMessages{
+					Events: []ResponseEventMessages{
 						{Message: "Scaled"},
 						{Message: "foo"},
 					},
@@ -127,8 +127,8 @@ func TestMarkApplicationDeploymentEventContent(t *testing.T) {
 
 	MarkApplicationDeploymentEvents(&appDeployment, eventsConfig)
 
-	if !reflect.DeepEqual(appDeployment.Resources.Deployments["deployment"].DeploymentEvents[0].MarkDescriptions, expectedEventDescriptions) {
-		t.Fatalf("unexpected mark message count, got %v expected %v", appDeployment.Resources.Deployments["deployment"].DeploymentEvents[0].MarkDescriptions, expectedEventDescriptions)
+	if !reflect.DeepEqual(appDeployment.Resources.Deployments["deployment"].Events[0].MarkDescriptions, expectedEventDescriptions) {
+		t.Fatalf("unexpected mark message count, got %v expected %v", appDeployment.Resources.Deployments["deployment"].Events[0].MarkDescriptions, expectedEventDescriptions)
 	}
 
 }

@@ -16,6 +16,11 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
+const (
+	// applyVersionFormat describe the format of apply versions
+	applyVersionFormat = "%s-%s-%s-%s"
+)
+
 type Resources struct {
 	Deployments  map[string]*DeploymentData  `json:"Deployments"`
 	Daemonsets   map[string]*DaemonsetData   `json:"Daemonsets"`
@@ -59,12 +64,12 @@ type RegistryManager struct {
 	lastDeploymentHistory       map[string]time.Time
 }
 
-func (dr *RegistryManager) UpdateAppliesVersionHistory(name, namespace string, hash uint64) bool {
-	return dr.storage.UpdateAppliesVersionHistory(fmt.Sprintf("%s-%s", namespace, name), hash)
+func (dr *RegistryManager) UpdateAppliesVersionHistory(name, namespace, resourceName string, hash uint64) bool {
+	return dr.storage.UpdateAppliesVersionHistory(fmt.Sprintf(applyVersionFormat, resourceName, namespace, name, dr.clusterName), hash)
 }
 
-func (dr *RegistryManager) DeleteAppliedVersion(name, namespace string) bool {
-	return dr.storage.DeleteAppliedVersion(fmt.Sprintf("%s-%s", namespace, name))
+func (dr *RegistryManager) DeleteAppliedVersion(name, namespace, resourceName string) bool {
+	return dr.storage.DeleteAppliedVersion(fmt.Sprintf(applyVersionFormat, resourceName, namespace, name, dr.clusterName))
 }
 
 // NewRegistryManager create new schema registry instance

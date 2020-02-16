@@ -129,10 +129,10 @@ func (dm *DeploymentManager) watchDeployments(ctx context.Context) {
 				if event.Type == eventwatch.Modified || event.Type == eventwatch.Added || event.Type == eventwatch.Deleted {
 
 					if event.Type == eventwatch.Deleted {
-						dm.registryManager.DeleteAppliedVersion(deployment.GetName(), deployment.GetNamespace())
+						dm.registryManager.DeleteAppliedVersion(deployment.GetName(), deployment.GetNamespace(), "deployment")
 					} else {
 						hash, _ := hashstructure.Hash(deployment.Spec, nil)
-						if !dm.registryManager.UpdateAppliesVersionHistory(deployment.GetName(), deployment.GetNamespace(), hash) {
+						if !dm.registryManager.UpdateAppliesVersionHistory(deployment.GetName(), deployment.GetNamespace(), "deployment", hash) {
 							continue
 						}
 					}

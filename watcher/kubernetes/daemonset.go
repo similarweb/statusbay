@@ -110,12 +110,13 @@ func (dsm *DaemonsetManager) watchDaemonsets(ctx context.Context) {
 				if event.Type == eventwatch.Modified || event.Type == eventwatch.Added || event.Type == eventwatch.Deleted {
 					// handle modified update
 					if event.Type == eventwatch.Deleted {
-						dsm.registryManager.DeleteAppliedVersion(daemonset.GetName(), daemonset.GetNamespace())
+						dsm.registryManager.DeleteAppliedVersion(daemonset.GetName(), daemonset.GetNamespace(), "daemonset")
 					} else {
 						hash, _ := hashstructure.Hash(daemonset.Spec, nil)
 						if !dsm.registryManager.UpdateAppliesVersionHistory(
 							daemonset.GetName(),
 							daemonset.GetNamespace(),
+							"daemonset",
 							hash) {
 							continue
 						}

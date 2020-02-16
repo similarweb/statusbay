@@ -1,5 +1,7 @@
 package common
 
+import log "github.com/sirupsen/logrus"
+
 //DeploymentStatus defined the status of the deployment
 type DeploymentStatus string
 
@@ -16,24 +18,30 @@ const (
 	// DeploymentStatusDeleted when deployment deleted
 	DeploymentStatusDeleted DeploymentStatus = "deleted"
 
-	// DeploymentStatusTimeout when statusbay stop watch
+	// DeploymentCanceled when statusbay stop watch
 	DeploymentCanceled DeploymentStatus = "cancelled"
 )
 
 // DeploymentReport defined deployment reporter message
 type DeploymentReport struct {
-	// List of channels/username to send message to
+	// To is a  list of channels/username to send message to
 	To []string
 
-	// Deployment owner
+	// DeployBy owner
 	DeployBy string
 
-	// Name of the deployment
+	// Name of the apply
 	Name string
 
-	// Status of the deployment
+	// Status of the apply
 	Status DeploymentStatus
 
-	//Deployment URI
+	// Deployment URI
 	URI string
+
+	// LogEntry is the application logger
+	LogEntry log.Entry
+
+	// ClusterName of the apply
+	ClusterName string
 }

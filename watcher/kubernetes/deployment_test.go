@@ -1,8 +1,10 @@
 package kuberneteswatcher_test
 
 import (
+	"context"
 	kuberneteswatcher "statusbay/watcher/kubernetes"
 	"statusbay/watcher/kubernetes/testutil"
+	"sync"
 
 	"testing"
 	"time"
@@ -80,9 +82,13 @@ func NewDeploymentManagerMock(client *fake.Clientset) (*kuberneteswatcher.Deploy
 	replicasetManager := NewReplicasetMock(client)
 	serviceManager := NewServiceManagerMockMock(client)
 	deploymentManager := kuberneteswatcher.NewDeploymentManager(client, eventManager, registryManager, replicasetManager, serviceManager, maxDeploymentTime)
-	deploymentManager.Serve()
-	serviceManager.Serve()
-	replicasetManager.Serve()
+
+	var wg *sync.WaitGroup
+	ctx := context.Background()
+
+	deploymentManager.Serve(ctx, wg)
+	serviceManager.Serve(ctx, wg)
+	replicasetManager.Serve(ctx, wg)
 	return deploymentManager, storage
 
 }
@@ -132,8 +138,8 @@ func TestDeploymentsWatch(t *testing.T) {
 
 	t.Run("deployment_schema_data", func(t *testing.T) {
 
-		if len(deployment.DeploymentEvents) != 1 {
-			t.Fatalf("unexpected deployment events, got %d expected %d", len(deployment.DeploymentEvents), 1)
+		if len(deployment.Events) != 1 {
+			t.Fatalf("unexpected deployment events, got %d expected %d", len(deployment.Events), 1)
 		}
 	})
 

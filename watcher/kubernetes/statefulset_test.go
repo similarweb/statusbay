@@ -1,9 +1,11 @@
 package kuberneteswatcher_test
 
 import (
+	"context"
 	"fmt"
 	kuberneteswatcher "statusbay/watcher/kubernetes"
 	"statusbay/watcher/kubernetes/testutil"
+	"sync"
 	"testing"
 	"time"
 
@@ -61,10 +63,13 @@ func NewStatefulSetManagerMock(client *fake.Clientset) (*kuberneteswatcher.State
 
 	statefulsetManager := kuberneteswatcher.NewStatefulsetManager(client, eventManager, registryManager, serviceManager, controllerRevisionManager, maxDeploymentTime)
 
-	eventManager.Serve()
-	serviceManager.Serve()
-	podManager.Serve()
-	statefulsetManager.Serve()
+	var wg *sync.WaitGroup
+	ctx := context.Background()
+
+	eventManager.Serve(ctx, wg)
+	serviceManager.Serve(ctx, wg)
+	podManager.Serve(ctx, wg)
+	statefulsetManager.Serve(ctx, wg)
 
 	return statefulsetManager, Mockstorage, controllerRevisionManager
 

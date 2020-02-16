@@ -1,7 +1,9 @@
 package prometheus
 
 import (
+	"context"
 	testutil "statusbay/api/metrics/prometheus/testutils"
+	"sync"
 	"testing"
 	"time"
 )
@@ -15,9 +17,11 @@ func MockPrometheus() *Prometheus {
 }
 
 func TestGetMetric(t *testing.T) {
+	var wg *sync.WaitGroup
+	ctx := context.Background()
 
 	prometheus := MockPrometheus()
-	prometheus.Serve()
+	prometheus.Serve(ctx, wg)
 
 	from := time.Unix(1557942490, 0)
 	to := time.Unix(1557942490, 0)

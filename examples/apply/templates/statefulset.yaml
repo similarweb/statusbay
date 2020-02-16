@@ -1,0 +1,51 @@
+{{- $root := . -}}
+{{range $i, $e := until (int .Values.statefulset.count) }}
+{{-  $name := printf "%s-%d" $root.Values.statefulset.name  $i  }}
+---
+apiVersion: apps/v1 #  for k8s versions before 1.9.0 use apps/v1beta2  and before 1.8.0 use extensions/v1beta1
+kind: StatefulSet
+metadata:
+  name: {{ $name }}
+  labels:
+    component: {{ $name }}
+  annotations:
+{{ toYaml $root.Values.statefulset.annotations | indent 4}}
+spec:
+  serviceName: {{ $name }}
+  selector:
+    matchLabels:
+      component: {{ $name }}
+  replicas: {{ $root.Values.statefulset.replicas}}
+  template:
+    metadata:
+      labels:
+        component: {{ $name }}
+    spec:
+      containers:
+      - name: {{ $name }}
+        image: "{{ $root.Values.statefulset.image.repository }}:{{ $root.Values.statefulset.image.tag }}"
+        imagePullPolicy: {{ $root.Values.statefulset.image.pullPolicy }}
+        livenessProbe:
+{{- toYaml $root.Values.statefulset.livenessProbe | nindent 10 }}
+        readinessProbe:
+{{- toYaml $root.Values.statefulset.readinessProbe | nindent 10 }}
+        ports:
+        - containerPort: 80
+          name: {{ $name }}
+        volumeMounts:
+        - name: data
+          mountPath: /usr/share/nginx/html2 # We not want to ovediede that default path of the Nginx container (/usr/share/nginx/html)
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: [{{ $root.Values.statefulset.persistence.persistentVolumeClaim.accessMode | quote }}]
+      {{- if not (eq "-" $root.Values.statefulset.persistence.persistentVolumeClaim.storageClass) }}
+      storageClassName: "{{ $root.Values.statefulset.persistence.persistentVolumeClaim.storageClass }}"
+      {{- end }}
+      resources:
+        requests:
+          memory: {{ $root.Values.statefulset.resources.requests.memory | quote }}
+          storage: {{ $root.Values.statefulset.persistence.persistentVolumeClaim.size | quote }}
+          
+{{- end }}

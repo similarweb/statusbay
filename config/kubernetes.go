@@ -67,9 +67,11 @@ func (k *Kubernetes) BuildNotifiers() (registeredNotifiers []notifierCommon.Noti
 }
 
 type KubernetesMarksEvents struct {
-	Pod        []EventMarksConfig `yaml:"pod"`
-	Replicaset []EventMarksConfig `yaml:"replicaset"`
-	Deployment []EventMarksConfig `yaml:"deployment"`
+	Pod         []EventMarksConfig `yaml:"pod"`
+	Replicaset  []EventMarksConfig `yaml:"replicaset"`
+	Deployment  []EventMarksConfig `yaml:"deployment"`
+	Demonset    []EventMarksConfig `yaml:"demonset"`
+	Statefulset []EventMarksConfig `yaml:"statefulset"`
 }
 
 // LoadKubernetesConfig will load all yaml configuration file to struct

@@ -24,19 +24,44 @@ pod:
 - pattern: "CrashLoopBackOff"
   descriptions:
   - >-
-    Container Terminated and Kubelet is backing off the restart:
+    TBD
     <ul>
         <li>TODO....</li>
     </ul>
 
 replicaset:
-- pattern: "some pod error event"
+- pattern: "Replicaset event example"
   descriptions:
   - >-
+    TBD
+    <ul>
+        <li>TODO....</li>
+    </ul>
     
     
 deployment:
-- pattern: "some pod error event"
+- pattern: "Deployment event example"
   descriptions:
   - >-
-    pod description error event
+    TBD
+    <ul>
+        <li>TODO....</li>
+    </ul>
+
+demonset:
+- pattern: "Demonset event example"
+  descriptions:
+  - >-
+    TBD
+    <ul>
+        <li>TODO....</li>
+    </ul>
+    
+statefulset:
+- pattern: "Statefulset event example"
+  descriptions:
+  - >-
+    TBD
+    <ul>
+        <li>TODO....</li>
+    </ul>

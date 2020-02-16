@@ -1,5 +1,7 @@
 package common
 
+import log "github.com/sirupsen/logrus"
+
 //DeploymentStatus defined the status of the deployment
 type DeploymentStatus string
 
@@ -34,6 +36,9 @@ type DeploymentReport struct {
 	// Status of the deployment
 	Status DeploymentStatus
 
-	//Deployment URI
+	// Deployment URI
 	URI string
+
+	// LogEntry is the application logger
+	LogEntry log.Entry
 }

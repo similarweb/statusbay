@@ -7,6 +7,7 @@ import (
 
 	kuberneteswatcher "statusbay/watcher/kubernetes"
 
+	log "github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
@@ -29,13 +30,14 @@ func TestWatchReceivedCount(t *testing.T) {
 	event3 := &v1.Event{Message: "message2", ObjectMeta: metav1.ObjectMeta{Name: "c", CreationTimestamp: metav1.Time{Time: time.Now().Add(-time.Hour)}}}
 
 	listOptions := metav1.ListOptions{}
-
+	lg := log.WithField("test", "TestWatchReceivedCount")
 	ctx := context.Background()
 
 	watchData := kuberneteswatcher.WatchEvents{
 		ListOptions: listOptions,
 		Namespace:   "default",
 		Ctx:         ctx,
+		LogEntry:    *lg,
 	}
 
 	eventChan := eventManager.Watch(watchData)
@@ -72,13 +74,14 @@ func TestWatchMark(t *testing.T) {
 	event1 := &v1.Event{Message: "OOMKill message", ObjectMeta: metav1.ObjectMeta{Name: "a", CreationTimestamp: metav1.Time{Time: time.Now()}}}
 
 	listOptions := metav1.ListOptions{}
-
+	lg := log.WithField("test", "TestWatchMark")
 	ctx := context.Background()
 
 	watchData := kuberneteswatcher.WatchEvents{
 		ListOptions: listOptions,
 		Namespace:   "default",
 		Ctx:         ctx,
+		LogEntry:    *lg,
 	}
 
 	eventChan := eventManager.Watch(watchData)

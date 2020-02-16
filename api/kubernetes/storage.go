@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"statusbay/state"
 
-	"github.com/apex/log"
 	"github.com/jinzhu/gorm"
+	log "github.com/sirupsen/logrus"
 )
 
 type Storage interface {

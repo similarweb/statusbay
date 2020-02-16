@@ -102,7 +102,12 @@ func (sl *Manager) sendToAll(stage ReportStage, message watcherCommon.Deployment
 					{
 						Title: "Application Name:",
 						Value: message.Name,
-						Short: false,
+						Short: true,
+					},
+					{
+						Title: "Cluster:",
+						Value: message.ClusterName,
+						Short: true,
 					},
 				},
 			}

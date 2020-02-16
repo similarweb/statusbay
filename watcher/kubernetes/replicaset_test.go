@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	log "github.com/sirupsen/logrus"
 	appsV1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -52,7 +53,7 @@ func NewReplicasetMock(client *fake.Clientset) *kuberneteswatcher.ReplicaSetMana
 // 	registry, storageMock, _ := NewRegistryMock()
 
 // 	registryDeploymentData := createMockDeploymentData(registry, kuberneteswatcher.DeploymentStatusRunning)
-
+// lg := log.WithField("test", "TestReplicasetWatch")
 // 	ctx := context.Background()
 
 // 	client := fake.NewSimpleClientset()
@@ -65,6 +66,7 @@ func NewReplicasetMock(client *fake.Clientset) *kuberneteswatcher.ReplicaSetMana
 // 		Registry:        registryDeploymentData,
 // 		Namespace:       "pe",
 // 		Ctx:             ctx,
+// 		LogEntry:     *lg,
 // 	}
 // 	time.Sleep(time.Second)
 
@@ -112,7 +114,7 @@ func TestInvalidSelector(t *testing.T) {
 	registry, storageMock := NewRegistryMock()
 
 	registryDeploymentData := createMockDeploymentData(registry, common.DeploymentStatusRunning)
-
+	lg := log.WithField("test", "TestInvalidSelector")
 	ctx := context.Background()
 
 	client := fake.NewSimpleClientset()
@@ -125,6 +127,7 @@ func TestInvalidSelector(t *testing.T) {
 		Registry:        registryDeploymentData,
 		Namespace:       "pe",
 		Ctx:             ctx,
+		LogEntry:        *lg,
 	}
 	time.Sleep(time.Second)
 

@@ -46,4 +46,5 @@ helm delete foo
 | `statefulset.persistence.persistentVolumeClaim.storageClass` | Specify the `storageClass` used to provision the volume. Or the default StorageClass will be used(the default). Set it to `-` to disable dynamic provisioning | `-`
 | `statefulset.persistence.persistentVolumeClaim.size` | The size of the volume | `1Gi`
 | `statefulset.annotations` | the statusbay annotations to set | `list of annotations` |
-
+| `statefulset.livenessProbe` | readiness health check | `HTTP 80 /` |
+| `statefulset.readinessProbe` | readiness health check | `HTTP 80 /` |

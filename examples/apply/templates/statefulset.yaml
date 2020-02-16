@@ -34,7 +34,7 @@ spec:
           name: {{ $name }}
         volumeMounts:
         - name: data
-          mountPath: /usr/share/nginx/html2
+          mountPath: /usr/share/nginx/html2 # We not want to ovediede that default path of the Nginx container (/usr/share/nginx/html)
   volumeClaimTemplates:
   - metadata:
       name: data

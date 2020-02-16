@@ -28,6 +28,7 @@ import DatePickerFilter from './Filters/DatePickerFilter';
 import SearchField from './Filters/SearchField';
 import NoData from './NoData';
 import { useApplicationsData } from '../../Hooks/ApplicationsHooks';
+import ToggleFilter from './Filters/ToggleFilter';
 
 const parseSortBy = (sortby = '|') => sortby.split('|');
 const paramToArray = (param = '') => (param ? param.split(',') : []);
@@ -98,6 +99,10 @@ const Table = ({ hideNameFilter, onRowClick, filters }) => {
   const handlePageChange = (event, nextPage) => {
     setTableFilters('page', nextPage);
   };
+
+  const handleDistinctChange = (event) => {
+    setTableFilters('distinct', event.target.checked);
+  }
 
   const resetFilters = () => {
     resetTableFilters();
@@ -195,6 +200,7 @@ const Table = ({ hideNameFilter, onRowClick, filters }) => {
                   defaultValue={tableFilters.deployBy}
                   delay={250}
                 />
+                <ToggleFilter label="Distinct" checked={tableFilters.distinct} onChange={handleDistinctChange} />
               </Box>
               <Box display="flex" alignItems="center">
                 <MultiSelect

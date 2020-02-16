@@ -12,14 +12,13 @@ import makeStyles from '@material-ui/core/styles/makeStyles';
 import LinearProgress from '@material-ui/core/LinearProgress';
 import Box from '@material-ui/core/Box';
 import Topbar from './components/Layout/Topbar';
-import Sidebar from './components/Layout/Sidebar';
-import Deployments from './containers/Deployments';
 import Applications from './containers/Applications';
 import DeploymentDetails from './containers/DeploymentDetails';
 import ApplicationDeployments from './containers/ApplicationDeployments';
 import { getMetaData } from './Services/API/TableApi';
 import { AppSettingsContext } from './context/AppSettingsContext';
 import useDarkMode from './Hooks/DarkMode';
+import Grid from '@material-ui/core/Grid';
 
 const drawerWidth = 190;
 
@@ -91,27 +90,27 @@ function App() {
             isDarkMode={theme.palette.type === 'dark'}
             onChangeThemeType={onChangeThemeType}
           />
-          <Sidebar />
           <main className={classes.main}>
             <div className={classes.toolbar} />
-            {
-              loadSettings ? <Box m={2} flexGrow={1} justifyContent="space-around" display="flex" flexDirection="column"><LinearProgress /></Box> : (
-                <RouterSwitch>
-                  <Route exact path="/">
-                    <Deployments />
-                  </Route>
-                  <Route exact path="/applications">
-                    <Applications />
-                  </Route>
-                  <Route exact path="/applications/:appName">
-                    <ApplicationDeployments />
-                  </Route>
-                  <Route path="/application/:deploymentId">
-                    <DeploymentDetails />
-                  </Route>
-                </RouterSwitch>
-              )
-            }
+            <Grid container justify="center">
+              <Grid item xl={10}>
+                {
+                  loadSettings ? <Box m={2} flexGrow={1} justifyContent="space-around" display="flex" flexDirection="column"><LinearProgress /></Box> : (
+                    <RouterSwitch>
+                      <Route exact path="/">
+                        <Applications />
+                      </Route>
+                      <Route exact path="/applications/:appName">
+                        <ApplicationDeployments />
+                      </Route>
+                      <Route path="/application/:deploymentId">
+                        <DeploymentDetails />
+                      </Route>
+                    </RouterSwitch>
+                  )
+                }
+              </Grid>
+            </Grid>
           </main>
         </div>
       </Router>

@@ -149,8 +149,8 @@ func (dr *RegistryManager) NewApplication(appName string, namespace string, anno
 	defer dr.newAppLock.Unlock()
 
 	encodedID := generateID(appName, namespace, dr.clusterName)
-	reportTo := GetMetadataByPrefix(annotations, fmt.Sprintf("%s/%s", ANNOTATION_PREFIX, "report-"))
-	deployBy := GetMetadata(annotations, fmt.Sprintf("%s/%s", ANNOTATION_PREFIX, "report-deploy-by"))
+	reportTo := GetMetadataByPrefix(annotations, fmt.Sprintf("%s/%s-", annotationPrefix, annotationPrefixAllReporter))
+	deployBy := GetMetadata(annotations, fmt.Sprintf("%s/%s", annotationPrefix, annotationReportDeployBy))
 	deployTime := time.Now().Unix()
 	ctx, cancelFn := context.WithCancel(context.Background())
 
@@ -183,21 +183,23 @@ func (dr *RegistryManager) NewApplication(appName string, namespace string, anno
 	switch status {
 	case common.DeploymentStatusRunning:
 		dr.reporter.DeploymentStarted <- common.DeploymentReport{
-			To:       reportTo,
-			DeployBy: deployBy,
-			Name:     appName,
-			URI:      row.GetURI(),
-			Status:   status,
-			LogEntry: lg,
+			To:          reportTo,
+			DeployBy:    deployBy,
+			Name:        appName,
+			URI:         row.GetURI(),
+			Status:      status,
+			LogEntry:    lg,
+			ClusterName: dr.clusterName,
 		}
 	case common.DeploymentStatusDeleted:
 		dr.reporter.DeploymentDeleted <- common.DeploymentReport{
-			To:       reportTo,
-			DeployBy: deployBy,
-			Name:     appName,
-			URI:      row.GetURI(),
-			Status:   status,
-			LogEntry: lg,
+			To:          reportTo,
+			DeployBy:    deployBy,
+			Name:        appName,
+			URI:         row.GetURI(),
+			Status:      status,
+			LogEntry:    lg,
+			ClusterName: dr.clusterName,
 		}
 	default:
 		lg.WithField("status", status).Info("Reporter status not supported")
@@ -719,12 +721,13 @@ func (dr *RegistryManager) save() {
 
 				if data.status != common.DeploymentStatusDeleted {
 					dr.reporter.DeploymentFinished <- common.DeploymentReport{
-						To:       data.DBSchema.ReportTo,
-						DeployBy: data.DBSchema.DeployBy,
-						Name:     data.DBSchema.Application,
-						URI:      data.GetURI(),
-						Status:   data.status,
-						LogEntry: data.Log(),
+						To:          data.DBSchema.ReportTo,
+						DeployBy:    data.DBSchema.DeployBy,
+						Name:        data.DBSchema.Application,
+						URI:         data.GetURI(),
+						Status:      data.status,
+						LogEntry:    data.Log(),
+						ClusterName: dr.clusterName,
 					}
 				}
 

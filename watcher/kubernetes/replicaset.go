@@ -15,6 +15,7 @@ import (
 
 // WatchReplica defined replicaset watch received message
 type WatchReplica struct {
+	LogEntry        log.Entry
 	DesiredReplicas int32
 	ListOptions     metaV1.ListOptions
 
@@ -65,16 +66,8 @@ func (rm *ReplicaSetManager) watch(replicaData WatchReplica) {
 
 	go func() {
 
-		log.WithFields(log.Fields{
-			"deployment": replicaData.Registry.Deployment.Name,
-			"namespace":  replicaData.Namespace,
-		}).Info("Start watch on replicasets")
-
-		log.WithFields(log.Fields{
-			"deployment_name": replicaData.Registry.Deployment.Name,
-			"namespace":       replicaData.Namespace,
-			"list_option":     replicaData.ListOptions,
-		}).Warn("Start watch on replicasets with list options")
+		replicaData.LogEntry.Info("Start watch on replicasets")
+		replicaData.LogEntry.WithField("list_option", replicaData.ListOptions).Debug("List option for replicaset filtering")
 
 		//List of replicaset changes events
 		firstInit := map[string]bool{}
@@ -82,11 +75,7 @@ func (rm *ReplicaSetManager) watch(replicaData WatchReplica) {
 		watcher, err := rm.client.AppsV1().ReplicaSets(replicaData.Namespace).Watch(replicaData.ListOptions)
 
 		if err != nil {
-			log.WithError(err).WithFields(log.Fields{
-				"deployment":  replicaData.Registry.Deployment.Name,
-				"namespace":   replicaData.Namespace,
-				"list_option": replicaData.ListOptions.String(),
-			}).Error("Error when trying to start watch on replicasets")
+			replicaData.LogEntry.WithField("list_option", replicaData.ListOptions).Error("Error when trying to start watch on replicasets")
 			return
 		}
 
@@ -94,26 +83,29 @@ func (rm *ReplicaSetManager) watch(replicaData WatchReplica) {
 			select {
 			case event, watch := <-watcher.ResultChan():
 				if !watch {
-					log.WithFields(log.Fields{
-						"deployment":   replicaData.Registry.Deployment.Name,
-						"list_options": replicaData.ListOptions.String(),
-						"namespace":    replicaData.Namespace,
-					}).Warn("Replicaset watch was stopped. Channel was closed")
+					replicaData.LogEntry.Warn("Replicaset watch was stopped. Channel was closed")
 
 					return
 				}
 
 				replicaset, ok := event.Object.(*appsV1.ReplicaSet)
 				if !ok {
-					log.WithField("object", event.Object).Warn("Failed to parse replicaset watch data")
+					replicaData.LogEntry.WithField("object", event.Object).Warn("Failed to parse replicaset watch data")
 					continue
 				}
 
+				lg := replicaData.LogEntry.WithFields(log.Fields{
+					"replicaset_name": replicaset.GetName(),
+				})
+
 				if _, found := firstInit[replicaset.Name]; !found {
+
+					lg.Debug("Found new replicaset")
 					firstInit[replicaset.Name] = true
 					replicaData.Registry.InitReplicaset(replicaset.GetName())
 
 					if value, found := replicaset.Spec.Selector.MatchLabels["pod-template-hash"]; found {
+						lg.Debug("Selector `pod-template-hash` found in replicaset")
 
 						podListOptions := metaV1.ListOptions{LabelSelector: labels.SelectorFromSet(map[string]string{
 							"pod-template-hash": value,
@@ -124,15 +116,11 @@ func (rm *ReplicaSetManager) watch(replicaData WatchReplica) {
 							RegistryData: replicaData.Registry,
 							Namespace:    replicaData.Namespace,
 							Ctx:          replicaData.Ctx,
+							LogEntry:     *lg,
 						}
 
 					} else {
-						log.WithFields(log.Fields{
-							"deployment": replicaData.Registry.Deployment.Name,
-							"name":       replicaset.GetName(),
-							"namespace":  replicaset.GetNamespace(),
-							"selector":   replicaset.Spec.Selector.String(),
-						}).Error("Selector `pod-template-hash` not found in replicaset. cannot start watch on pods")
+						lg.Warn("Selector `pod-template-hash` not found in replicaset")
 						continue
 					}
 
@@ -142,17 +130,14 @@ func (rm *ReplicaSetManager) watch(replicaData WatchReplica) {
 					}).String(),
 					}
 
-					rm.watchEvents(replicaData.Ctx, replicaData.Registry, eventListOptions, replicaset.GetName(), replicaData.Namespace)
+					rm.watchEvents(replicaData.Ctx, *lg, replicaData.Registry, eventListOptions, replicaset.GetName(), replicaData.Namespace)
 
 				}
 
 				replicaData.Registry.UpdateReplicasetStatus(replicaset.GetName(), replicaset.Status)
 
 			case <-replicaData.Ctx.Done():
-				log.WithFields(log.Fields{
-					"selector":  replicaData.ListOptions.String(),
-					"namespace": replicaData.Namespace,
-				}).Debug("Replicaset watch was stopped. Got ctx done signal")
+				replicaData.LogEntry.Debug("Replicaset watch was stopped. Got ctx done signal")
 				watcher.Stop()
 				return
 			}
@@ -162,19 +147,16 @@ func (rm *ReplicaSetManager) watch(replicaData WatchReplica) {
 }
 
 // watchEvents will start watch on replicaset event messages changes
-func (rm *ReplicaSetManager) watchEvents(ctx context.Context, registryDeployment *DeploymentData, listOptions metaV1.ListOptions, replicasetName, namespace string) {
+func (rm *ReplicaSetManager) watchEvents(ctx context.Context, lg log.Entry, registryDeployment *DeploymentData, listOptions metaV1.ListOptions, replicasetName, namespace string) {
 
-	log.WithFields(log.Fields{
-		"deployment": registryDeployment.Deployment.Name,
-		"replicaset": replicasetName,
-		"namespace":  namespace,
-	}).Info("Start watch on replicaset events")
-
+	lg.Info("Start watch on replicaset events")
 	watchData := WatchEvents{
 		ListOptions: listOptions,
 		Namespace:   namespace,
 		Ctx:         ctx,
+		LogEntry:    lg,
 	}
+
 	eventChan := rm.eventManager.Watch(watchData)
 	go func() {
 
@@ -183,11 +165,7 @@ func (rm *ReplicaSetManager) watchEvents(ctx context.Context, registryDeployment
 			case event := <-eventChan:
 				registryDeployment.UpdateReplicasetEvents(replicasetName, event)
 			case <-ctx.Done():
-				log.WithFields(log.Fields{
-					"deployment": registryDeployment.Deployment.Name,
-					"replicaset": replicasetName,
-					"namespace":  namespace,
-				}).Info("Stop watch on replicaset events")
+				lg.Info("Stop watch on replicaset events")
 				return
 			}
 

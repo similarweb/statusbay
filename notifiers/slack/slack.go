@@ -9,10 +9,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/apex/log"
 	"github.com/mitchellh/mapstructure"
 	slackApi "github.com/nlopes/slack"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -102,16 +103,19 @@ func (sl *Manager) sendToAll(stage ReportStage, message watcherCommon.Deployment
 					{
 						Title: "Application Name:",
 						Value: message.Name,
-						Short: false,
+						Short: true,
+					},
+					{
+						Title: "Cluster:",
+						Value: message.ClusterName,
+						Short: true,
 					},
 				},
 			}
-			sl.send(toChannel, attachment)
+			sl.send(toChannel, attachment, message.LogEntry)
 
 		} else {
-			log.WithFields(log.Fields{
-				"to": to,
-			}).Debug("Slack id not found")
+			message.LogEntry.WithField("to", to).Debug("Slack id not found")
 		}
 
 	}
@@ -194,17 +198,14 @@ func (sl *Manager) getUserIdByEmail(email string) (string, error) {
 }
 
 // send sends a slack notification to user
-func (sl *Manager) send(channelID string, attachment slackApi.Attachment) {
+func (sl *Manager) send(channelID string, attachment slackApi.Attachment, lg logrus.Entry) {
 	_, _, err := sl.client.PostMessage(channelID, slackApi.MsgOptionAttachments(attachment), slackApi.MsgOptionAsUser(true))
 	if err != nil {
 
-		log.WithError(err).WithFields(log.Fields{
-			"channel_id": channelID,
-		}).Error("Error when trying to send post message")
+		lg.WithError(err).WithField("channel_id", channelID).Debug("Error when trying to send post message")
+
 	}
-	log.WithFields(log.Fields{
-		"channel_id": channelID,
-	}).Debug("Slack message was sent")
+	lg.WithField("channel_id", channelID).Debug("Slack message was sent")
 }
 
 // GetChannelId returns the channel id. if is it email, search the user channel id by his email

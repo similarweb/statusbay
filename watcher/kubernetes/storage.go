@@ -128,6 +128,7 @@ func (my *MySQLStorage) UpdateAppliesVersionHistory(applyName string, hash uint6
 
 	row := state.TableDeploymentsHash{}
 
+	// Check if the deployment exists in DB
 	if err := my.client.DB.Where("deployment = ?", applyName).First(&row).Error; err != nil {
 		if gorm.IsRecordNotFoundError(err) {
 			my.client.DB.Create(&state.TableDeploymentsHash{
@@ -137,23 +138,23 @@ func (my *MySQLStorage) UpdateAppliesVersionHistory(applyName string, hash uint6
 			log.WithFields(log.Fields{
 				"apply_name": applyName,
 				"hash":       hash,
-			}).Info("deployment version created")
+			}).Debug("Apply hash version not found in storage, creating one")
 			return true
 		}
 		return false
 	} else if row.Hash == hash {
 		log.WithFields(log.Fields{
 			"apply_name": applyName,
-			"hash":       hash,
-		}).Info("deployment version already exists")
+			"spec_hash":  hash,
+		}).Info("Apply version already exists, the spec data is equal the the last apply")
 		return false
 	}
 
 	my.client.DB.Model(&row).Where("deployment = ?", applyName).Update("hash", hash)
 	log.WithFields(log.Fields{
 		"apply_name": applyName,
-		"hash":       hash,
-	}).Info("Deployment version updated")
+		"spec_hash":  hash,
+	}).Info("Apply version updated")
 	return true
 
 }

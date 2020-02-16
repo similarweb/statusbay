@@ -138,8 +138,8 @@ func TestDeploymentsWatch(t *testing.T) {
 
 	t.Run("deployment_schema_data", func(t *testing.T) {
 
-		if len(deployment.DeploymentEvents) != 1 {
-			t.Fatalf("unexpected deployment events, got %d expected %d", len(deployment.DeploymentEvents), 1)
+		if len(deployment.Events) != 1 {
+			t.Fatalf("unexpected deployment events, got %d expected %d", len(deployment.Events), 1)
 		}
 	})
 

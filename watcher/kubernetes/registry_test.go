@@ -219,8 +219,8 @@ func TestDeploymentData(t *testing.T) {
 		data.UpdateDeploymentEvents(event1)
 		data.UpdateDeploymentEvents(event2)
 
-		if len(data.DeploymentEvents) != 2 {
-			t.Fatalf("unexpected deployment event count, got %d expected %d", len(data.DeploymentEvents), 2)
+		if len(data.Events) != 2 {
+			t.Fatalf("unexpected deployment event count, got %d expected %d", len(data.Events), 2)
 
 		}
 

@@ -534,7 +534,7 @@ func (dd *DeploymentData) UpdateDeploymentStatus(status appsV1.DeploymentStatus)
 
 // UpdateDeploymentEvents will append events to deployment
 func (dd *DeploymentData) UpdateDeploymentEvents(event EventMessages) {
-	dd.DeploymentEvents = append(dd.DeploymentEvents, event)
+	dd.Events = append(dd.Events, event)
 }
 
 // InitReplicaset create new list of replicaset
@@ -634,7 +634,7 @@ func (dsd *DaemonsetData) UpdateApplyStatus(status appsV1.DaemonSetStatus) {
 
 // UpdateDaemonsetEvents will add event to a daemonset
 func (dsd *DaemonsetData) UpdateDaemonsetEvents(event EventMessages) {
-	dsd.DaemonsetEvents = append(dsd.DaemonsetEvents, event)
+	dsd.Events = append(dsd.Events, event)
 }
 
 // UpdatePodEvents will set pod events
@@ -659,7 +659,7 @@ func (dsd *DaemonsetData) GetName() string {
 
 // UpdateStatefulsetEvents will append events to StatefulsetEvents list
 func (ssd *StatefulsetData) UpdateStatefulsetEvents(event EventMessages) {
-	ssd.StatefulsetEvents = append(ssd.StatefulsetEvents, event)
+	ssd.Events = append(ssd.Events, event)
 }
 
 // UpdatePod will set pod events to statefulset

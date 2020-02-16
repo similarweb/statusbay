@@ -19,24 +19,25 @@ export default () => {
   return (
     <Breadcrumbs aria-label="breadcrumb" classes={classes.typography}>
       {
-            appName && (
-            <Link to="/" className={classes.link}>
-                    Applications
-            </Link>
-            )
-        }
+        appName && (
+          <Link to="/" className={classes.link}>
+            Applications
+          </Link>
+        )
+      }
 
       {
-            appName && (
-            <Link to={`/application/${appName}`} className={classes.link}>
-              {appName}
-            </Link>
-            )
-        }
+        appName && (
+          <Link to={`/application/${appName}`} className={classes.link}>
+            {appName}
+          </Link>
+        )
+      }
 
       {
-            deploymentId && <Typography classes={{ root: classes.selected }} variant="body2">{deploymentId}</Typography>
-        }
+        deploymentId &&
+        <Typography classes={{ root: classes.selected }} variant="body2">{deploymentId}</Typography>
+      }
 
     </Breadcrumbs>
   );

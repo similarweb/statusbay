@@ -4,7 +4,7 @@ import DeploymentDetailsSection from '../components/DeploymentDetailsSection';
 import { useDeploymentDetailsContext } from '../context/DeploymentDetailsContext';
 
 const PodEvents = ({ kindIndex }) => {
-  const data = useDeploymentDetailsContext();
+  const {data} = useDeploymentDetailsContext();
   if (!data) {
     return null;
   }

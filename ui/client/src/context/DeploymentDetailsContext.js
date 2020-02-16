@@ -8,18 +8,22 @@ const DeploymentDetailsContext = createContext(null);
 export const DeploymentDetailsContextProvider = ({ id, children }) => {
   const { deploymentDetails } = useContext(SocketIOContext);
   const [data, setData] = useState();
+  const [loading, setLoading] = useState(true);
   useEffect(() => {
     deploymentDetails.emit('init', id);
     deploymentDetails.on('data', ({ data: newData }) => {
       setData(newData);
+      if (loading) {
+        setLoading(false);
+      }
     });
     return () => {
       deploymentDetails.emit('close');
     };
-  }, [id]);
+  }, [id, loading]);
   return (
-    <DeploymentDetailsContext.Provider value={data}>
-      {children}
+    <DeploymentDetailsContext.Provider value={{data, loading}}>
+      {children({loading, data})}
     </DeploymentDetailsContext.Provider>
   );
 };

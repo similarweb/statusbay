@@ -223,7 +223,7 @@ const transformers = {
     }
   },
   deploymentEvents: (rawData) => {
-    return rawData.DeploymentEvents.map(event => {
+    return rawData.Events.map(event => {
       return {
         title: event.Message,
         time: event.Time,
@@ -233,7 +233,7 @@ const transformers = {
     })
   },
   daemonSetEvents: (rawData) => {
-    return rawData.DaemonsetEvents.map(event => {
+    return rawData.Events.map(event => {
       return {
         title: event.Message,
         time: event.Time,

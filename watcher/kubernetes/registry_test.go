@@ -16,19 +16,6 @@ import (
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func createMockDeploymentData(registry *kuberneteswatcher.RegistryManager, status common.DeploymentStatus) *kuberneteswatcher.DeploymentData {
-
-	fakeDeployment := GetFakeDeployment(200)
-	labels := map[string]string{}
-	annotations := map[string]string{}
-
-	registryRow := registry.NewApplication("nginx", fakeDeployment.GetNamespace(), fakeDeployment.GetAnnotations(), status)
-	registryDeploymentData := registryRow.AddDeployment("application", "pe", labels, annotations, 1, 3)
-
-	return registryDeploymentData
-
-}
-
 func NewRegistryMock() (*kuberneteswatcher.RegistryManager, *testutil.MockStorage) {
 
 	saveInterval, _ := time.ParseDuration("1s")
@@ -121,14 +108,25 @@ func TestAddDeployment(t *testing.T) {
 	registry, _ := NewRegistryMock()
 
 	fakeDeployment := GetFakeDeployment(300)
-	registryRow := registry.NewApplication("nginx", fakeDeployment.GetNamespace(), fakeDeployment.GetAnnotations(), common.DeploymentStatusRunning)
-
-	labels := map[string]string{
+	annotations := map[string]string{
 		"statusbay.io/report-deploy-by":      "elad.kaplan@similarweb.com",
 		"statusbay.io/report-slack-channels": "#channel",
 	}
-	annotations := map[string]string{}
-	data := registryRow.AddDeployment("nginx-deployment", "pe", labels, annotations, 3, 300)
+	registryRow := registry.NewApplication("nginx", fakeDeployment.GetNamespace(), annotations, common.DeploymentStatusRunning)
+
+	// data := registryRow.AddDeployment("nginx-deployment", "pe", labels, annotations, 3, 300)
+
+	apply := kuberneteswatcher.ApplyEvent{
+		Event:        "create",
+		ApplyName:    "nginx-deployment",
+		ResourceName: "resourceName",
+		Namespace:    "default",
+		Kind:         "deployment",
+		Hash:         1234,
+		Annotations:  fakeDeployment.GetAnnotations(),
+	}
+
+	data := createMockDeploymentData(registry, registryRow, apply, "10m")
 
 	// TODO:: add report check
 	t.Run("deployment_data", func(t *testing.T) {
@@ -150,7 +148,7 @@ func TestAddDeployment(t *testing.T) {
 				func(deploymentData *kuberneteswatcher.DeploymentData) interface{} {
 					return deploymentData.Deployment.Namespace
 				},
-				"pe",
+				"default",
 			},
 			{
 				"desired state",
@@ -160,9 +158,9 @@ func TestAddDeployment(t *testing.T) {
 				int32(3),
 			},
 			{
-				"label count",
+				"annotations count",
 				func(deploymentData *kuberneteswatcher.DeploymentData) interface{} {
-					return len(deploymentData.Deployment.Labels)
+					return len(deploymentData.Deployment.Annotations)
 				},
 				2,
 			},
@@ -191,15 +189,24 @@ func TestAddDeployment(t *testing.T) {
 func TestDeploymentData(t *testing.T) {
 	registry, _ := NewRegistryMock()
 
-	fakeDeployment := GetFakeDeployment(300)
-	registryRow := registry.NewApplication("nginx", fakeDeployment.GetNamespace(), fakeDeployment.GetAnnotations(), common.DeploymentStatusRunning)
-
-	labels := map[string]string{
+	annotations := map[string]string{
 		"statusbay.io/report-deploy-by":      "elad.kaplan@similarweb.com",
 		"statusbay.io/report-slack-channels": "#channel",
 	}
-	annotations := map[string]string{}
-	data := registryRow.AddDeployment("nginx-deployment", "pe", labels, annotations, 1, 3)
+
+	registryRow := registry.NewApplication("nginx", "default", annotations, common.DeploymentStatusRunning)
+
+	apply := kuberneteswatcher.ApplyEvent{
+		Event:        "create",
+		ApplyName:    "nginx-deployment",
+		ResourceName: "resourceName",
+		Namespace:    "default",
+		Kind:         "deployment",
+		Hash:         1234,
+		Annotations:  annotations,
+	}
+
+	data := createMockDeploymentData(registry, registryRow, apply, "10m")
 
 	t.Run("update_deployment_Status", func(t *testing.T) {
 		deploymentStatus := appsV1.DeploymentStatus{
@@ -336,17 +343,34 @@ func TestDeploymentData(t *testing.T) {
 func TestSave(t *testing.T) {
 	registry, storage := NewRegistryMock()
 
-	fakeDeployment := GetFakeDeployment(300)
-	registryRow := registry.NewApplication("nginx", fakeDeployment.GetNamespace(), fakeDeployment.GetAnnotations(), common.DeploymentStatusRunning)
-
-	labels := map[string]string{
+	annotations := map[string]string{
 		"statusbay.io/report-deploy-by":      "elad.kaplan@similarweb.com",
 		"statusbay.io/report-slack-channels": "#channel",
 	}
-	annotations := map[string]string{}
+	registryRow := registry.NewApplication("nginx", "default", annotations, common.DeploymentStatusRunning)
 
-	registryRow.AddDeployment("nginx-deployment", "pe", labels, annotations, 1, 3)
-	registryRow.AddDeployment("nginx-deployment2", "pe", labels, annotations, 1, 3)
+	apply := kuberneteswatcher.ApplyEvent{
+		Event:        "create",
+		ApplyName:    "nginx-deployment",
+		ResourceName: "resourceName",
+		Namespace:    "default",
+		Kind:         "deployment",
+		Hash:         1234,
+		Annotations:  annotations,
+	}
+
+	createMockDeploymentData(registry, registryRow, apply, "10m")
+
+	apply2 := kuberneteswatcher.ApplyEvent{
+		Event:        "create",
+		ApplyName:    "nginx-deployment1",
+		ResourceName: "resourceName",
+		Namespace:    "default",
+		Kind:         "deployment",
+		Hash:         1234,
+		Annotations:  annotations,
+	}
+	createMockDeploymentData(registry, registryRow, apply2, "10m")
 
 	time.Sleep(time.Second * 5)
 	id := "1"
@@ -384,20 +408,28 @@ func TestDeploymentFinishSuccessful(t *testing.T) {
 
 	registry, storage := NewRegistryMock()
 
-	fakeDeployment := GetFakeDeployment(300)
-	registryRow := registry.NewApplication("nginx", fakeDeployment.GetNamespace(), fakeDeployment.GetAnnotations(), common.DeploymentStatusRunning)
-
-	labels := map[string]string{
+	annotations := map[string]string{
 		"statusbay.io/report-deploy-by":      "elad.kaplan@similarweb.com",
 		"statusbay.io/report-slack-channels": "#channel",
 	}
-	annotations := map[string]string{}
+	registryRow := registry.NewApplication("nginx", "default", annotations, common.DeploymentStatusRunning)
 
 	replicasetStatus := appsV1.ReplicaSetStatus{
 		Replicas:      3,
 		ReadyReplicas: 3,
 	}
-	data := registryRow.AddDeployment("nginx-deployment", "pe", labels, annotations, 3, 300)
+
+	apply := kuberneteswatcher.ApplyEvent{
+		Event:        "create",
+		ApplyName:    "nginx-deployment",
+		ResourceName: "resourceName",
+		Namespace:    "default",
+		Kind:         "deployment",
+		Hash:         1234,
+		Annotations:  annotations,
+	}
+
+	data := createMockDeploymentData(registry, registryRow, apply, "10m")
 
 	data.InitReplicaset("replicaset-name")
 
@@ -416,18 +448,22 @@ func TestDeploymentFinishProgressDeadLine(t *testing.T) {
 
 	registry, storage := NewRegistryMock()
 
-	var progressDeadlineSeconds int32
-	progressDeadlineSeconds = 1
-	fakeDeployment := GetFakeDeployment(progressDeadlineSeconds)
-	registryRow := registry.NewApplication("nginx", fakeDeployment.GetNamespace(), fakeDeployment.GetAnnotations(), common.DeploymentStatusRunning)
+	registryRow := registry.NewApplication("nginx", "default", map[string]string{}, common.DeploymentStatusRunning)
 
-	labels := map[string]string{}
-	annotations := map[string]string{}
 	replicasetStatus := appsV1.ReplicaSetStatus{
 		Replicas:      3,
 		ReadyReplicas: 2,
 	}
-	data := registryRow.AddDeployment("nginx-deployment", "pe", labels, annotations, 3, 2)
+	apply := kuberneteswatcher.ApplyEvent{
+		Event:        "create",
+		ApplyName:    "nginx-deployment",
+		ResourceName: "resourceName",
+		Namespace:    "default",
+		Kind:         "deployment",
+		Hash:         1234,
+		Annotations:  map[string]string{},
+	}
+	data := createMockDeploymentData(registry, registryRow, apply, "1s")
 
 	data.InitReplicaset("replicaset-name")
 

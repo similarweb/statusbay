@@ -113,7 +113,19 @@ func TestInvalidSelector(t *testing.T) {
 
 	registry, storageMock := NewRegistryMock()
 
-	registryDeploymentData := createMockDeploymentData(registry, common.DeploymentStatusRunning)
+	registryRow := registry.NewApplication("nginx", "default", map[string]string{}, common.DeploymentStatusRunning)
+
+	apply := kuberneteswatcher.ApplyEvent{
+		Event:        "create",
+		ApplyName:    "application",
+		ResourceName: "resourceName",
+		Namespace:    "default",
+		Kind:         "deployment",
+		Hash:         1234,
+		Annotations:  map[string]string{},
+	}
+
+	registryDeploymentData := createMockDeploymentData(registry, registryRow, apply, "10m")
 	lg := log.WithField("test", "TestInvalidSelector")
 	ctx := context.Background()
 

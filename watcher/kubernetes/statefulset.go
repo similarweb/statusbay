@@ -2,7 +2,7 @@ package kuberneteswatcher
 
 import (
 	"context"
-	"statusbay/watcher/kubernetes/common"
+	"fmt"
 	"sync"
 	"time"
 
@@ -105,39 +105,26 @@ func (ssm *StatefulsetManager) watchStatefulsets(ctx context.Context) {
 				statefulsetName := GetApplicationName(statefulset.GetAnnotations(), statefulset.GetName())
 
 				if event.Type == eventwatch.Modified || event.Type == eventwatch.Added || event.Type == eventwatch.Deleted {
-					// handle modified event
-					if event.Type == eventwatch.Deleted {
-						ssm.registryManager.DeleteAppliedVersion(statefulset.GetName(), statefulset.GetNamespace(), "statefulset")
-					} else {
-						hash, _ := hashstructure.Hash(statefulset.Spec, nil)
-						if !ssm.registryManager.UpdateAppliesVersionHistory(statefulset.GetName(), statefulset.GetNamespace(), "statefulset", hash) {
-							continue
-						}
+
+					hash, _ := hashstructure.Hash(statefulset.Spec, nil)
+					apply := ApplyEvent{
+						Event:           fmt.Sprintf("%v", event.Type),
+						ApplyName:       statefulsetName,
+						ResourceName:    statefulset.GetName(),
+						Namespace:       statefulset.GetNamespace(),
+						Kind:            "statefulset",
+						Hash:            hash,
+						RegistryManager: ssm.registryManager,
+						Annotations:     statefulset.GetAnnotations(),
 					}
-					appRegistry := ssm.registryManager.Get(statefulsetName, statefulset.GetNamespace())
 
-					// extract annotation for progressDeadLine since statefulset don't have this feature
-					progressDeadLine := GetProgressDeadlineApply(statefulset.GetAnnotations(), ssm.maxDeploymentTime)
-
+					appRegistry := ssm.registryManager.NewApplyEvent(apply)
 					if appRegistry == nil {
-						statefulsetStatus := common.DeploymentStatusRunning
-						if event.Type == eventwatch.Deleted {
-							statefulsetStatus = common.DeploymentStatusDeleted
-						}
-
-						appRegistry = ssm.registryManager.NewApplication(statefulsetName,
-							statefulset.GetNamespace(),
-							statefulset.GetAnnotations(),
-							statefulsetStatus)
+						continue
 					}
 
-					registryApply := appRegistry.AddStatefulset(
-						statefulsetName,
-						statefulset.GetNamespace(),
-						statefulset.GetLabels(),
-						statefulset.GetAnnotations(),
-						*statefulset.Spec.Replicas,
-						progressDeadLine)
+					registryApply := ssm.AddNewStatefulset(apply, appRegistry, *statefulset.Spec.Replicas)
+
 					statefulsetWatchListOptions := metaV1.ListOptions{
 						LabelSelector: labels.SelectorFromSet(statefulset.GetLabels()).String()}
 
@@ -148,7 +135,8 @@ func (ssm *StatefulsetManager) watchStatefulsets(ctx context.Context) {
 						registryApply,
 						statefulsetWatchListOptions,
 						statefulset.GetNamespace(),
-						progressDeadLine)
+						GetProgressDeadlineApply(statefulset.GetAnnotations(), ssm.maxDeploymentTime))
+
 				} else {
 					log.WithFields(log.Fields{
 						"event_type":  event.Type,
@@ -254,4 +242,28 @@ func (ssm *StatefulsetManager) watchEvents(ctx context.Context, lg log.Entry, re
 			}
 		}
 	}()
+}
+
+// AddNewStatefulset add a new statefulset under application settings
+func (ssm *StatefulsetManager) AddNewStatefulset(data ApplyEvent, applicationRegistry *RegistryRow, desiredState int32) *StatefulsetData {
+
+	log := applicationRegistry.Log()
+	dd := &StatefulsetData{
+		Statefulset: MetaData{
+			Name:         data.ApplyName,
+			Namespace:    data.Namespace,
+			Annotations:  data.Annotations,
+			Metrics:      GetMetricsDataFromAnnotations(data.Annotations),
+			Alerts:       GetAlertsDataFromAnnotations(data.Annotations),
+			DesiredState: desiredState,
+		},
+		Pods:                    make(map[string]DeploymenPod, 0),
+		ProgressDeadlineSeconds: GetProgressDeadlineApply(data.Annotations, ssm.maxDeploymentTime),
+	}
+	applicationRegistry.DBSchema.Resources.Statefulsets[data.ApplyName] = dd
+
+	log.Info("Daemonset was associated to the application")
+
+	return dd
+
 }

@@ -14,6 +14,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	appsV1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
+	eventwatch "k8s.io/apimachinery/pkg/watch"
 )
 
 const (
@@ -39,6 +40,18 @@ type DBSchema struct {
 	Resources             Resources                   `json:"Resources"`
 }
 
+// ApplyEvent describe the new Kubernetes apply details for create/skip/delete new application
+type ApplyEvent struct {
+	Event           string
+	ApplyName       string
+	ResourceName    string
+	Namespace       string
+	Kind            string
+	Hash            uint64
+	RegistryManager *RegistryManager
+	Annotations     map[string]string
+}
+
 // RegistryRow defined row data of deployment
 type RegistryRow struct {
 	applyID                          string
@@ -62,14 +75,6 @@ type RegistryManager struct {
 	storage                     Storage
 	reporter                    *ReporterManager
 	lastDeploymentHistory       map[string]time.Time
-}
-
-func (dr *RegistryManager) UpdateAppliesVersionHistory(name, namespace, resourceName string, hash uint64) bool {
-	return dr.storage.UpdateAppliesVersionHistory(fmt.Sprintf(applyVersionFormat, resourceName, namespace, name, dr.clusterName), hash)
-}
-
-func (dr *RegistryManager) DeleteAppliedVersion(name, namespace, resourceName string) bool {
-	return dr.storage.DeleteAppliedVersion(fmt.Sprintf(applyVersionFormat, resourceName, namespace, name, dr.clusterName))
 }
 
 // NewRegistryManager create new schema registry instance
@@ -140,6 +145,33 @@ func (dr *RegistryManager) LoadRunningApplies() []*RegistryRow {
 	}
 
 	return rows
+
+}
+
+func (dr *RegistryManager) NewApplyEvent(data ApplyEvent) *RegistryRow {
+
+	if data.Event == fmt.Sprintf("%v", eventwatch.Deleted) {
+		data.RegistryManager.deleteAppliedVersion(data.ResourceName, data.Namespace, data.Kind)
+	} else {
+		if !data.RegistryManager.updateAppliesVersionHistory(data.ResourceName, data.Namespace, data.Kind, data.Hash) {
+			return nil
+		}
+	}
+	appRegistry := data.RegistryManager.Get(data.ApplyName, data.Namespace)
+
+	if appRegistry == nil {
+		status := common.DeploymentStatusRunning
+		if data.Event == fmt.Sprintf("%v", eventwatch.Deleted) {
+			status = common.DeploymentStatusDeleted
+		}
+
+		appRegistry = data.RegistryManager.NewApplication(data.ApplyName,
+			data.Namespace,
+			data.Annotations,
+			status)
+	}
+
+	return appRegistry
 
 }
 
@@ -245,80 +277,6 @@ func (wbr *RegistryRow) GetApplyID() string {
 	h.Write([]byte(fmt.Sprintf("%s-%d", encodedID, wbr.DBSchema.CreationTimestamp)))
 	return fmt.Sprintf("%x", h.Sum(nil))
 
-}
-
-// AddDeployment add new deployment under application
-func (wbr *RegistryRow) AddDeployment(name, namespace string, labels map[string]string, annotations map[string]string, desiredState int32, maxDeploymentTime int64) *DeploymentData {
-	lg := wbr.Log()
-	data := DeploymentData{
-		Deployment: MetaData{
-			Name:         name,
-			Namespace:    namespace,
-			Labels:       labels,
-			Annotations:  annotations,
-			Metrics:      GetMetricsDataFromAnnotations(annotations),
-			Alerts:       GetAlertsDataFromAnnotations(annotations),
-			DesiredState: desiredState,
-		},
-		Pods:                    make(map[string]DeploymenPod, 0),
-		Replicaset:              make(map[string]Replicaset, 0),
-		ProgressDeadlineSeconds: maxDeploymentTime,
-	}
-	wbr.DBSchema.Resources.Deployments[name] = &data
-
-	lg.WithFields(log.Fields{
-		"deployment": name,
-	}).Info("Deployment was associated to the application")
-
-	return &data
-}
-
-// AddDaemonset add new daemonset under application
-func (wbr *RegistryRow) AddDaemonset(name, namespace string, labels map[string]string, annotations map[string]string, desiredState int32, maxDeploymentTime int64) *DaemonsetData {
-	lg := wbr.Log()
-	data := DaemonsetData{
-		Metadata: MetaData{
-			Name:         name,
-			Namespace:    namespace,
-			Labels:       labels,
-			Annotations:  annotations,
-			Metrics:      GetMetricsDataFromAnnotations(annotations),
-			Alerts:       GetAlertsDataFromAnnotations(annotations),
-			DesiredState: desiredState,
-		},
-		Pods:                    make(map[string]DeploymenPod, 0),
-		ProgressDeadlineSeconds: maxDeploymentTime,
-	}
-	wbr.DBSchema.Resources.Daemonsets[name] = &data
-
-	lg.WithFields(log.Fields{
-		"daemonset": name,
-	}).Info("Daemonset was associated to the application")
-
-	return &data
-}
-
-// AddStatefulset add a new statefulset under application settings
-func (wbr *RegistryRow) AddStatefulset(name, namespace string, labels map[string]string, annotations map[string]string, desiredState int32, maxDeploymentTime int64) *StatefulsetData {
-	lg := wbr.Log()
-	data := StatefulsetData{
-		Statefulset: MetaData{
-			Name:         name,
-			Namespace:    namespace,
-			Labels:       labels,
-			Annotations:  annotations,
-			DesiredState: desiredState,
-		},
-		Pods:                    make(map[string]DeploymenPod, 0),
-		ProgressDeadlineSeconds: maxDeploymentTime,
-	}
-	wbr.DBSchema.Resources.Statefulsets[name] = &data
-
-	lg.WithFields(log.Fields{
-		"statefulset": name,
-	}).Info("Statefulset was associated to the application")
-
-	return &data
 }
 
 // GetURI will generate uri link for UI
@@ -749,4 +707,14 @@ func (dr *RegistryManager) save() {
 // generateID will create a id for the deployment
 func generateID(name, namespace, cluster string) string {
 	return base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s-%s-%s", name, namespace, cluster)))
+}
+
+// updateAppliesVersionHistory updates a new version of hash kind
+func (dr *RegistryManager) updateAppliesVersionHistory(name, namespace, resourceName string, hash uint64) bool {
+	return dr.storage.UpdateAppliesVersionHistory(fmt.Sprintf(applyVersionFormat, resourceName, namespace, name, dr.clusterName), hash)
+}
+
+// deleteAppliedVersion delete apply version
+func (dr *RegistryManager) deleteAppliedVersion(name, namespace, resourceName string) bool {
+	return dr.storage.DeleteAppliedVersion(fmt.Sprintf(applyVersionFormat, resourceName, namespace, name, dr.clusterName))
 }

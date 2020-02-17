@@ -108,14 +108,13 @@ func (ssm *StatefulsetManager) watchStatefulsets(ctx context.Context) {
 
 					hash, _ := hashstructure.Hash(statefulset.Spec, nil)
 					apply := ApplyEvent{
-						Event:           fmt.Sprintf("%v", event.Type),
-						ApplyName:       statefulsetName,
-						ResourceName:    statefulset.GetName(),
-						Namespace:       statefulset.GetNamespace(),
-						Kind:            "statefulset",
-						Hash:            hash,
-						RegistryManager: ssm.registryManager,
-						Annotations:     statefulset.GetAnnotations(),
+						Event:        fmt.Sprintf("%v", event.Type),
+						ApplyName:    statefulsetName,
+						ResourceName: statefulset.GetName(),
+						Namespace:    statefulset.GetNamespace(),
+						Kind:         "statefulset",
+						Hash:         hash,
+						Annotations:  statefulset.GetAnnotations(),
 					}
 
 					appRegistry := ssm.registryManager.NewApplyEvent(apply)

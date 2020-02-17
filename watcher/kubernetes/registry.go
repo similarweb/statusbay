@@ -42,14 +42,13 @@ type DBSchema struct {
 
 // ApplyEvent describe the new Kubernetes apply details for create/skip/delete new application
 type ApplyEvent struct {
-	Event           string
-	ApplyName       string
-	ResourceName    string
-	Namespace       string
-	Kind            string
-	Hash            uint64
-	RegistryManager *RegistryManager
-	Annotations     map[string]string
+	Event        string
+	ApplyName    string
+	ResourceName string
+	Namespace    string
+	Kind         string
+	Hash         uint64
+	Annotations  map[string]string
 }
 
 // RegistryRow defined row data of deployment
@@ -151,13 +150,13 @@ func (dr *RegistryManager) LoadRunningApplies() []*RegistryRow {
 func (dr *RegistryManager) NewApplyEvent(data ApplyEvent) *RegistryRow {
 
 	if data.Event == fmt.Sprintf("%v", eventwatch.Deleted) {
-		data.RegistryManager.deleteAppliedVersion(data.ResourceName, data.Namespace, data.Kind)
+		dr.deleteAppliedVersion(data.ResourceName, data.Namespace, data.Kind)
 	} else {
-		if !data.RegistryManager.updateAppliesVersionHistory(data.ResourceName, data.Namespace, data.Kind, data.Hash) {
+		if !dr.updateAppliesVersionHistory(data.ResourceName, data.Namespace, data.Kind, data.Hash) {
 			return nil
 		}
 	}
-	appRegistry := data.RegistryManager.Get(data.ApplyName, data.Namespace)
+	appRegistry := dr.Get(data.ApplyName, data.Namespace)
 
 	if appRegistry == nil {
 		status := common.DeploymentStatusRunning
@@ -165,7 +164,7 @@ func (dr *RegistryManager) NewApplyEvent(data ApplyEvent) *RegistryRow {
 			status = common.DeploymentStatusDeleted
 		}
 
-		appRegistry = data.RegistryManager.NewApplication(data.ApplyName,
+		appRegistry = dr.NewApplication(data.ApplyName,
 			data.Namespace,
 			data.Annotations,
 			status)

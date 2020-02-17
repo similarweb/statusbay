@@ -129,14 +129,13 @@ func (dm *DeploymentManager) watchDeployments(ctx context.Context) {
 
 					hash, _ := hashstructure.Hash(deployment.Spec, nil)
 					apply := ApplyEvent{
-						Event:           fmt.Sprintf("%v", event.Type),
-						ApplyName:       deploymentName,
-						ResourceName:    deployment.GetName(),
-						Namespace:       deployment.GetNamespace(),
-						Kind:            "deployment",
-						Hash:            hash,
-						RegistryManager: dm.registryManager,
-						Annotations:     deployment.GetAnnotations(),
+						Event:        fmt.Sprintf("%v", event.Type),
+						ApplyName:    deploymentName,
+						ResourceName: deployment.GetName(),
+						Namespace:    deployment.GetNamespace(),
+						Kind:         "deployment",
+						Hash:         hash,
+						Annotations:  deployment.GetAnnotations(),
 					}
 
 					applicationRegistry := dm.registryManager.NewApplyEvent(apply)

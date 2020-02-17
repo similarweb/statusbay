@@ -111,14 +111,13 @@ func (dsm *DaemonsetManager) watchDaemonsets(ctx context.Context) {
 
 					hash, _ := hashstructure.Hash(daemonset.Spec, nil)
 					apply := ApplyEvent{
-						Event:           fmt.Sprintf("%v", event.Type),
-						ApplyName:       daemonsetName,
-						ResourceName:    daemonset.GetName(),
-						Namespace:       daemonset.GetNamespace(),
-						Kind:            "daemonset",
-						Hash:            hash,
-						RegistryManager: dsm.registryManager,
-						Annotations:     daemonset.GetAnnotations(),
+						Event:        fmt.Sprintf("%v", event.Type),
+						ApplyName:    daemonsetName,
+						ResourceName: daemonset.GetName(),
+						Namespace:    daemonset.GetNamespace(),
+						Kind:         "daemonset",
+						Hash:         hash,
+						Annotations:  daemonset.GetAnnotations(),
 					}
 
 					appRegistry := dsm.registryManager.NewApplyEvent(apply)

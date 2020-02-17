@@ -6,7 +6,7 @@ import * as PropTypes from 'prop-types';
 import { useDeploymentDetailsContext } from '../context/DeploymentDetailsContext';
 
 const Metrics = ({ kindIndex }) => {
-  const data = useDeploymentDetailsContext();
+  const {data} = useDeploymentDetailsContext();
   if (!data) {
     return null;
   }

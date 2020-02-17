@@ -129,6 +129,7 @@ func (pm *PodsManager) watch(watchData WatchData) {
 								"metadata.name": pvc.ClaimName}).String()}
 
 							pm.pvcManager.Watch <- WatchPvcData{
+								LogEntry:     *podLog,
 								ListOptions:  PvcEventListOptions,
 								RegistryData: watchData.RegistryData,
 								Namespace:    pod.Namespace,

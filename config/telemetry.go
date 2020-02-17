@@ -10,7 +10,7 @@ import (
 
 const (
 	_minFlushIntervalSec  int64 = 10
-	_defaultMetricsPrefix       = "statusbay."
+	_defaultMetricsPrefix       = "statusbay"
 )
 
 type MetricsConfig struct {
@@ -29,7 +29,7 @@ type MetricsConfig struct {
 	DisableHostname bool `yaml:"disable_hostname,omitempty"`
 
 	// FilterDefault indicates whether we want to allow metrics by default
-	FilterDefault bool `yaml:"filter_default,omitempty"`
+	AllowMetricsByDefault bool `yaml:"allow_metrics_by_default,omitempty"`
 
 	// MetricsPrefix is the prefix used to write stats values to.
 	// optional. defaults to the value in _defaultMetricsPrefix if not provided
@@ -111,7 +111,7 @@ func InitMetricAggregator(cfg MetricsConfig) (err error) {
 	metricsConf.AllowedPrefixes = cfg.AllowedPrefixes
 	metricsConf.BlockedPrefixes = cfg.BlockedPrefixes
 	metricsConf.EnableHostname = !cfg.DisableHostname
-	metricsConf.FilterDefault = cfg.FilterDefault
+	metricsConf.FilterDefault = cfg.AllowMetricsByDefault
 
 	var sinks metrics.FanoutSink
 

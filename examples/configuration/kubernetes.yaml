@@ -33,7 +33,7 @@ telemetry:
 #    - 'def'
 #  disable_hostname: true
 #  metrics_prefix: ''
-#
+#  allow_metrics_by_default: true
 #  dogstatsd_addr: ''
 #  datadog_tags:
 #    - 'tag1:value1'

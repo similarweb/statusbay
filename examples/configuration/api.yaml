@@ -42,6 +42,8 @@ telemetry:
 #    - 'tag1:value1'
 #    - 'tag2:value2'
 #
+#  allow_metrics_by_default: true
+#
 #  prometheus_retention_time_sec: 3600
 #  statsd_address: ''
 #  statsite_address: ''

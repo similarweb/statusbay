@@ -3,7 +3,7 @@ import Typography from '@material-ui/core/Typography';
 import PropTypes from 'prop-types';
 
 const PageTitle = ({ children }) => (
-  <Typography variant="h4">
+  <Typography variant="h3">
     {children}
   </Typography>
 );

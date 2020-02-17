@@ -3,6 +3,7 @@ package kuberneteswatcher
 
 import (
 	"context"
+	"fmt"
 	"statusbay/watcher/kubernetes/common"
 	"sync"
 	"time"
@@ -12,7 +13,6 @@ import (
 	appsV1 "k8s.io/api/apps/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	eventwatch "k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -36,9 +36,9 @@ type DaemonsetManager struct {
 }
 
 //NewDaemonsetManager  create new instance to manage damonset related things
-func NewDaemonsetManager(k8sClient kubernetes.Interface, eventManager *EventsManager, registryManager *RegistryManager, serviceManager *ServiceManager, controllerRevisionManager ControllerRevision, maxDeploymentTime time.Duration) *DaemonsetManager {
+func NewDaemonsetManager(kubernetesClientset kubernetes.Interface, eventManager *EventsManager, registryManager *RegistryManager, serviceManager *ServiceManager, controllerRevisionManager ControllerRevision, maxDeploymentTime time.Duration) *DaemonsetManager {
 	return &DaemonsetManager{
-		client:               k8sClient,
+		client:               kubernetesClientset,
 		eventManager:         eventManager,
 		registryManager:      registryManager,
 		serviceManager:       serviceManager,
@@ -69,6 +69,7 @@ func (dsm *DaemonsetManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 			go dsm.watchDaemonset(
 				application.ctx,
 				application.cancelFn,
+				application.Log(),
 				daemonsetData,
 				daemonsetWatchListOptions,
 				daemonsetData.Metadata.Namespace,
@@ -85,79 +86,59 @@ func (dsm *DaemonsetManager) watchDaemonsets(ctx context.Context) {
 	daemonsetWatchListOptions := metaV1.ListOptions{ResourceVersion: daemonsetsList.GetResourceVersion()}
 	watcher, err := dsm.client.AppsV1().DaemonSets("").Watch(daemonsetWatchListOptions)
 	if err != nil {
-		log.WithError(err).WithFields(log.Fields{
-			"list_option": daemonsetWatchListOptions.String(),
-		}).Error("Could not start watch on daemonset")
+		log.WithError(err).WithField("list_option", daemonsetWatchListOptions.String()).Error("Could not start a watcher on daemonsets")
 		return
 	}
 	go func() {
-		log.WithField("resource_version", daemonsetsList.GetResourceVersion()).Info("Daemonsets watch was started")
+		log.WithField("resource_version", daemonsetsList.GetResourceVersion()).Info("Daemonsets watcher was started")
 		for {
 			select {
 			case event, watch := <-watcher.ResultChan():
 				if !watch {
-					log.WithFields(log.Fields{
-						"list_options": daemonsetWatchListOptions.String(),
-					}).Info("Daemonsets watch was stopped. Channel was closed")
+					log.WithField("list_options", daemonsetWatchListOptions.String()).Info("Daemonsets watcher was stopped. Reopen the channel")
 					dsm.watchDaemonsets(ctx)
 					return
 				}
 				daemonset, ok := event.Object.(*appsV1.DaemonSet)
 				if !ok {
-					log.WithField("object", event.Object).Warn("Failed to parse daemonset watch data")
+					log.WithField("object", event.Object).Warn("Failed to parse daemonset watcher data")
 					continue
 				}
 
 				daemonsetName := GetApplicationName(daemonset.GetAnnotations(), daemonset.GetName())
 
-				if event.Type == eventwatch.Modified ||
-					event.Type == eventwatch.Added ||
-					event.Type == eventwatch.Deleted {
-					// handle modified update
-					if event.Type == eventwatch.Deleted {
-						dsm.registryManager.DeleteAppliedVersion(daemonset.GetName(), daemonset.GetNamespace())
-					} else {
-						hash, _ := hashstructure.Hash(daemonset.Spec, nil)
-						if !dsm.registryManager.UpdateAppliesVersionHistory(
-							daemonset.GetName(),
-							daemonset.GetNamespace(),
-							hash) {
-							continue
-						}
+				if common.IsSupportedEventType(event.Type) {
+
+					hash, _ := hashstructure.Hash(daemonset.Spec, nil)
+					apply := ApplyEvent{
+						Event:        fmt.Sprintf("%v", event.Type),
+						ApplyName:    daemonsetName,
+						ResourceName: daemonset.GetName(),
+						Namespace:    daemonset.GetNamespace(),
+						Kind:         "daemonset",
+						Hash:         hash,
+						Annotations:  daemonset.GetAnnotations(),
 					}
-					appRegistry := dsm.registryManager.Get(daemonsetName, daemonset.GetNamespace())
 
-					// extract annotation for progressDeadLine since Daemonset don't have hat feature.
-					progressDeadLine := GetProgressDeadlineApply(daemonset.GetAnnotations(), dsm.maxDeploymentTime)
-
+					appRegistry := dsm.registryManager.NewApplyEvent(apply)
 					if appRegistry == nil {
-						daemonsetStatus := common.DeploymentStatusRunning
-						if event.Type == eventwatch.Deleted {
-							daemonsetStatus = common.DeploymentStatusDeleted
-						}
-						appRegistry = dsm.registryManager.NewApplication(daemonsetName,
-							daemonset.GetNamespace(),
-							daemonset.GetAnnotations(),
-							daemonsetStatus)
-
+						continue
 					}
-					registryApply := appRegistry.AddDaemonset(
-						daemonset.GetName(),
-						daemonset.GetNamespace(),
-						daemonset.GetLabels(),
-						daemonset.GetAnnotations(),
-						daemonset.Status.DesiredNumberScheduled,
-						progressDeadLine)
+
+					registryApply := dsm.AddNewDaemonset(apply, appRegistry, daemonset.Status.DesiredNumberScheduled)
+
 					daemonsetWatchListOptions := metaV1.ListOptions{
 						LabelSelector: labels.SelectorFromSet(daemonset.GetLabels()).String()}
 
 					go dsm.watchDaemonset(
 						appRegistry.ctx,
 						appRegistry.cancelFn,
+						appRegistry.Log(),
 						registryApply,
 						daemonsetWatchListOptions,
 						daemonset.GetNamespace(),
-						progressDeadLine)
+						GetProgressDeadlineApply(daemonset.GetAnnotations(), dsm.maxDeploymentTime))
+
 				} else {
 					log.WithFields(log.Fields{
 						"event_type": event.Type,
@@ -174,23 +155,15 @@ func (dsm *DaemonsetManager) watchDaemonsets(ctx context.Context) {
 }
 
 // watchDaemonset will watch a specific daemonset and its related resources (controller revision + pods)
-func (dsm *DaemonsetManager) watchDaemonset(ctx context.Context, cancelFn context.CancelFunc, daemonsetData *DaemonsetData, listOptions metaV1.ListOptions, namespace string, maxWatchTime int64) {
-	log.WithFields(log.Fields{
-		"daemonset": daemonsetData.GetName(),
-		"namespace": namespace,
-	}).Info("Starting watch on Daemonset")
+func (dsm *DaemonsetManager) watchDaemonset(ctx context.Context, cancelFn context.CancelFunc, lg log.Entry, daemonsetData *DaemonsetData, listOptions metaV1.ListOptions, namespace string, maxWatchTime int64) {
 
-	log.WithFields(log.Fields{
-		"daemonset":   daemonsetData.GetName(),
-		"list_option": listOptions.String(),
-		"namespace":   namespace,
-	}).Debug("Daemonset watch list option")
+	daemonsetLog := lg.WithField("daemonset_name", daemonsetData.GetName())
+	daemonsetLog.Info("Starting watch on Daemonset")
+	daemonsetLog.WithField("list_option", listOptions.String()).Debug("List option for daemonset filtering")
+
 	watcher, err := dsm.client.AppsV1().DaemonSets(namespace).Watch(listOptions)
 	if err != nil {
-		log.WithError(err).WithFields(log.Fields{
-			"daemonset": daemonsetData.GetName(),
-			"namesapce": namespace,
-		}).Error("Could not start watch on daemonset")
+		daemonsetLog.WithError(err).Error("Could not start watch on daemonset")
 		return
 	}
 	firstInit := true
@@ -198,19 +171,13 @@ func (dsm *DaemonsetManager) watchDaemonset(ctx context.Context, cancelFn contex
 		select {
 		case event, watch := <-watcher.ResultChan():
 			if !watch {
-				log.WithFields(log.Fields{
-					"daemonset": daemonsetData.GetName(),
-					"namespace": namespace,
-				}).Warn("Daemonset watch was stopped. Channel was closed")
+				daemonsetLog.Warn("Daemonset watcher was stopped. Channel was closed")
 				cancelFn()
 				return
 			}
 			daemonset, isOk := event.Object.(*appsV1.DaemonSet)
 			if !isOk {
-				log.WithFields(log.Fields{
-					"daemonset": daemonsetData.GetName(),
-					"namespace": namespace,
-				}).WithField("object", event.Object).Warn("Failed to parse daemonset watch data")
+				daemonsetLog.WithField("object", event.Object).Warn("Failed to parse daemonset watcher data")
 				continue
 			}
 			if firstInit {
@@ -221,10 +188,10 @@ func (dsm *DaemonsetManager) watchDaemonset(ctx context.Context, cancelFn contex
 				}).String(),
 					TimeoutSeconds: &maxWatchTime,
 				}
-				dsm.watchEvents(ctx, daemonsetData, eventListOptions, namespace)
+				dsm.watchEvents(ctx, *daemonsetLog, daemonsetData, eventListOptions, namespace)
 
 				// start pods watch
-				dsm.controllerRevManager.WatchControllerRevisionPodsRetry(ctx, daemonsetData,
+				dsm.controllerRevManager.WatchControllerRevisionPodsRetry(ctx, *daemonsetLog, daemonsetData,
 					daemonset.ObjectMeta.Generation,
 					daemonset.Spec.Selector.MatchLabels,
 					appsV1.DefaultDaemonSetUniqueLabelKey,
@@ -238,14 +205,12 @@ func (dsm *DaemonsetManager) watchDaemonset(ctx context.Context, cancelFn contex
 					RegistryData: daemonsetData,
 					Namespace:    daemonset.Namespace,
 					Ctx:          ctx,
+					LogEntry:     *daemonsetLog,
 				}
 			}
 			daemonsetData.UpdateApplyStatus(daemonset.Status)
 		case <-ctx.Done():
-			log.WithFields(log.Fields{
-				"selector":  listOptions.String(),
-				"namespace": namespace,
-			}).Debug("Daemonset watch was stopped. Got ctx done signal")
+			daemonsetLog.Debug("Daemonset watcher was stopped. Got ctx done signal")
 			watcher.Stop()
 			return
 		}
@@ -253,15 +218,14 @@ func (dsm *DaemonsetManager) watchDaemonset(ctx context.Context, cancelFn contex
 }
 
 // watchEvents will watch for events related to the Daemonset Resource
-func (dsm *DaemonsetManager) watchEvents(ctx context.Context, daemonsetData *DaemonsetData, listOptions metaV1.ListOptions, namespace string) {
-	log.WithFields(log.Fields{
-		"daemonset": daemonsetData.GetName(),
-		"namespace": namespace,
-	}).Info("Start watch on daemonset events")
+func (dsm *DaemonsetManager) watchEvents(ctx context.Context, lg log.Entry, daemonsetData *DaemonsetData, listOptions metaV1.ListOptions, namespace string) {
+	lg.Info("Started the event watcher on daemonset events")
+
 	watchData := WatchEvents{
 		ListOptions: listOptions,
 		Namespace:   namespace,
 		Ctx:         ctx,
+		LogEntry:    lg,
 	}
 	eventChan := dsm.eventManager.Watch(watchData)
 	go func() {
@@ -270,12 +234,32 @@ func (dsm *DaemonsetManager) watchEvents(ctx context.Context, daemonsetData *Dae
 			case event := <-eventChan:
 				daemonsetData.UpdateDaemonsetEvents(event)
 			case <-ctx.Done():
-				log.WithFields(log.Fields{
-					"daemonset": daemonsetData.GetName(),
-					"namespace": namespace,
-				}).Info("Stop watch on daemonset events")
+				lg.Info("Stop watch on daemonset events")
 				return
 			}
 		}
 	}()
+}
+
+// AddNewDaemonset add new daemonset under application
+func (dsm *DaemonsetManager) AddNewDaemonset(data ApplyEvent, applicationRegistry *RegistryRow, desiredState int32) *DaemonsetData {
+
+	log := applicationRegistry.Log()
+	dd := &DaemonsetData{
+		Metadata: MetaData{
+			Name:         data.ApplyName,
+			Namespace:    data.Namespace,
+			Annotations:  data.Annotations,
+			Metrics:      GetMetricsDataFromAnnotations(data.Annotations),
+			Alerts:       GetAlertsDataFromAnnotations(data.Annotations),
+			DesiredState: desiredState,
+		},
+		Pods:                    make(map[string]DeploymenPod, 0),
+		ProgressDeadlineSeconds: GetProgressDeadlineApply(data.Annotations, dsm.maxDeploymentTime),
+	}
+	applicationRegistry.DBSchema.Resources.Daemonsets[data.ApplyName] = dd
+
+	log.Info("Daemonset was associated to the application")
+
+	return dd
 }

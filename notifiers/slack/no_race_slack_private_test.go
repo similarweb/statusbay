@@ -35,7 +35,7 @@ func TestServe(t *testing.T) {
 		time.Sleep(time.Millisecond)
 
 		if slackManager.emailToUser == nil {
-			t.Errorf("expected the goroutine to stop running and stop updating the users.")
+			t.Errorf("expected the goroutine to stop running and stop updating the users")
 		}
 	})
 

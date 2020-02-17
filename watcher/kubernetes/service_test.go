@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	log "github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -34,10 +35,22 @@ func NewServiceManagerMockMock(client *fake.Clientset) *kuberneteswatcher.Servic
 }
 
 func TestServiceWatch(t *testing.T) {
-	registory, storageMock := NewRegistryMock()
+	registry, storageMock := NewRegistryMock()
 
-	registryDeploymentData := createMockDeploymentData(registory, common.DeploymentStatusRunning)
+	registryRow := registry.NewApplication("nginx", "default", map[string]string{}, common.DeploymentStatusRunning)
 
+	apply := kuberneteswatcher.ApplyEvent{
+		Event:        "create",
+		ApplyName:    "nginx-deployment",
+		ResourceName: "resourceName",
+		Namespace:    "default",
+		Kind:         "deployment",
+		Hash:         1234,
+		Annotations:  map[string]string{},
+	}
+
+	registryDeploymentData := createMockDeploymentData(registry, registryRow, apply, "10m")
+	lg := log.WithField("test", "TestServiceWatch")
 	ctx := context.Background()
 
 	client := fake.NewSimpleClientset()
@@ -55,6 +68,7 @@ func TestServiceWatch(t *testing.T) {
 		RegistryData: registryDeploymentData,
 		Namespace:    "pe",
 		Ctx:          ctx,
+		LogEntry:     *lg,
 	}
 
 	time.Sleep(time.Second * 5)

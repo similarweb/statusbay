@@ -49,6 +49,8 @@ type Kubernetes struct {
 	UI              *UIConfig                   `yaml:"ui"`
 	Applies         *KubernetesApplies          `yaml:"applies"`
 
+	Telemetry MetricsConfig `yaml:"telemetry"`
+
 	registeredNotifiers []notifierCommon.Notifier
 }
 
@@ -67,9 +69,11 @@ func (k *Kubernetes) BuildNotifiers() (registeredNotifiers []notifierCommon.Noti
 }
 
 type KubernetesMarksEvents struct {
-	Pod        []EventMarksConfig `yaml:"pod"`
-	Replicaset []EventMarksConfig `yaml:"replicaset"`
-	Deployment []EventMarksConfig `yaml:"deployment"`
+	Pod         []EventMarksConfig `yaml:"pod"`
+	Replicaset  []EventMarksConfig `yaml:"replicaset"`
+	Deployment  []EventMarksConfig `yaml:"deployment"`
+	Demonset    []EventMarksConfig `yaml:"demonset"`
+	Statefulset []EventMarksConfig `yaml:"statefulset"`
 }
 
 // LoadKubernetesConfig will load all yaml configuration file to struct

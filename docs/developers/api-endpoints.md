@@ -227,18 +227,17 @@ This endpoint returns a specific deployment details.
 
 | Method        | Path                                            | Produces          |
 | :------------ |:------------------------------------------------| :-----------------|
-| GET           | /api/v1/kubernetes/application/{name}/{time} | application/json  |
+| GET           | /api/v1/kubernetes/application/{applyID}        | application/json  |
 
 #### Parameters
 
-- **name** - application name.
-- **time** - deployment timestamp.
+- **applyID** - Unique apply ID.
 
 #### Request Sample
 
 ```bash
 $ curl \
-  'http://127.0.0.1:8080/api/v1/kubernetes/application/example-deployment/1580045074'
+  'http://127.0.0.1:8080/api/v1/kubernetes/application/13f77155e111a9bce2a366f25fc9815d0f825517'
 ```
 
 #### Response Sample
@@ -248,7 +247,7 @@ $ curl \
   "Cluster": "telaviv",
   "Namespace": "staging",
   "Status": "running",
-  "Time": "",
+  "Time": 1581574816,
   "Details": {
     "Resources": {
       "Deployments": {

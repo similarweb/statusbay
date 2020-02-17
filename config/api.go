@@ -52,6 +52,8 @@ type API struct {
 	MySQL           *state.MySQLConfig `yaml:"mysql"`
 	MetricsProvider *MetricsProvider   `yaml:"metrics"`
 	AlertProvider   *AlertProvider     `yaml:"alerts"`
+
+	Telemetry MetricsConfig `yaml:"telemetry"`
 }
 
 // LoadConfigAPI will load all yaml configuration file to struct

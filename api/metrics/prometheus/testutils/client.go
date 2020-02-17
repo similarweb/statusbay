@@ -22,23 +22,23 @@ type dataResponse struct {
 	Results    model.Matrix    `json:"result"`
 }
 
-func MockQueryRange(ctx context.Context, query string, r v1.Range) (model.Value, error) {
+func MockQueryRange(ctx context.Context, query string, r v1.Range) (model.Value, v1.Warnings, error) {
 
 	_, filename, _, _ := runtime.Caller(0)
 	currentFolderPath := filepath.Dir(filename)
 	reader, err := ioutil.ReadFile(fmt.Sprintf("%s/mock/%s.json", currentFolderPath, query))
 
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	var apiRes apiResponse
 	err = json.Unmarshal(reader, &apiRes)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return apiRes.Data.Results, nil
+	return apiRes.Data.Results, nil, nil
 }
 
 type MockPrometheus struct {
@@ -48,6 +48,6 @@ func NewMockPrometheus() *MockPrometheus {
 	return &MockPrometheus{}
 }
 
-func (m *MockPrometheus) QueryRange(ctx context.Context, query string, r v1.Range) (model.Value, error) {
+func (m *MockPrometheus) QueryRange(ctx context.Context, query string, r v1.Range) (model.Value, v1.Warnings, error) {
 	return MockQueryRange(ctx, query, r)
 }

@@ -156,8 +156,8 @@ func TestStatefulsetWatch(t *testing.T) {
 		if application.Schema.Resources.Statefulsets["application"].ProgressDeadlineSeconds != expectedProgressDeadLine {
 			t.Fatalf("unexpected values for ProgressDeadline field , got %d expected %d", application.Schema.Resources.Statefulsets["application"].ProgressDeadlineSeconds, expectedProgressDeadLine)
 		}
-		if len(application.Schema.Resources.Statefulsets["application"].Statefulset.Labels) != 2 {
-			t.Fatalf("unexpected amount of Lables values for statefulset labeles field , got %d expected %d", len(application.Schema.Resources.Statefulsets["application"].Statefulset.Labels), 2)
+		if len(application.Schema.Resources.Statefulsets["application"].Statefulset.Annotations) != 4 {
+			t.Fatalf("unexpected amount of Lables values for statefulset annotations field , got %d expected %d", len(application.Schema.Resources.Statefulsets["application"].Statefulset.Annotations), 4)
 		}
 
 	})

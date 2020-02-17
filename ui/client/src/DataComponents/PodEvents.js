@@ -4,13 +4,14 @@ import DeploymentDetailsSection from '../components/DeploymentDetailsSection';
 import { useDeploymentDetailsContext } from '../context/DeploymentDetailsContext';
 
 const PodEvents = ({ kindIndex }) => {
-  const data = useDeploymentDetailsContext();
+  const {data} = useDeploymentDetailsContext();
   if (!data) {
     return null;
   }
   return (
     <DeploymentDetailsSection title="Pod Events" defaultExpanded>
       <EventsView
+        key={kindIndex}
         items={data.kinds[kindIndex].podEvents}
       />
     </DeploymentDetailsSection>

@@ -1,6 +1,9 @@
 package common
 
-import log "github.com/sirupsen/logrus"
+import (
+	log "github.com/sirupsen/logrus"
+	eventwatch "k8s.io/apimachinery/pkg/watch"
+)
 
 //DeploymentStatus defined the status of the deployment
 type DeploymentStatus string
@@ -44,4 +47,8 @@ type DeploymentReport struct {
 
 	// ClusterName of the apply
 	ClusterName string
+}
+
+func IsSupportedEventType(eventType eventwatch.EventType) bool {
+	return (eventType == eventwatch.Modified || eventType == eventwatch.Added || eventType == eventwatch.Deleted)
 }

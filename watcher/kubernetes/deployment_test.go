@@ -5,8 +5,8 @@ import (
 	kuberneteswatcher "statusbay/watcher/kubernetes"
 	"statusbay/watcher/kubernetes/testutil"
 	"sync"
-
 	"testing"
+
 	"time"
 
 	appsV1 "k8s.io/api/apps/v1"
@@ -14,6 +14,20 @@ import (
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 )
+
+func createMockDeploymentData(registryManager *kuberneteswatcher.RegistryManager, registryRow *kuberneteswatcher.RegistryRow, applyEvent kuberneteswatcher.ApplyEvent, progressDeadlineSeconds string) *kuberneteswatcher.DeploymentData {
+
+	maxDeploymentTime, _ := time.ParseDuration(progressDeadlineSeconds)
+	client := fake.NewSimpleClientset()
+
+	eventManager := NewEventsMock(client)
+	replicasetManager := NewReplicasetMock(client)
+	serviceManager := NewServiceManagerMockMock(client)
+	deploymentManager := kuberneteswatcher.NewDeploymentManager(client, eventManager, registryManager, replicasetManager, serviceManager, maxDeploymentTime)
+
+	return deploymentManager.AddNewDeployment(applyEvent, registryRow, 3)
+
+}
 
 func updateDeploymentMock(client *fake.Clientset, deployment *appsV1.Deployment) {
 
@@ -92,6 +106,8 @@ func NewDeploymentManagerMock(client *fake.Clientset) (*kuberneteswatcher.Deploy
 	return deploymentManager, storage
 
 }
+
+// ELAD:: TODO
 func TestDeploymentsWatch(t *testing.T) {
 	client := fake.NewSimpleClientset()
 	_, storage := NewDeploymentManagerMock(client)
@@ -134,7 +150,7 @@ func TestDeploymentsWatch(t *testing.T) {
 
 	application := storage.MockWriteDeployment["1"]
 
-	deployment := application.Schema.Resources.Deployments["test-deployment"]
+	deployment := application.Schema.Resources.Deployments["custom-application-name"]
 
 	t.Run("deployment_schema_data", func(t *testing.T) {
 

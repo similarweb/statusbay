@@ -1,0 +1,6 @@
+{
+  "short_name": "StatusBay UI",
+  "name": "StatusBay UI",
+  "start_url": ".",
+  "display": "standalone"
+}

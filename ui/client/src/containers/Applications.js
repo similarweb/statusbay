@@ -14,7 +14,7 @@ const Applications = () => {
     });
   };
   const filters = useMemo(() => {return {
-    distinct: true
+    distinct: false
   }}, []);
   return (
     <PageContent>

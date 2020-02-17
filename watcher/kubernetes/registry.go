@@ -586,6 +586,7 @@ func (dd *DeploymentData) UpdateReplicasetStatus(name string, status appsV1.Repl
 	return nil
 }
 
+// NewPodToPods
 func NewPodToPods(pods map[string]DeploymenPod, pod *v1.Pod) error {
 	if _, found := pods[pod.GetName()]; found {
 		log.WithField("pod", pod.GetName()).Debug("Pod already exists in pod list")
@@ -595,6 +596,7 @@ func NewPodToPods(pods map[string]DeploymenPod, pod *v1.Pod) error {
 	pods[pod.GetName()] = DeploymenPod{
 		Phase:  &phase,
 		Events: &[]EventMessages{},
+		Pvcs:   map[string][]EventMessages{},
 	}
 	return nil
 }
@@ -605,7 +607,7 @@ func (dd *DeploymentData) NewPod(pod *v1.Pod) error {
 }
 
 // UpdatePodEvents will add event to pod events list
-func UpdatePodEvents(pods map[string]DeploymenPod, podName string, event EventMessages) error {
+func UpdatePodEvents(pods map[string]DeploymenPod, podName string, pvcName string, event EventMessages) error {
 	if _, found := pods[podName]; !found {
 		log.WithField("pod", podName).Warn("Pod not exists in pod list")
 		return errors.New("Pod not exists in pod list")
@@ -616,14 +618,22 @@ func UpdatePodEvents(pods map[string]DeploymenPod, podName string, event EventMe
 			return nil
 		}
 	}
-	*pods[podName].Events = append(*pods[podName].Events, event)
+
+	if pvcName != "" {
+		if _, found := pods[podName].Pvcs[pvcName]; !found {
+			pods[podName].Pvcs[pvcName] = []EventMessages{}
+		}
+		pods[podName].Pvcs[pvcName] = append(pods[podName].Pvcs[pvcName], event)
+	} else {
+		*pods[podName].Events = append(*pods[podName].Events, event)
+	}
+
 	return nil
 }
 
 // UpdatePodEvents will set pod events
-func (dd *DeploymentData) UpdatePodEvents(podName string, event EventMessages) error {
-	return UpdatePodEvents(dd.Pods, podName, event)
-
+func (dd *DeploymentData) UpdatePodEvents(podName string, pvcName string, event EventMessages) error {
+	return UpdatePodEvents(dd.Pods, podName, pvcName, event)
 }
 
 // Get the deployment name
@@ -658,8 +668,8 @@ func (dsd *DaemonsetData) UpdateDaemonsetEvents(event EventMessages) {
 }
 
 // UpdatePodEvents will set pod events
-func (dsd *DaemonsetData) UpdatePodEvents(podName string, event EventMessages) error {
-	return UpdatePodEvents(dsd.Pods, podName, event)
+func (dsd *DaemonsetData) UpdatePodEvents(podName string, pvcName string, event EventMessages) error {
+	return UpdatePodEvents(dsd.Pods, podName, pvcName, event)
 }
 
 // UpdatePod will set pod events to daemonset
@@ -688,8 +698,8 @@ func (ssd *StatefulsetData) UpdatePod(pod *v1.Pod, status string) error {
 }
 
 // UpdatePodEvents will set pod events
-func (ssd *StatefulsetData) UpdatePodEvents(podName string, event EventMessages) error {
-	return UpdatePodEvents(ssd.Pods, podName, event)
+func (ssd *StatefulsetData) UpdatePodEvents(podName string, pvcName string, event EventMessages) error {
+	return UpdatePodEvents(ssd.Pods, podName, pvcName, event)
 }
 
 // GetName get the Statefulset name

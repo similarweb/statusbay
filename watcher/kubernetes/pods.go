@@ -3,7 +3,6 @@ package kuberneteswatcher
 import (
 	"context"
 	"fmt"
-	"strings"
 	"sync"
 	"time"
 
@@ -118,20 +117,22 @@ func (pm *PodsManager) watch(watchData WatchData) {
 					go pm.watchEvents(watchData.Ctx, watchData.RegistryData, eventListOptions, pod.Namespace, pod.GetName())
 
 					for _, volume := range pod.Spec.Volumes {
-						pvcName := volume.VolumeSource.PersistentVolumeClaim.ClaimName
-						if strings.Contains(pvcName, pod.GetName()) {
+						pvc := volume.VolumeSource.PersistentVolumeClaim
+						// There are some cases where pvc is nil , when Kubernetes creates it's own certificates on the pods
+						// It mounts another volume for system use which does not have PersistentVolumeClaim
+						if pvc != nil {
 							PvcEventListOptions := metaV1.ListOptions{FieldSelector: labels.SelectorFromSet(map[string]string{
-								"involvedObject.name": pvcName,
-								"involvedObject.kind": "PersistentVolumeClaim"}).String()}
-							pm.pvcManager.Watch <- WatchData{
+								"metadata.name": pvc.ClaimName}).String()}
+
+							pm.pvcManager.Watch <- WatchPvcData{
 								ListOptions:  PvcEventListOptions,
 								RegistryData: watchData.RegistryData,
 								Namespace:    pod.Namespace,
+								Pod:          pod.Name,
 								Ctx:          watchData.Ctx,
 							}
 						}
 					}
-
 				}
 
 				status := string(pod.Status.Phase)
@@ -148,7 +149,7 @@ func (pm *PodsManager) watch(watchData WatchData) {
 							Message: message,
 							Time:    time.Now().UnixNano(),
 						}
-						watchData.RegistryData.UpdatePodEvents(pod.GetName(), eventMessage)
+						watchData.RegistryData.UpdatePodEvents(pod.GetName(), "", eventMessage)
 						status = container.State.Waiting.Reason
 					}
 
@@ -165,7 +166,7 @@ func (pm *PodsManager) watch(watchData WatchData) {
 							Time:                container.State.Terminated.StartedAt.UnixNano(),
 							ReportingController: container.State.Terminated.ContainerID,
 						}
-						watchData.RegistryData.UpdatePodEvents(pod.GetName(), eventMessage)
+						watchData.RegistryData.UpdatePodEvents(pod.GetName(), "", eventMessage)
 						status = container.State.Terminated.Reason
 					}
 				}
@@ -208,7 +209,7 @@ func (pm *PodsManager) watchEvents(ctx context.Context, registryData RegistryDat
 		for {
 			select {
 			case event := <-eventChan:
-				registryData.UpdatePodEvents(podName, event)
+				registryData.UpdatePodEvents(podName, "", event)
 			case <-ctx.Done():
 				log.WithFields(log.Fields{
 					fmt.Sprintf("%T", registryData): registryData.GetName(),

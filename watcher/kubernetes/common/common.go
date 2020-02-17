@@ -1,8 +1,8 @@
 package common
 
-import log (
+import (
+	log "github.com/sirupsen/logrus"
 	eventwatch "k8s.io/apimachinery/pkg/watch"
-	"github.com/sirupsen/logrus"
 )
 
 //DeploymentStatus defined the status of the deployment

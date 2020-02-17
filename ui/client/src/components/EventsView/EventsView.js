@@ -15,7 +15,7 @@ const EventsView = ({ items }) => {
     return null;
   }
   const selectedLogs = items[selectedItem].logs;
-  const eventsViewSelectorItems = items.map(({ name, status }) => ({ name, status }));
+  const eventsViewSelectorItems = items.map(({ name, status, logs = [] }) => ({ name, status, hasError: logs.some(({ error }) => error) }));
   return (
 
     <Grid container>

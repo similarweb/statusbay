@@ -21,6 +21,7 @@ import DeploymentEvents from '../DataComponents/DeploymentEvents';
 import {
   DeploymentDetailsContextProvider,
 } from '../context/DeploymentDetailsContext';
+import * as moment from 'moment';
 
 const DeploymentDetails = () => {
   const location = useLocation();
@@ -40,13 +41,14 @@ const DeploymentDetails = () => {
       {
         ({ data, loading }) => (loading ? <Box m={2} flexGrow={1} justifyContent="space-around" display="flex" flexDirection="column"><LinearProgress /></Box> : (
           <PageContent>
-            <Box m={3}>
+            <Box mt={3} mb={3}>
               <Grid container spacing={2} justify="space-between" alignContent="center">
                 <Grid item xs={12} xl={6}>
                   <PageTitle>
                     {data.name}
                     <Typography variant="body2">Namespace: {data.namespace}</Typography>
                     <Typography variant="body2">Cluster: {data.cluster}</Typography>
+                    <Typography variant="body2">{moment.unix(data.time).utc().format('DD/MM/YYYY HH:MM:ss')}</Typography>
                   </PageTitle>
                 </Grid>
                 <Grid container xs={12} xl={6} alignContent="center" direction="row-reverse">
@@ -57,10 +59,10 @@ const DeploymentDetails = () => {
               </Grid>
             </Box>
             <Kinds selectedTab={parseInt(tab)} onTabChange={handleTabChange} />
-            <Box m={2}>
+            <Box mt={2} mb={2}>
               <ReplicasStats kindIndex={parseInt(tab)} />
             </Box>
-            <Box m={2}>
+            <Box mt={2} mb={2}>
               <PodEvents kindIndex={parseInt(tab)} />
               {/* <Metrics kindIndex={parseInt(tab)} /> */}
               <DeploymentEvents kindIndex={parseInt(tab)} />

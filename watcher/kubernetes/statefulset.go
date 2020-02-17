@@ -3,6 +3,7 @@ package kuberneteswatcher
 import (
 	"context"
 	"fmt"
+	"statusbay/watcher/kubernetes/common"
 	"sync"
 	"time"
 
@@ -11,7 +12,6 @@ import (
 	appsV1 "k8s.io/api/apps/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	eventwatch "k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -104,7 +104,7 @@ func (ssm *StatefulsetManager) watchStatefulsets(ctx context.Context) {
 
 				statefulsetName := GetApplicationName(statefulset.GetAnnotations(), statefulset.GetName())
 
-				if event.Type == eventwatch.Modified || event.Type == eventwatch.Added || event.Type == eventwatch.Deleted {
+				if common.IsSupportedEventType(event.Type) {
 
 					hash, _ := hashstructure.Hash(statefulset.Spec, nil)
 					apply := ApplyEvent{

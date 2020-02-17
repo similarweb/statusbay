@@ -15,10 +15,10 @@ to receive metrics in
 
 ## List of metrics
 
-statusbay.runtime.num_goroutines
-statusbay.runtime.alloc_bytes
-statusbay.runtime.malloc_count
-statusbay.runtime.free_count
-statusbay.runtime.heap_objects
-statusbay.runtime.total_gc_pause_ns
-statusbay.runtime.total_gc_runs
+* `statusbay.runtime.num_goroutines` the number of active goroutines
+* `statusbay.runtime.alloc_bytes` the number of allocated bytes by the process
+* `statusbay.runtime.malloc_count` the cumulative count of heap objects allocated
+* `statusbay.runtime.free_count` the cumulative count of heap objects freed
+* `statusbay.runtime.heap_objects` the number of currently allocated heap objects
+* `statusbay.runtime.total_gc_pause_ns` the cumulative nanoseconds in GC stop-the-world pauses since the program started
+* `statusbay.runtime.total_gc_runs` the number of completed GC cycles

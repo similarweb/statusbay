@@ -12,7 +12,7 @@ const titles = {
 };
 
 const DeploymentEvents = ({ kindIndex }) => {
-  const data = useDeploymentDetailsContext();
+  const {data} = useDeploymentDetailsContext();
   if (!data) {
     return null;
   }

@@ -16,42 +16,42 @@ const (
 type MetricsConfig struct {
 
 	// FlushIntervalSec is the number of seconds we want to wait between metric flushes to sinks
-	FlushIntervalSec int64 `json:"flush_interval,omitempty"`
+	// optional. defaults to the value in _minFlushIntervalSec  if not provided
+	FlushIntervalSec int64 `yaml:"flush_interval,omitempty"`
 
 	// AllowedPrefixes is a list of filter rules to apply for allowing metrics by prefix
-	AllowedPrefixes []string `json:"allowed_prefixes,omitempty"`
+	AllowedPrefixes []string `yaml:"allowed_prefixes,omitempty"`
 
 	// BlockedPrefixes is a list of filter rules to apply for blocking metrics by prefix
-	BlockedPrefixes []string `json:"blocked_prefixes,omitempty"`
+	BlockedPrefixes []string `yaml:"blocked_prefixes,omitempty"`
 
 	// DisableHostname will disable hostname prefixing for all metrics.
-	DisableHostname bool `json:"disable_hostname,omitempty"`
+	DisableHostname bool `yaml:"disable_hostname,omitempty"`
 
-	// FilterDefault is the default for whether to allow a metric that's not
-	// covered by the filter.
-	FilterDefault bool `json:"filter_default,omitempty"`
+	// FilterDefault indicates whether we want to allow metrics by default
+	FilterDefault bool `yaml:"filter_default,omitempty"`
 
 	// MetricsPrefix is the prefix used to write stats values to.
-	// defaults to "statusbay." if not provided
-	MetricsPrefix string `json:"metrics_prefix,omitempty"`
+	// optional. defaults to the value in _defaultMetricsPrefix if not provided
+	MetricsPrefix string `yaml:"metrics_prefix,omitempty"`
 
 	// DogStatsdAddr is the address of a dogstatsd instance
-	DogstatsdAddr string `json:"dogstatsd_addr,omitempty"`
+	DogstatsdAddr string `yaml:"dogstatsd_addr,omitempty"`
 
 	// DatadogTags are tags that should be sent with each packet to dogstatsd
 	// A list of strings where each string looks like this "my_tag_name:my_tag_value"
-	DatadogTags []string `json:"datadog_tags,omitempty"`
+	DatadogTags []string `yaml:"datadog_tags,omitempty"`
 
 	// PrometheusRetentionTime is the retention time for prometheus metrics in seconds.
 	// a non-positive value disable Prometheus support. It is highly advised to put large values
 	// days/hours/at least the interval between prometheus requests.
-	PrometheusRetentionTimeSeconds int64 `json:"prometheus_retention_time_sec,omitempty"`
+	PrometheusRetentionTimeSeconds int64 `yaml:"prometheus_retention_time_sec,omitempty"`
 
 	// StatsdAddr is the address of a statsd instance
-	StatsdAddr string `json:"statsd_address,omitempty"`
+	StatsdAddr string `yaml:"statsd_address,omitempty"`
 
 	// StatsiteAddr is the address of a statsite instance
-	StatsiteAddr string `json:"statsite_address,omitempty"`
+	StatsiteAddr string `yaml:"statsite_address,omitempty"`
 }
 
 func dogstatdSink(cfg MetricsConfig, hostname string) (metrics.MetricSink, error) {
@@ -95,7 +95,7 @@ func statsdSink(cfg MetricsConfig, _ string) (metrics.MetricSink, error) {
 // InitMetricAggregator sets up go-metrics using the provided MetricsConfig
 func InitMetricAggregator(cfg MetricsConfig) (err error) {
 	flushIntervalSec := _minFlushIntervalSec
-	if cfg.FlushIntervalSec > flushIntervalSec { // overwrite if lower than higher than minimum allowed value
+	if cfg.FlushIntervalSec > flushIntervalSec { // overwrite if lower than minimum allowed value
 		flushIntervalSec = _minFlushIntervalSec
 	}
 

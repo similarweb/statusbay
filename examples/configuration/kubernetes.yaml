@@ -22,3 +22,23 @@ applies:
   max_apply_time: 10m
   check_finish_delay: 5s
   collect_data_after_apply_finish: 10s
+
+telemetry:
+#  flush_interval: 10
+#  allowed_prefixes:
+#    - 'abc'
+#    - 'def'
+#  blocked_prefixes:
+#    - 'abc'
+#    - 'def'
+#  disable_hostname: true
+#  metrics_prefix: ''
+#
+#  dogstatsd_addr: ''
+#  datadog_tags:
+#    - 'tag1:value1'
+#    - 'tag2:value2'
+#
+#  prometheus_retention_time_sec: 3600
+#  statsd_address: ''
+#  statsite_address: ''

@@ -77,7 +77,7 @@ func startKubernetesWatcher(ctx context.Context, configPath, kubeconfig, apiserv
 		os.Exit(1)
 	}
 
-	err = config.InitMetricAggregator(watcherConfig.MetricAggregatorConfig)
+	err = config.InitMetricAggregator(watcherConfig.Telemetry)
 	if err != nil {
 		log.WithError(err).Panic("could not init telemetry")
 		os.Exit(1)
@@ -147,6 +147,12 @@ func startAPIServer(ctx context.Context, configPath, eventConfigPath string) *se
 	apiConfig, err := config.LoadConfigAPI(configPath)
 	if err != nil {
 		log.WithError(err).Panic("could not load configuration file")
+		os.Exit(1)
+	}
+
+	err = config.InitMetricAggregator(apiConfig.Telemetry)
+	if err != nil {
+		log.WithError(err).Panic("could not init telemetry")
 		os.Exit(1)
 	}
 

@@ -49,7 +49,7 @@ type Kubernetes struct {
 	UI              *UIConfig                   `yaml:"ui"`
 	Applies         *KubernetesApplies          `yaml:"applies"`
 
-	MetricAggregatorConfig MetricsConfig
+	Telemetry MetricsConfig `yaml:"telemetry"`
 
 	registeredNotifiers []notifierCommon.Notifier
 }

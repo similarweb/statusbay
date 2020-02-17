@@ -16,7 +16,7 @@ import (
 
 // ClientDescriber is a interface for using function in DataDog package
 type ClientDescriber interface {
-	QueryRange(ctx context.Context, query string, r v1.Range) (model.Value, error)
+	QueryRange(ctx context.Context, query string, r v1.Range) (model.Value, v1.Warnings, error)
 }
 
 // Prometheus is responsible for communicate with datadog and cache storage save/cleanup
@@ -77,7 +77,7 @@ func (pm *Prometheus) GetMetric(query string, from, to time.Time) ([]httprespons
 		Step:  time.Duration(time.Second * 60),
 	}
 
-	val, err := pm.api.QueryRange(ctx, query, r)
+	val, _, err := pm.api.QueryRange(ctx, query, r)
 	if err != nil {
 		log.WithError(err).WithFields(log.Fields{
 			"query": query,

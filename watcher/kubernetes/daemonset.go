@@ -3,6 +3,7 @@ package kuberneteswatcher
 
 import (
 	"context"
+	"fmt"
 	"statusbay/watcher/kubernetes/common"
 	"sync"
 	"time"
@@ -12,7 +13,6 @@ import (
 	appsV1 "k8s.io/api/apps/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	eventwatch "k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -107,43 +107,26 @@ func (dsm *DaemonsetManager) watchDaemonsets(ctx context.Context) {
 
 				daemonsetName := GetApplicationName(daemonset.GetAnnotations(), daemonset.GetName())
 
-				if event.Type == eventwatch.Modified || event.Type == eventwatch.Added || event.Type == eventwatch.Deleted {
-					// handle modified update
-					if event.Type == eventwatch.Deleted {
-						dsm.registryManager.DeleteAppliedVersion(daemonset.GetName(), daemonset.GetNamespace(), "daemonset")
-					} else {
-						hash, _ := hashstructure.Hash(daemonset.Spec, nil)
-						if !dsm.registryManager.UpdateAppliesVersionHistory(
-							daemonset.GetName(),
-							daemonset.GetNamespace(),
-							"daemonset",
-							hash) {
-							continue
-						}
+				if common.IsSupportedEventType(event.Type) {
+
+					hash, _ := hashstructure.Hash(daemonset.Spec, nil)
+					apply := ApplyEvent{
+						Event:        fmt.Sprintf("%v", event.Type),
+						ApplyName:    daemonsetName,
+						ResourceName: daemonset.GetName(),
+						Namespace:    daemonset.GetNamespace(),
+						Kind:         "daemonset",
+						Hash:         hash,
+						Annotations:  daemonset.GetAnnotations(),
 					}
-					appRegistry := dsm.registryManager.Get(daemonsetName, daemonset.GetNamespace())
 
-					// extract annotation for progressDeadLine since Daemonset don't have hat feature.
-					progressDeadLine := GetProgressDeadlineApply(daemonset.GetAnnotations(), dsm.maxDeploymentTime)
-
+					appRegistry := dsm.registryManager.NewApplyEvent(apply)
 					if appRegistry == nil {
-						daemonsetStatus := common.DeploymentStatusRunning
-						if event.Type == eventwatch.Deleted {
-							daemonsetStatus = common.DeploymentStatusDeleted
-						}
-						appRegistry = dsm.registryManager.NewApplication(daemonsetName,
-							daemonset.GetNamespace(),
-							daemonset.GetAnnotations(),
-							daemonsetStatus)
-
+						continue
 					}
-					registryApply := appRegistry.AddDaemonset(
-						daemonset.GetName(),
-						daemonset.GetNamespace(),
-						daemonset.GetLabels(),
-						daemonset.GetAnnotations(),
-						daemonset.Status.DesiredNumberScheduled,
-						progressDeadLine)
+
+					registryApply := dsm.AddNewDaemonset(apply, appRegistry, daemonset.Status.DesiredNumberScheduled)
+
 					daemonsetWatchListOptions := metaV1.ListOptions{
 						LabelSelector: labels.SelectorFromSet(daemonset.GetLabels()).String()}
 
@@ -154,7 +137,8 @@ func (dsm *DaemonsetManager) watchDaemonsets(ctx context.Context) {
 						registryApply,
 						daemonsetWatchListOptions,
 						daemonset.GetNamespace(),
-						progressDeadLine)
+						GetProgressDeadlineApply(daemonset.GetAnnotations(), dsm.maxDeploymentTime))
+
 				} else {
 					log.WithFields(log.Fields{
 						"event_type": event.Type,
@@ -255,4 +239,27 @@ func (dsm *DaemonsetManager) watchEvents(ctx context.Context, lg log.Entry, daem
 			}
 		}
 	}()
+}
+
+// AddNewDaemonset add new daemonset under application
+func (dsm *DaemonsetManager) AddNewDaemonset(data ApplyEvent, applicationRegistry *RegistryRow, desiredState int32) *DaemonsetData {
+
+	log := applicationRegistry.Log()
+	dd := &DaemonsetData{
+		Metadata: MetaData{
+			Name:         data.ApplyName,
+			Namespace:    data.Namespace,
+			Annotations:  data.Annotations,
+			Metrics:      GetMetricsDataFromAnnotations(data.Annotations),
+			Alerts:       GetAlertsDataFromAnnotations(data.Annotations),
+			DesiredState: desiredState,
+		},
+		Pods:                    make(map[string]DeploymenPod, 0),
+		ProgressDeadlineSeconds: GetProgressDeadlineApply(data.Annotations, dsm.maxDeploymentTime),
+	}
+	applicationRegistry.DBSchema.Resources.Daemonsets[data.ApplyName] = dd
+
+	log.Info("Daemonset was associated to the application")
+
+	return dd
 }

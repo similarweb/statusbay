@@ -2,10 +2,10 @@ package kuberneteswatcher
 
 import (
 	"context"
+	"fmt"
+	"statusbay/watcher/kubernetes/common"
 	"sync"
 	"time"
-
-	"statusbay/watcher/kubernetes/common"
 
 	"github.com/mitchellh/hashstructure"
 	log "github.com/sirupsen/logrus"
@@ -13,7 +13,6 @@ import (
 	appsV1 "k8s.io/api/apps/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	eventwatch "k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -126,40 +125,24 @@ func (dm *DeploymentManager) watchDeployments(ctx context.Context) {
 
 				deploymentName := GetApplicationName(deployment.GetAnnotations(), deployment.GetName())
 
-				if event.Type == eventwatch.Modified || event.Type == eventwatch.Added || event.Type == eventwatch.Deleted {
+				if common.IsSupportedEventType(event.Type) {
 
-					if event.Type == eventwatch.Deleted {
-						dm.registryManager.DeleteAppliedVersion(deployment.GetName(), deployment.GetNamespace(), "deployment")
-					} else {
-						hash, _ := hashstructure.Hash(deployment.Spec, nil)
-						if !dm.registryManager.UpdateAppliesVersionHistory(deployment.GetName(), deployment.GetNamespace(), "deployment", hash) {
-							continue
-						}
+					hash, _ := hashstructure.Hash(deployment.Spec, nil)
+					apply := ApplyEvent{
+						Event:        fmt.Sprintf("%v", event.Type),
+						ApplyName:    deploymentName,
+						ResourceName: deployment.GetName(),
+						Namespace:    deployment.GetNamespace(),
+						Kind:         "deployment",
+						Hash:         hash,
+						Annotations:  deployment.GetAnnotations(),
 					}
 
-					applicationRegistry := dm.registryManager.Get(deploymentName, deployment.GetNamespace())
-
-					// extract annotation for progressDeadLine since Daemonset don't have hat feature.
-					progressDeadLine := GetProgressDeadlineApply(deployment.GetAnnotations(), dm.maxDeploymentTime)
-
+					applicationRegistry := dm.registryManager.NewApplyEvent(apply)
 					if applicationRegistry == nil {
-
-						deploymentStatus := common.DeploymentStatusRunning
-						if event.Type == eventwatch.Deleted {
-							deploymentStatus = common.DeploymentStatusDeleted
-						}
-						applicationRegistry = dm.registryManager.NewApplication(deploymentName,
-							deployment.GetNamespace(),
-							deployment.GetAnnotations(),
-							deploymentStatus)
+						continue
 					}
-
-					registryDeployment := applicationRegistry.AddDeployment(deployment.GetName(),
-						deployment.GetNamespace(),
-						deployment.GetLabels(),
-						deployment.GetAnnotations(),
-						*deployment.Spec.Replicas,
-						progressDeadLine)
+					registryDeployment := dm.AddNewDeployment(apply, applicationRegistry, *deployment.Spec.Replicas)
 
 					deploymentWatchListOptions := metaV1.ListOptions{LabelSelector: labels.SelectorFromSet(deployment.GetLabels()).String()}
 
@@ -291,4 +274,29 @@ func (dm *DeploymentManager) watchEvents(ctx context.Context, lg log.Entry, regi
 			}
 		}
 	}()
+}
+
+// AddNewDeployment add new deployment under application
+func (dm *DeploymentManager) AddNewDeployment(data ApplyEvent, applicationRegistry *RegistryRow, desiredState int32) *DeploymentData {
+
+	log := applicationRegistry.Log()
+	dd := &DeploymentData{
+		Deployment: MetaData{
+			Name:         data.ApplyName,
+			Namespace:    data.Namespace,
+			Annotations:  data.Annotations,
+			Metrics:      GetMetricsDataFromAnnotations(data.Annotations),
+			Alerts:       GetAlertsDataFromAnnotations(data.Annotations),
+			DesiredState: desiredState,
+		},
+		Pods:                    make(map[string]DeploymenPod, 0),
+		Replicaset:              make(map[string]Replicaset, 0),
+		ProgressDeadlineSeconds: GetProgressDeadlineApply(data.Annotations, dm.maxDeploymentTime),
+	}
+	applicationRegistry.DBSchema.Resources.Deployments[data.ApplyName] = dd
+
+	log.Info("Deployment was associated to the application")
+
+	return dd
+
 }

@@ -43,7 +43,20 @@ func NewPodManagerMock() (*fake.Clientset, *kuberneteswatcher.PodsManager) {
 func TestPodWatch(t *testing.T) {
 	registry, storageMock := NewRegistryMock()
 
-	registryDeploymentData := createMockDeploymentData(registry, common.DeploymentStatusRunning)
+	registryRow := registry.NewApplication("nginx", "default", map[string]string{}, common.DeploymentStatusRunning)
+
+	apply := kuberneteswatcher.ApplyEvent{
+		Event:        "create",
+		ApplyName:    "application",
+		ResourceName: "resourceName",
+		Namespace:    "default",
+		Kind:         "deployment",
+		Hash:         1234,
+		Annotations:  map[string]string{},
+	}
+
+	registryDeploymentData := createMockDeploymentData(registry, registryRow, apply, "10m")
+
 	lg := log.WithField("test", "TestPodWatch")
 	ctx := context.Background()
 
@@ -136,7 +149,20 @@ func TestPodWatch(t *testing.T) {
 func TestPodWatchEvent(t *testing.T) {
 	registry, storageMock := NewRegistryMock()
 
-	registryDeploymentData := createMockDeploymentData(registry, common.DeploymentStatusRunning)
+	registryRow := registry.NewApplication("nginx", "default", map[string]string{}, common.DeploymentStatusRunning)
+
+	apply := kuberneteswatcher.ApplyEvent{
+		Event:        "create",
+		ApplyName:    "application",
+		ResourceName: "resourceName",
+		Namespace:    "default",
+		Kind:         "deployment",
+		Hash:         1234,
+		Annotations:  map[string]string{},
+	}
+
+	registryDeploymentData := createMockDeploymentData(registry, registryRow, apply, "10m")
+
 	lg := log.WithField("test", "TestPodWatchEvent")
 	ctx := context.Background()
 

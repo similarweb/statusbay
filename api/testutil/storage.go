@@ -7,9 +7,9 @@ import (
 
 var (
 	responseTable = []state.TableKubernetes{
-		{ApplyId: "c60c45dc08b369ec8a4ee89bcf37c96eaa1b81cb", Name: "foo", Cluster: "cluster1", Namespace: "foo-namespace", Status: "running", Time: 123, DeployBy: "foo@similarweb.com"},
-		{ApplyId: "cbd69b781769cbf090662f46dd3bbef10f3103c2", Name: "foo", Cluster: "cluster1", Namespace: "foo-namespace", Status: "successful", Time: 1234, DeployBy: "foo@similarweb.com"},
-		{ApplyId: "asdmken3rnuiweu423ihndscsdfalwelk2223usd", Name: "foo-1", Cluster: "cluster1", Namespace: "foo-namespace", Status: "faild", Time: 1234, DeployBy: "foo@similarweb.com"},
+		{ApplyId: "c60c45dc08b369ec8a4ee89bcf37c96eaa1b81cb", Name: "foo", Cluster: "cluster1", Namespace: "foo-namespace", Status: "running", Time: 123, DeployBy: "foo@example.com"},
+		{ApplyId: "cbd69b781769cbf090662f46dd3bbef10f3103c2", Name: "foo", Cluster: "cluster1", Namespace: "foo-namespace", Status: "successful", Time: 1234, DeployBy: "foo@example.com"},
+		{ApplyId: "asdmken3rnuiweu423ihndscsdfalwelk2223usd", Name: "foo-1", Cluster: "cluster1", Namespace: "foo-namespace", Status: "faild", Time: 1234, DeployBy: "foo@example.com"},
 	}
 )
 

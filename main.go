@@ -79,7 +79,7 @@ func startKubernetesWatcher(ctx context.Context, configPath, kubeconfig, apiserv
 
 	err = config.InitMetricAggregator(watcherConfig.Telemetry)
 	if err != nil {
-		log.WithError(err).Panic("could not init telemetry")
+		log.WithError(err).Panic("failed to initialize telemetry")
 		os.Exit(1)
 	}
 
@@ -87,9 +87,9 @@ func startKubernetesWatcher(ctx context.Context, configPath, kubeconfig, apiserv
 	visibility.SetupLogging(watcherConfig.Log.Level, watcherConfig.Log.GelfAddress, "wacher_kubernetes")
 
 	// Init kubernetes client
-	kubernetesClientManager, cErr := client.NewClientManager(kubeconfig, apiserverHost)
-	if cErr != nil {
-		log.WithError(cErr).Panic("could not init kubernetes client")
+	kubernetesClientManager, err := client.NewClientManager(kubeconfig, apiserverHost)
+	if err != nil {
+		log.WithError(err).Panic("failed to initialize Kubernetes client")
 		os.Exit(1)
 	}
 	kubernetesClientset := kubernetesClientManager.GetInsecureClient()
@@ -99,9 +99,9 @@ func startKubernetesWatcher(ctx context.Context, configPath, kubeconfig, apiserv
 	mysqlManager.Migration()
 	mysql := kuberneteswatcher.NewMysql(mysqlManager)
 
-	notifiers, nErr := watcherConfig.BuildNotifiers()
-	if nErr != nil {
-		log.WithError(nErr).Panic("failed to build notifiers")
+	notifiers, err := watcherConfig.BuildNotifiers()
+	if err != nil {
+		log.WithError(err).Panic("failed to initialize notifiers")
 		os.Exit(1)
 	}
 
@@ -146,13 +146,13 @@ func startAPIServer(ctx context.Context, configPath, eventConfigPath string) *se
 
 	apiConfig, err := config.LoadConfigAPI(configPath)
 	if err != nil {
-		log.WithError(err).Panic("could not load configuration file")
+		log.WithError(err).Panic("could not load API configuration file")
 		os.Exit(1)
 	}
 
 	err = config.InitMetricAggregator(apiConfig.Telemetry)
 	if err != nil {
-		log.WithError(err).Panic("could not init telemetry")
+		log.WithError(err).Panic("failed to initialize telemetry")
 		os.Exit(1)
 	}
 

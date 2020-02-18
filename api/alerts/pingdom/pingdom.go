@@ -25,7 +25,7 @@ type Pingdom struct {
 
 // NewPingdomManager create new Pingdom instance
 func NewPingdomManager(client ClientDescriber) *Pingdom {
-	log.Info("Init Pingdom manager")
+	log.Info("initializing Pingdom manager")
 	return &Pingdom{
 		client: client,
 	}
@@ -46,11 +46,11 @@ func (pi *Pingdom) GetAlertByTags(tags string, from, to time.Time) ([]httprespon
 
 	checks, err := pi.client.GetChecks(v)
 	if err != nil {
-		lg.WithError(err).Error("Error when trying to get Pingdom checks")
+		lg.WithError(err).Error("could not get Pingdom checks")
 		return checkResponses, nil
 	}
 
-	lg.WithField("checks", len(checks.Checks)).Debug("Alerts was found")
+	lg.WithField("checks", len(checks.Checks)).Debug("received checks from Pingdom")
 
 	// Prepare query string filter
 	resultQueryString := url.Values{}
@@ -68,10 +68,8 @@ func (pi *Pingdom) GetAlertByTags(tags string, from, to time.Time) ([]httprespon
 			defer wg.Done()
 			checkStatus, err := pi.client.GetCheckSummaryOutage(check.ID, resultQueryString)
 			if err != nil {
-				if err != nil {
-					lg.WithError(err).WithField("check_id", check.ID).Info("Failed to call summary outage check")
-					return
-				}
+				lg.WithError(err).WithField("check_id", check.ID).Info("failed to get check summary outage")
+				return
 			}
 
 			checkData := httpresponse.CheckResponse{

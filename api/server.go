@@ -54,12 +54,12 @@ func NewServer(kubernetesStorage kubernetes.Storage, port string, kubernetesMark
 func (server *Server) Serve(ctx context.Context, wg *sync.WaitGroup) {
 
 	server.BindEndpoints()
-	log.WithField("bind_address", server.httpserver.Addr).Info("Starting statusbay server")
+	log.WithField("bind_address", server.httpserver.Addr).Info("starting StatusBay server")
 	go func() {
 		<-ctx.Done()
 		err := server.httpserver.Shutdown(ctx)
 		if err != nil {
-			log.WithError(err).Error("error occured while shutting down manager HTTP server")
+			log.WithError(err).Error("failed to shutdown manager HTTP server")
 		}
 		log.Warn("HTTP server has been shut down")
 		wg.Done()

@@ -93,8 +93,8 @@ func (cr *ControllerRevisionManager) WatchControllerRevisionPods(ctx context.Con
 	if err != nil {
 		logEntry.WithError(err).WithFields(log.Fields{
 			"revision": resourceGeneration,
-		}).Error("Cannot list revisions")
-		return errors.New("Cannot list revisions")
+		}).Error("could not list revisions")
+		return errors.New("could not list revisions")
 	}
 
 	revisionLog := logEntry.WithFields(log.Fields{
@@ -109,8 +109,8 @@ func (cr *ControllerRevisionManager) WatchControllerRevisionPods(ctx context.Con
 			revisionLog.Info("Searching for controllerRevisionHash from the controllerRevisionHashlabelKey")
 			controllerRevisionHash, valExist := revision.ObjectMeta.Labels[controllerRevisionHashlabelKey]
 			if !valExist {
-				revisionLog.Warn("Cannot find controllerRevision label inside ControllerRevision kind. cannot start watch on pods")
-				return errors.New("Cannot find controllerRevisionHashLabelKey lables, inside ControllerRevision. cannot start watch on pods")
+				revisionLog.Warn("could not find controllerRevision label inside ControllerRevision kind. can't start watch on pods")
+				return errors.New("could not find controllerRevisionHashLabelKey lables, inside ControllerRevision. can't start watch on pods")
 			}
 			revisionLog.WithFields(log.Fields{
 				"controllerRevisionHash": controllerRevisionHash,
@@ -124,7 +124,7 @@ func (cr *ControllerRevisionManager) WatchControllerRevisionPods(ctx context.Con
 			revisionLog.WithFields(log.Fields{
 				"controller_revision_pod_label_key":   appsV1.ControllerRevisionHashLabelKey,
 				"controller_revision_pod_label_value": controllerRevisionPodLabelValue,
-			}).Info("Going to watch pods with the following fields")
+			}).Info("going to watch pods with the following fields")
 
 			// Start watching pods with the specific appsV1.ControllerRevisionHashLabelKey
 			podLabelSelector := map[string]string{appsV1.ControllerRevisionHashLabelKey: controllerRevisionPodLabelValue}
@@ -139,6 +139,6 @@ func (cr *ControllerRevisionManager) WatchControllerRevisionPods(ctx context.Con
 			return nil
 		}
 	}
-	revisionLog.Warn("Cannot find resourceVersion in ControllerRevision. cannot start watch on pods")
+	revisionLog.Warn("could not find resourceVersion in ControllerRevision. can't start watch on pods")
 	return nil
 }

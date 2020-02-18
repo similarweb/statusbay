@@ -40,12 +40,12 @@ func TestApplicationMetricsEndpoint(t *testing.T) {
 	rr := httptest.NewRecorder()
 	req, err := http.NewRequest("GET", "/api/v1/application/metric?provider=dummy&query=foo.2xx&from=1&to=1", nil)
 	if err != nil {
-		t.Fatalf("Http request returned with error")
+		t.Fatalf("http request returned with error")
 	}
 
 	ms.api.Router().ServeHTTP(rr, req)
 	if rr.Code != http.StatusOK {
-		t.Fatalf("handler returned wrong status code: got %v want %v", rr.Code, http.StatusOK)
+		t.Fatalf("handler returned unexpected status code: got %v want %v", rr.Code, http.StatusOK)
 	}
 
 	if err != nil {
@@ -61,7 +61,7 @@ func TestApplicationMetricsEndpoint(t *testing.T) {
 	}
 
 	if len(response) != 1 {
-		t.Fatalf("unexpected metrics endpont response, got %d expected %d", len(response), 1)
+		t.Fatalf("unexpected length for metrics endpoint response, got %d expected %d", len(response), 1)
 	}
 
 }
@@ -96,12 +96,12 @@ func TestApplicationMetricsEndpointWithInvalidQueryParameters(t *testing.T) {
 			rr := httptest.NewRecorder()
 			req, err := http.NewRequest("GET", test.endpoint, nil)
 			if err != nil {
-				t.Fatalf("Http request returned with error")
+				t.Fatalf("http request returned with error")
 			}
 
 			ms.api.Router().ServeHTTP(rr, req)
 			if rr.Code != test.expectedStatusCode {
-				t.Fatalf("handler returned wrong status code: got %v want %v", rr.Code, test.expectedStatusCode)
+				t.Fatalf("handler returned unexpected status code: got %d want %d", rr.Code, test.expectedStatusCode)
 			}
 
 			if err != nil {
@@ -113,7 +113,7 @@ func TestApplicationMetricsEndpointWithInvalidQueryParameters(t *testing.T) {
 			json.Unmarshal(body, &response)
 
 			if len(response["Validation"]) != test.expectedValidationCount {
-				t.Fatalf("unexpected validation message count response, got %d, expected %d", len(response["Validation"]), test.expectedValidationCount)
+				t.Fatalf("unexpected validation message length response, got %d, expected %d", len(response["Validation"]), test.expectedValidationCount)
 			}
 		})
 	}
@@ -132,12 +132,12 @@ func TestApplicationAlertsEndpoint(t *testing.T) {
 	rr := httptest.NewRecorder()
 	req, err := http.NewRequest("GET", "/api/v1/application/alerts?tags=foo,foo2&from=1&to=1&provider=foo", nil)
 	if err != nil {
-		t.Fatalf("Http request returned with error")
+		t.Fatalf("http request returned with error")
 	}
 
 	ms.api.Router().ServeHTTP(rr, req)
 	if rr.Code != http.StatusOK {
-		t.Fatalf("handler returned wrong status code: got %v want %v", rr.Code, http.StatusOK)
+		t.Fatalf("handler returned unexpected status code: got %d want %d", rr.Code, http.StatusOK)
 	}
 
 	if err != nil {
@@ -149,7 +149,7 @@ func TestApplicationAlertsEndpoint(t *testing.T) {
 	json.Unmarshal(body, &response)
 
 	if len(response) != 1 {
-		t.Fatalf("unexpected metrics endpont response, got %d expected %d", len(response), 1)
+		t.Fatalf("unexpected length for metrics endpoint response, got %d expected %d", len(response), 1)
 	}
 
 }
@@ -180,12 +180,12 @@ func TestApplicationAlertsEndpointWithInvalidQueryParameters(t *testing.T) {
 			rr := httptest.NewRecorder()
 			req, err := http.NewRequest("GET", test.endpoint, nil)
 			if err != nil {
-				t.Fatalf("Http request returned with error")
+				t.Fatalf("http request returned with error")
 			}
 
 			ms.api.Router().ServeHTTP(rr, req)
 			if rr.Code != test.expectedStatusCode {
-				t.Fatalf("handler returned wrong status code: got %v want %v", rr.Code, test.expectedStatusCode)
+				t.Fatalf("handler returned unexpected status code: got %d want %d", rr.Code, test.expectedStatusCode)
 			}
 
 			if err != nil {
@@ -197,7 +197,7 @@ func TestApplicationAlertsEndpointWithInvalidQueryParameters(t *testing.T) {
 			err = json.Unmarshal(body, &response)
 
 			if len(response["Validation"]) != test.expectedValidationCount {
-				t.Fatalf("unexpected validation message count response, got %d, expected %d", len(response["Validation"]), test.expectedValidationCount)
+				t.Fatalf("unexpected validation message length response, got %d, expected %d", len(response["Validation"]), test.expectedValidationCount)
 			}
 		})
 	}

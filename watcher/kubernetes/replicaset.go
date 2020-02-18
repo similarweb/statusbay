@@ -52,7 +52,7 @@ func (rm *ReplicaSetManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 			case replicaSets := <-rm.Watch:
 				rm.watch(replicaSets)
 			case <-ctx.Done():
-				log.Warn("Replicaset Manager has been shut down")
+				log.Warn("replicaset manager has been shut down")
 				wg.Done()
 				return
 			}
@@ -67,7 +67,7 @@ func (rm *ReplicaSetManager) watch(replicaData WatchReplica) {
 	go func() {
 
 		replicaData.LogEntry.Info("Start watch on replicasets")
-		replicaData.LogEntry.WithField("list_option", replicaData.ListOptions).Debug("List option for replicaset filtering")
+		replicaData.LogEntry.WithField("list_option", replicaData.ListOptions).Debug("list option for replicaset filtering")
 
 		//List of replicaset changes events
 		firstInit := map[string]bool{}
@@ -75,7 +75,7 @@ func (rm *ReplicaSetManager) watch(replicaData WatchReplica) {
 		watcher, err := rm.client.AppsV1().ReplicaSets(replicaData.Namespace).Watch(replicaData.ListOptions)
 
 		if err != nil {
-			replicaData.LogEntry.WithField("list_option", replicaData.ListOptions).Error("Error when trying to start watch on replicasets")
+			replicaData.LogEntry.WithField("list_option", replicaData.ListOptions).WithError(err).Error("error occured trying to start watch on replicasets")
 			return
 		}
 
@@ -83,14 +83,14 @@ func (rm *ReplicaSetManager) watch(replicaData WatchReplica) {
 			select {
 			case event, watch := <-watcher.ResultChan():
 				if !watch {
-					replicaData.LogEntry.Warn("Replicaset watch was stopped. Channel was closed")
+					replicaData.LogEntry.Warn("replicaset watch was stopped, channel was closed")
 
 					return
 				}
 
 				replicaset, ok := event.Object.(*appsV1.ReplicaSet)
 				if !ok {
-					replicaData.LogEntry.WithField("object", event.Object).Warn("Failed to parse replicaset watch data")
+					replicaData.LogEntry.WithField("object", event.Object).Warn("failed to parse replicaset watch data")
 					continue
 				}
 
@@ -100,12 +100,12 @@ func (rm *ReplicaSetManager) watch(replicaData WatchReplica) {
 
 				if _, found := firstInit[replicaset.Name]; !found {
 
-					lg.Debug("Found new replicaset")
+					lg.Debug("discovered new replicaset")
 					firstInit[replicaset.Name] = true
 					replicaData.Registry.InitReplicaset(replicaset.GetName())
 
 					if value, found := replicaset.Spec.Selector.MatchLabels["pod-template-hash"]; found {
-						lg.Debug("Selector `pod-template-hash` found in replicaset")
+						lg.Debug("selector `pod-template-hash` found in replicaset")
 
 						podListOptions := metaV1.ListOptions{LabelSelector: labels.SelectorFromSet(map[string]string{
 							"pod-template-hash": value,
@@ -120,7 +120,7 @@ func (rm *ReplicaSetManager) watch(replicaData WatchReplica) {
 						}
 
 					} else {
-						lg.Warn("Selector `pod-template-hash` not found in replicaset")
+						lg.Warn("selector `pod-template-hash` not found in replicaset")
 						continue
 					}
 
@@ -137,7 +137,7 @@ func (rm *ReplicaSetManager) watch(replicaData WatchReplica) {
 				replicaData.Registry.UpdateReplicasetStatus(replicaset.GetName(), replicaset.Status)
 
 			case <-replicaData.Ctx.Done():
-				replicaData.LogEntry.Debug("Replicaset watch was stopped. Got ctx done signal")
+				replicaData.LogEntry.Debug("replicaset watch was stopped, got ctx done signal")
 				watcher.Stop()
 				return
 			}
@@ -149,7 +149,7 @@ func (rm *ReplicaSetManager) watch(replicaData WatchReplica) {
 // watchEvents will start watch on replicaset event messages changes
 func (rm *ReplicaSetManager) watchEvents(ctx context.Context, lg log.Entry, registryDeployment *DeploymentData, listOptions metaV1.ListOptions, replicasetName, namespace string) {
 
-	lg.Info("Start watch on replicaset events")
+	lg.Info("start watching replicaset events")
 	watchData := WatchEvents{
 		ListOptions: listOptions,
 		Namespace:   namespace,
@@ -165,7 +165,7 @@ func (rm *ReplicaSetManager) watchEvents(ctx context.Context, lg log.Entry, regi
 			case event := <-eventChan:
 				registryDeployment.UpdateReplicasetEvents(replicasetName, event)
 			case <-ctx.Done():
-				lg.Info("Stop watch on replicaset events")
+				lg.Info("stop watching replicaset events")
 				return
 			}
 

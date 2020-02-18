@@ -125,7 +125,7 @@ func NewClientManager(kubeConfigPath, apiserverHost string) (ClientManagerDescri
 	log.WithFields(log.Fields{
 		"config_path": kubeConfigPath,
 		"server_host": apiserverHost,
-	}).Info("Setting up kubernetes client manager")
+	}).Info("setting up kubernetes client manager")
 
 	result := &clientManager{
 		kubeConfigPath: kubeConfigPath,

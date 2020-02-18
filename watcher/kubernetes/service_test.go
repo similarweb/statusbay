@@ -37,7 +37,7 @@ func NewServiceManagerMockMock(client *fake.Clientset) *kuberneteswatcher.Servic
 func TestServiceWatch(t *testing.T) {
 	registry, storageMock := NewRegistryMock()
 
-	registryRow := registry.NewApplication("nginx", "default", map[string]string{}, common.DeploymentStatusRunning)
+	registryRow := registry.NewApplication("nginx", "default", map[string]string{}, common.ApplyStatusRunning)
 
 	apply := kuberneteswatcher.ApplyEvent{
 		Event:        "create",

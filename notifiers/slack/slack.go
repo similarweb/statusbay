@@ -136,11 +136,11 @@ func (sl *Manager) ReportEnded(message watcherCommon.DeploymentReport) {
 	color := green
 
 	switch message.Status {
-	case watcherCommon.DeploymentSuccessful:
+	case watcherCommon.ApplySuccessful:
 		color = green
-	case watcherCommon.DeploymentCanceled:
+	case watcherCommon.ApplyCanceled:
 		color = yellow
-	case watcherCommon.DeploymentStatusFailed:
+	case watcherCommon.ApplyStatusFailed:
 		color = red
 	}
 

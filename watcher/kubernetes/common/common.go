@@ -9,20 +9,38 @@ import (
 type DeploymentStatus string
 
 const (
-	// DeploymentSuccessful when deployment finish successfully
-	DeploymentSuccessful DeploymentStatus = "successful"
+	// ApplySuccessful when deployment finish successfully
+	ApplySuccessful DeploymentStatus = "successful"
 
-	// DeploymentStatusFailed when deployment failed
-	DeploymentStatusFailed DeploymentStatus = "failed"
+	// ApplyStatusFailed when deployment failed
+	ApplyStatusFailed DeploymentStatus = "failed"
 
-	// DeploymentStatusRunning when deployment still in progress
-	DeploymentStatusRunning DeploymentStatus = "running"
+	// ApplyStatusRunning when deployment still in progress
+	ApplyStatusRunning DeploymentStatus = "running"
 
-	// DeploymentStatusDeleted when deployment deleted
-	DeploymentStatusDeleted DeploymentStatus = "deleted"
+	// ApplyStatusDeleted when deployment deleted
+	ApplyStatusDeleted DeploymentStatus = "deleted"
 
-	// DeploymentCanceled when statusbay stop watch
-	DeploymentCanceled DeploymentStatus = "cancelled"
+	// ApplyCanceled when statusbay stop watch
+	ApplyCanceled DeploymentStatus = "cancelled"
+)
+
+// DeploymentStatusDescription are the various descriptions of the states a deployment can be in.
+type DeploymentStatusDescription string
+
+const (
+
+	// ApplyStatusDescriptionRunning running deployment
+	ApplyStatusDescriptionRunning DeploymentStatusDescription = "Deployment is running"
+
+	// ApplyStatusDescriptionSuccessful successfully deployment
+	ApplyStatusDescriptionSuccessful DeploymentStatusDescription = "Deployment completed successfully"
+
+	// ApplyStatusDescriptionProgressDeadline progress deadline ended
+	ApplyStatusDescriptionProgressDeadline DeploymentStatusDescription = "Failed due to progress deadline"
+
+	// ApplyStatusDescriptionCanceled description when apply canceld
+	ApplyStatusDescriptionCanceled DeploymentStatusDescription = "Apply canceld"
 )
 
 // DeploymentReport defined deployment reporter message

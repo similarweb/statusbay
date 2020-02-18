@@ -30,14 +30,14 @@ type Resources struct {
 
 //DBSchema is a struct that save as json in given storage
 type DBSchema struct {
-	Application           string                      `json:"Application"`
-	Cluster               string                      `json:"Cluster"`
-	Namespace             string                      `json:"Namespace"`
-	CreationTimestamp     int64                       `json:"CreationTimestamp"`
-	ReportTo              []string                    `json:"ReportTo"`
-	DeployBy              string                      `json:"DeployBy"`
-	DeploymentDescription DeploymentStatusDescription `json:"DeploymentDescription"`
-	Resources             Resources                   `json:"Resources"`
+	Application           string                             `json:"Application"`
+	Cluster               string                             `json:"Cluster"`
+	Namespace             string                             `json:"Namespace"`
+	CreationTimestamp     int64                              `json:"CreationTimestamp"`
+	ReportTo              []string                           `json:"ReportTo"`
+	DeployBy              string                             `json:"DeployBy"`
+	DeploymentDescription common.DeploymentStatusDescription `json:"DeploymentDescription"`
+	Resources             Resources                          `json:"Resources"`
 }
 
 // ApplyEvent describe the new Kubernetes apply details for create/skip/delete new application
@@ -55,6 +55,7 @@ type ApplyEvent struct {
 type RegistryRow struct {
 	applyID                          string
 	finish                           bool
+	beforeFinish                     bool
 	status                           common.DeploymentStatus
 	ctx                              context.Context
 	cancelFn                         context.CancelFunc
@@ -120,7 +121,7 @@ func (dr *RegistryManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 func (dr *RegistryManager) LoadRunningApplies() []*RegistryRow {
 
 	rows := []*RegistryRow{}
-	apps, _ := dr.storage.GetAppliesByStatus(common.DeploymentStatusRunning)
+	apps, _ := dr.storage.GetAppliesByStatus(common.ApplyStatusRunning)
 	log.WithField("count", len(apps)).Info("Loading running job from DB")
 
 	for applyID, appSchema := range apps {
@@ -133,7 +134,7 @@ func (dr *RegistryManager) LoadRunningApplies() []*RegistryRow {
 			ctx:      ctx,
 			cancelFn: cancelFn,
 			finish:   false,
-			status:   common.DeploymentStatusRunning,
+			status:   common.ApplyStatusRunning,
 			DBSchema: appSchema,
 		}
 		go row.isFinish(dr.checkFinishDelay)
@@ -149,19 +150,31 @@ func (dr *RegistryManager) LoadRunningApplies() []*RegistryRow {
 
 func (dr *RegistryManager) NewApplyEvent(data ApplyEvent) *RegistryRow {
 
+	appRegistry := dr.Get(data.ApplyName, data.Namespace)
+
 	if data.Event == fmt.Sprintf("%v", eventwatch.Deleted) {
+
+		// Once the event is deleted, we needs to delete apply version from DB and
+		// stop the apply watcher.
 		dr.deleteAppliedVersion(data.ResourceName, data.Namespace, data.Kind)
+		if appRegistry.beforeFinish {
+			return nil
+		}
+		appRegistry.Stop(common.ApplyCanceled, common.ApplyStatusDescriptionCanceled)
+
+		// needs to reset the appRegistry for create a new application row in DB with deleted status
+		appRegistry = nil
+
 	} else {
 		if !dr.updateAppliesVersionHistory(data.ResourceName, data.Namespace, data.Kind, data.Hash) {
 			return nil
 		}
 	}
-	appRegistry := dr.Get(data.ApplyName, data.Namespace)
 
 	if appRegistry == nil {
-		status := common.DeploymentStatusRunning
+		status := common.ApplyStatusRunning
 		if data.Event == fmt.Sprintf("%v", eventwatch.Deleted) {
-			status = common.DeploymentStatusDeleted
+			status = common.ApplyStatusDeleted
 		}
 
 		appRegistry = dr.NewApplication(data.ApplyName,
@@ -199,7 +212,7 @@ func (dr *RegistryManager) NewApplication(appName string, namespace string, anno
 			CreationTimestamp:     deployTime,
 			ReportTo:              reportTo,
 			DeployBy:              deployBy,
-			DeploymentDescription: DeploymentStatusDescriptionRunning,
+			DeploymentDescription: common.ApplyStatusDescriptionRunning,
 			Resources: Resources{
 				Deployments:  make(map[string]*DeploymentData),
 				Daemonsets:   make(map[string]*DaemonsetData),
@@ -210,9 +223,16 @@ func (dr *RegistryManager) NewApplication(appName string, namespace string, anno
 
 	lg := row.Log()
 
+	// If the status of the apply is deleted, there is case that the encodedID will be exists in the
+	// Memory (user delete the application when deployment is running)
+	// To create a new db record with deleted status, we add a deleted prefix the the encodedID
+	if status == common.ApplyStatusDeleted {
+		log.WithField("encoded_id", encodedID).Info("Change encodeding id of the apply")
+		encodedID = fmt.Sprintf("deleted-%s", encodedID)
+	}
 	dr.registryData[encodedID] = &row
 	switch status {
-	case common.DeploymentStatusRunning:
+	case common.ApplyStatusRunning:
 		dr.reporter.DeploymentStarted <- common.DeploymentReport{
 			To:          reportTo,
 			DeployBy:    deployBy,
@@ -222,7 +242,7 @@ func (dr *RegistryManager) NewApplication(appName string, namespace string, anno
 			LogEntry:    lg,
 			ClusterName: dr.clusterName,
 		}
-	case common.DeploymentStatusDeleted:
+	case common.ApplyStatusDeleted:
 		dr.reporter.DeploymentDeleted <- common.DeploymentReport{
 			To:          reportTo,
 			DeployBy:    deployBy,
@@ -320,7 +340,7 @@ func (wbr *RegistryRow) isDeploymentFinish() (bool, error) {
 		"count_deployments":    len(wbr.DBSchema.Resources.Deployments),
 	}).Info("Deployment status")
 	deploymentsNum := len(wbr.DBSchema.Resources.Deployments)
-	if deploymentsNum == countOfRunningReplicas && desiredStateCount == readyReplicasCount || wbr.status == common.DeploymentStatusDeleted {
+	if deploymentsNum == countOfRunningReplicas && desiredStateCount == readyReplicasCount || wbr.status == common.ApplyStatusDeleted {
 		lg.WithFields(log.Fields{
 			"replicaset_count":     countOfRunningReplicas,
 			"desired_state_count":  desiredStateCount,
@@ -364,7 +384,7 @@ func (wbr *RegistryRow) isDaemonSetFinish() (bool, error) {
 		"current_pods_count":            totalCurrentPods,
 		"total_daemonsets":              len(wbr.DBSchema.Resources.Daemonsets),
 	}).Debug("DaemonSet status")
-	if totalDesiredPods == totalCurrentPods && totalDesiredPods == totalUpdatedPodsOnNodes || wbr.status == common.DeploymentStatusDeleted {
+	if totalDesiredPods == totalCurrentPods && totalDesiredPods == totalUpdatedPodsOnNodes || wbr.status == common.ApplyStatusDeleted {
 		lg.WithFields(log.Fields{
 			"total_daemonsets_desired_pods": totalDesiredPods,
 			"current_pods_count":            totalCurrentPods,
@@ -414,7 +434,7 @@ func (wbr *RegistryRow) isStatefulSetFinish() (bool, error) {
 		"current_pods_count":               countOfRunningPods,
 		"total_statefulsets":               len(wbr.DBSchema.Resources.Statefulsets),
 	}).Info("Statefulset status")
-	if totalDesiredPods == readyPodsCount && countOfPodsInState == countOfRunningPods || wbr.status == common.DeploymentStatusDeleted {
+	if totalDesiredPods == readyPodsCount && countOfPodsInState == countOfRunningPods || wbr.status == common.ApplyStatusDeleted {
 		lg.WithFields(log.Fields{
 			"total_statefulset_desired_pods":   totalDesiredPods,
 			"total_statefulsets_in_state_pods": countOfPodsInState,
@@ -440,9 +460,8 @@ func (wbr *RegistryRow) isFinish(checkFinishDelay time.Duration) {
 	}).Debug("starting to watch on registry row to check if all resources status")
 	time.Sleep(checkFinishDelay)
 
-	if wbr.status == common.DeploymentStatusDeleted {
-		wbr.Stop(common.DeploymentStatusDeleted, DeploymentStatusDescriptionSuccessful)
-		wbr.cancelFn()
+	if wbr.status == common.ApplyStatusDeleted {
+		wbr.Stop(common.ApplyStatusDeleted, common.ApplyStatusDescriptionSuccessful)
 		return
 	}
 	for {
@@ -455,8 +474,7 @@ func (wbr *RegistryRow) isFinish(checkFinishDelay time.Duration) {
 			isDsFinished, dsErr := wbr.isDaemonSetFinish()
 			isSsFinished, ssErr := wbr.isStatefulSetFinish()
 			if dsErr != nil || depErr != nil || ssErr != nil {
-				wbr.Stop(common.DeploymentStatusFailed, DeploymentStatusDescriptionProgressDeadline)
-				wbr.cancelFn()
+				wbr.Stop(common.ApplyStatusFailed, common.ApplyStatusDescriptionProgressDeadline)
 				lg.WithFields(log.Fields{
 					"deployment_error":  depErr,
 					"daemonset_error":   dsErr,
@@ -464,8 +482,7 @@ func (wbr *RegistryRow) isFinish(checkFinishDelay time.Duration) {
 				}).Error("isFinish function watcher had an error")
 				return
 			} else if isDepFinished && isDsFinished && isSsFinished {
-				wbr.Stop(common.DeploymentSuccessful, DeploymentStatusDescriptionSuccessful)
-				wbr.cancelFn()
+				wbr.Stop(common.ApplySuccessful, common.ApplyStatusDescriptionSuccessful)
 			}
 		case <-wbr.ctx.Done():
 			lg.Debug("isFinish function watch was stopped. Got ctx done signal")
@@ -476,14 +493,15 @@ func (wbr *RegistryRow) isFinish(checkFinishDelay time.Duration) {
 }
 
 // Stop will marked the row as finish
-func (wbr *RegistryRow) Stop(status common.DeploymentStatus, message DeploymentStatusDescription) {
-	lg := wbr.Log()
-	lg.WithField("status", status).Debug("Marked apply as done")
+func (wbr *RegistryRow) Stop(status common.DeploymentStatus, message common.DeploymentStatusDescription) {
 
+	wbr.beforeFinish = true
+	log.WithField("status", status).Info("Marked apply as done")
 	time.Sleep(wbr.collectDataAfterDeploymentFinish)
 	wbr.DBSchema.DeploymentDescription = message
 	wbr.finish = true
 	wbr.status = status
+	wbr.cancelFn()
 }
 
 // UpdateDeploymentStatus will update deployment status
@@ -676,7 +694,7 @@ func (dr *RegistryManager) save() {
 
 			if data.finish {
 
-				if data.status != common.DeploymentStatusDeleted {
+				if data.status != common.ApplyStatusDeleted {
 					dr.reporter.DeploymentFinished <- common.DeploymentReport{
 						To:          data.DBSchema.ReportTo,
 						DeployBy:    data.DBSchema.DeployBy,

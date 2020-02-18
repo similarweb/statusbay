@@ -40,7 +40,7 @@ const (
 	ApplyStatusDescriptionProgressDeadline DeploymentStatusDescription = "Failed due to progress deadline"
 
 	// ApplyStatusDescriptionCanceled description when apply canceld
-	ApplyStatusDescriptionCanceled DeploymentStatusDescription = "Apply canceld"
+	ApplyStatusDescriptionCanceled DeploymentStatusDescription = "Deployment canceld"
 )
 
 // DeploymentReport defined deployment reporter message

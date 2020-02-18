@@ -101,7 +101,7 @@ func TestApplicationMetricsEndpointWithInvalidQueryParameters(t *testing.T) {
 
 			ms.api.Router().ServeHTTP(rr, req)
 			if rr.Code != test.expectedStatusCode {
-				t.Fatalf("handler returned unexpected status code: got %v want %v", rr.Code, test.expectedStatusCode)
+				t.Fatalf("handler returned unexpected status code: got %d want %d", rr.Code, test.expectedStatusCode)
 			}
 
 			if err != nil {

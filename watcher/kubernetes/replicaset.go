@@ -66,7 +66,7 @@ func (rm *ReplicaSetManager) watch(replicaData WatchReplica) {
 
 	go func() {
 
-		replicaData.LogEntry.Info("Start watch on replicasets")
+		replicaData.LogEntry.Info("start watch on replicasets")
 		replicaData.LogEntry.WithField("list_option", replicaData.ListOptions).Debug("list option for replicaset filtering")
 
 		//List of replicaset changes events

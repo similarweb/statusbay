@@ -75,7 +75,7 @@ func GetMetricsDataFromAnnotations(annotations map[string]string) []Metrics {
 				log.WithFields(log.Fields{
 					"key":   key,
 					"value": val,
-				}).Warn("Invalid annotation metric")
+				}).Warn("invalid annotation metric")
 				continue
 			}
 			metric := Metrics{

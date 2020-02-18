@@ -48,23 +48,19 @@ func TestApplicationsData(t *testing.T) {
 			rr := httptest.NewRecorder()
 			req, err := http.NewRequest("GET", test.endpoint, nil)
 			if err != nil {
-				t.Fatalf("Http request returned with error")
+				t.Errorf("unexpected error: %v", err)
 			}
 
 			ms.api.Router().ServeHTTP(rr, req)
 			if rr.Code != test.expectedStatusCode {
-				t.Fatalf("handler returned wrong status code: got %v want %v", rr.Code, test.expectedStatusCode)
-			}
-
-			if err != nil {
-				t.Fatal(err)
+				t.Fatalf("unexpected status code: got %v want %v", rr.Code, test.expectedStatusCode)
 			}
 
 			response := &kubernetes.ResponseKubernetesApplicationsCount{}
 			body, err := ioutil.ReadAll(rr.Body)
 			err = json.Unmarshal(body, &response)
 			if len(response.Records) != test.expectedCountResponse {
-				t.Fatalf("unexpected deployment events, got %d expected %d", len(response.Records), test.expectedCountResponse)
+				t.Fatalf("unexpected deployment events length, got %d expected %d", len(response.Records), test.expectedCountResponse)
 			}
 		})
 	}
@@ -94,16 +90,12 @@ func TestApplicationsFiltersData(t *testing.T) {
 			rr := httptest.NewRecorder()
 			req, err := http.NewRequest("GET", test.endpoint, nil)
 			if err != nil {
-				t.Fatalf("Http request returned with error")
+				t.Errorf("unexpected error: %v", err)
 			}
 
 			ms.api.Router().ServeHTTP(rr, req)
 			if rr.Code != test.expectedStatusCode {
-				t.Fatalf("handler returned wrong status code: got %v want %v", rr.Code, test.expectedStatusCode)
-			}
-
-			if err != nil {
-				t.Fatal(err)
+				t.Fatalf("unexpected status code: got %v want %v", rr.Code, test.expectedStatusCode)
 			}
 
 			response := []string{}
@@ -111,7 +103,7 @@ func TestApplicationsFiltersData(t *testing.T) {
 			err = json.Unmarshal(body, &response)
 
 			if len(response) != test.expectedCountResponse {
-				t.Fatalf("unexpected filters response count, got %d expected %d", len(response), test.expectedCountResponse)
+				t.Fatalf("unexpected filters response length, got %d expected %d", len(response), test.expectedCountResponse)
 			}
 
 		})

@@ -72,7 +72,7 @@ func (dm *DeploymentManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 		for {
 			select {
 			case <-ctx.Done():
-				log.Warn("Deployment Manager has been shut down")
+				log.Warn("deployment manager has been shut down")
 				wg.Done()
 				return
 			}
@@ -100,26 +100,26 @@ func (dm *DeploymentManager) watchDeployments(ctx context.Context) {
 	watcher, err := dm.client.AppsV1().Deployments("").Watch(deploymentWatchListOptions)
 
 	if err != nil {
-		log.WithError(err).WithField("list_option", deploymentWatchListOptions.String()).Error("Could not start a watcher on deployment")
+		log.WithError(err).WithField("list_option", deploymentWatchListOptions.String()).Error("could not start deployments watcher")
 
 		return
 	}
 
 	go func() {
-		log.WithField("resource_version", deploymentList.GetResourceVersion()).Info("Deployments watcher was started")
+		log.WithField("resource_version", deploymentList.GetResourceVersion()).Info("starting deployments watcher")
 		for {
 			select {
 			case event, watch := <-watcher.ResultChan():
 
 				if !watch {
-					log.WithField("list_options", deploymentWatchListOptions.String()).Info("Deployments watcher was stopped. Reopen the channel")
+					log.WithField("list_options", deploymentWatchListOptions.String()).Info("deployments watcher was stopped, reopening the channel")
 					dm.watchDeployments(ctx)
 					return
 				}
 
 				deployment, ok := event.Object.(*appsV1.Deployment)
 				if !ok {
-					log.WithField("object", event.Object).Warn("Failed to parse deployment watcher data")
+					log.WithField("object", event.Object).Warn("failed to parse deployment watcher data")
 					continue
 				}
 
@@ -161,11 +161,11 @@ func (dm *DeploymentManager) watchDeployments(ctx context.Context) {
 					log.WithFields(log.Fields{
 						"event_type":      event.Type,
 						"deployment_name": deploymentName,
-					}).Info("Event type not supported")
+					}).Info("event type not supported")
 				}
 
 			case <-ctx.Done():
-				log.Warn("Deployment watch was stopped. Got ctx done signal")
+				log.Warn("deployment watch was stopped, got ctx done signal")
 				watcher.Stop()
 				return
 
@@ -181,12 +181,12 @@ func (dm *DeploymentManager) watchDeployments(ctx context.Context) {
 func (dm *DeploymentManager) watchDeployment(ctx context.Context, cancelFn context.CancelFunc, lg log.Entry, registryDeployment *DeploymentData, listOptions metaV1.ListOptions, namespace string, maxWatchTime int64) {
 
 	deploymentLog := lg.WithField("deployment_name", registryDeployment.GetName())
-	deploymentLog.Info("Starting watch on deployment")
-	deploymentLog.WithField("list_option", listOptions.String()).Debug("List option for deployment filtering")
+	deploymentLog.Info("initializing deployments watcher")
+	deploymentLog.WithField("list_option", listOptions.String()).Debug("list option for deployment filtering")
 
 	watcher, err := dm.client.AppsV1().Deployments(namespace).Watch(listOptions)
 	if err != nil {
-		deploymentLog.Error("Could not start watch on deployment")
+		deploymentLog.Error("could not start deployments watcher")
 		return
 	}
 
@@ -196,14 +196,14 @@ func (dm *DeploymentManager) watchDeployment(ctx context.Context, cancelFn conte
 		select {
 		case event, watch := <-watcher.ResultChan():
 			if !watch {
-				deploymentLog.Warn("Deployment watcher was stopped. Channel was closed")
+				deploymentLog.Warn("deployment watcher was stopped, channel was closed")
 				cancelFn()
 				return
 			}
 
 			deployment, isOk := event.Object.(*appsV1.Deployment)
 			if !isOk {
-				deploymentLog.WithField("object", event.Object).Warn("Failed to parse deployment watcher data")
+				deploymentLog.WithField("object", event.Object).Warn("failed to parse deployment watcher data")
 				continue
 			}
 
@@ -241,7 +241,7 @@ func (dm *DeploymentManager) watchDeployment(ctx context.Context, cancelFn conte
 			registryDeployment.UpdateDeploymentStatus(deployment.Status)
 
 		case <-ctx.Done():
-			deploymentLog.Debug("Deployment watcher was stopped. Got ctx done signal")
+			deploymentLog.Debug("deployment watcher was stopped, got ctx done signal")
 			watcher.Stop()
 			return
 
@@ -252,7 +252,7 @@ func (dm *DeploymentManager) watchDeployment(ctx context.Context, cancelFn conte
 
 // watchEvents will start watch on deployment event messages changes
 func (dm *DeploymentManager) watchEvents(ctx context.Context, lg log.Entry, registryDeployment *DeploymentData, listOptions metaV1.ListOptions, namespace string) {
-	lg.Info("Started the event watcher on deployment events")
+	lg.Info("initializing events watcher")
 
 	watchData := WatchEvents{
 		ListOptions: listOptions,
@@ -269,7 +269,7 @@ func (dm *DeploymentManager) watchEvents(ctx context.Context, lg log.Entry, regi
 			case event := <-eventChan:
 				registryDeployment.UpdateDeploymentEvents(event)
 			case <-ctx.Done():
-				lg.Info("Stop watch on deployment events")
+				lg.Info("stopping events watcher")
 				return
 			}
 		}
@@ -295,7 +295,7 @@ func (dm *DeploymentManager) AddNewDeployment(data ApplyEvent, applicationRegist
 	}
 	applicationRegistry.DBSchema.Resources.Deployments[data.ApplyName] = dd
 
-	log.Info("Deployment was associated to the application")
+	log.Info("deployment was associated with application")
 
 	return dd
 

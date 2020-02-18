@@ -19,7 +19,7 @@ func TestNotifierRegistration(t *testing.T) {
 		load.RegisterNotifiers()
 		for _, notifierName := range implementedNotifiers {
 			if ctor, err := notifiers.GetNotifierMaker(notifierName); err != nil {
-				t.Errorf("Unexpected error %s", err.Error())
+				t.Errorf("unexpected error: %v", err)
 			} else if ctor == nil {
 				t.Error("expected ctor to not be nil")
 			}
@@ -32,7 +32,7 @@ func TestNotifierRegistration(t *testing.T) {
 		defer delete(notifierConfigs, unRegisteredNotifierName)
 
 		if _, err := load.Load(notifierConfigs, ""); err == nil {
-			t.Error("Error expected")
+			t.Error("error expected")
 		}
 	})
 
@@ -46,9 +46,9 @@ func TestNotifierRegistration(t *testing.T) {
 		notifiers.Register(registeredNotifierName, testutil.GetNotifierMakerMock("mock", errorMessage))
 
 		if _, err := load.Load(notifierConfigs, ""); err == nil {
-			t.Error("Error expected")
+			t.Error("error expected")
 		} else if err.Error() != errorMessage {
-			t.Errorf("Unexpected error message %s != %s", err.Error(), errorMessage)
+			t.Errorf("unexpected error message %s != %s", err.Error(), errorMessage)
 		}
 	})
 
@@ -62,9 +62,9 @@ func TestNotifierRegistration(t *testing.T) {
 		notifiers.Register(registeredNotifierName, testutil.GetNotifierMakerMock("mock", ""))
 
 		if notifierInstances, err := load.Load(notifierConfigs, ""); err != nil {
-			t.Errorf("Unexpected error %s", err.Error())
+			t.Errorf("unexpected error: %v", err)
 		} else if len(notifierInstances) != expectedNumberOfNotifiers {
-			t.Errorf("Unexpected number of notifier instances %d!=%d. %#v", expectedNumberOfNotifiers, len(notifierInstances), notifierInstances)
+			t.Errorf("unexpected number of notifier instances %d!=%d. %#v", expectedNumberOfNotifiers, len(notifierInstances), notifierInstances)
 		}
 	})
 }

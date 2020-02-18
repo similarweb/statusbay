@@ -76,18 +76,18 @@ func TestNewRequest(t *testing.T) {
 			response, err := client.newRequest("GET", "path", test.urlValues, nil)
 
 			if err != test.expectedErr {
-				t.Fatalf("unexpected error response, got %d, expected %d", err, test.expectedErr)
+				t.Fatalf("unexpected response, got %d, expected %d", err, test.expectedErr)
 			}
 
 			if mockHTTP.RequestData.URL.String() != test.expectedURL {
-				t.Fatalf("unexpected http URL, got %s, expected %s", mockHTTP.RequestData.URL, test.expectedURL)
+				t.Fatalf("unexpected URL, got %s, expected %s", mockHTTP.RequestData.URL, test.expectedURL)
 			}
 
 			if mockHTTP.RequestData.Header["Authorization"][0] != test.expectedToken {
-				t.Fatalf("unexpected http URL, expected %s", test.expectedToken)
+				t.Fatalf("unexpected URL, expected %s", test.expectedToken)
 			}
 			if response.StatusCode != test.expectedStatusCode {
-				t.Fatalf("unexpected http status code, got %d, expected %d", response.StatusCode, test.expectedStatusCode)
+				t.Fatalf("unexpected status code, got %d, expected %d", response.StatusCode, test.expectedStatusCode)
 			}
 
 		})
@@ -122,13 +122,13 @@ func TestGetCheckSummaryOutage(t *testing.T) {
 
 			if err != nil {
 				if err != test.err {
-					t.Fatalf("unexpected error response")
+					t.Errorf("unexpected error: %v", err)
 				}
 				return
 			}
 
 			if len(resp.Summary.States) != test.expectedCheckCount {
-				t.Fatalf("unexpected metrics endpont response, got %d expected %d", len(resp.Summary.States), test.expectedCheckCount)
+				t.Fatalf("unexpected metrics length response, got %d expected %d", len(resp.Summary.States), test.expectedCheckCount)
 			}
 
 		})
@@ -163,7 +163,7 @@ func TestGetChecks(t *testing.T) {
 
 			if err != nil {
 				if err != test.err {
-					t.Fatalf("unexpected error response")
+					t.Errorf("unexpected error: %v", err)
 				}
 				return
 			}

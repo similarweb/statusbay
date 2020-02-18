@@ -58,7 +58,7 @@ func (pm *PodsManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 			case data := <-pm.Watch:
 				pm.watch(data)
 			case <-ctx.Done():
-				log.Warn("Pods Manager has been shut down")
+				log.Warn("pods manager has been shut down")
 				wg.Done()
 				return
 			}
@@ -75,13 +75,13 @@ func (pm *PodsManager) watch(watchData WatchData) {
 			"name": watchData.RegistryData.GetName(),
 		})
 
-		watchData.LogEntry.Info("Start watch on pods")
+		watchData.LogEntry.Info("initializing pods watcher")
 
-		lg.WithField("list_option", watchData.ListOptions).Debug("Pod list options")
+		lg.WithField("list_option", watchData.ListOptions).Debug("pod list options")
 
 		watcher, err := pm.client.CoreV1().Pods(watchData.Namespace).Watch(watchData.ListOptions)
 		if err != nil {
-			lg.WithError(err).WithField("list_option", watchData.ListOptions.String()).Error("Error when trying to start watch on pods")
+			lg.WithError(err).WithField("list_option", watchData.ListOptions.String()).Error("error when trying to start watch on pods")
 			return
 		}
 		for {
@@ -90,13 +90,13 @@ func (pm *PodsManager) watch(watchData WatchData) {
 				if !watch {
 					lg.WithFields(log.Fields{
 						"list_options": watchData.ListOptions.String(),
-					}).Warn("Pods watch was stopped. Channel was closed")
+					}).Warn("pods watch was stopped, channel was closed")
 					return
 				}
 
 				pod, ok := event.Object.(*v1.Pod)
 				if !ok {
-					lg.Warn("Failed to parse pod watch data")
+					lg.Warn("failed to parse pod watch data")
 					continue
 				}
 
@@ -107,7 +107,7 @@ func (pm *PodsManager) watch(watchData WatchData) {
 				//If it is the first time that we got the pod, we are start watch on pod events & send the pod to registry
 				if found := pm.loadPodFirstInit(pod.Name); !found {
 
-					podLog.Debug("New pod found")
+					podLog.Debug("new pod discovered")
 
 					pm.storePodFirstInit(pod.Name, true)
 					watchData.RegistryData.NewPod(pod)
@@ -123,7 +123,7 @@ func (pm *PodsManager) watch(watchData WatchData) {
 				status := string(pod.Status.Phase)
 				podLog.WithFields(log.Fields{
 					"count": len(pod.Status.ContainerStatuses),
-				}).Debug("List of pod status Container statuses")
+				}).Debug("list of pod status container statuses")
 
 				for _, container := range pod.Status.ContainerStatuses {
 
@@ -135,7 +135,7 @@ func (pm *PodsManager) watch(watchData WatchData) {
 					if container.State.Waiting != nil {
 
 						message := container.State.Waiting.Reason
-						containerLog.WithField("message", message).Debug("Container statue is waiting")
+						containerLog.WithField("message", message).Debug("container status is waiting")
 						if container.State.Waiting.Message != "" {
 							message = fmt.Sprintf("%s - %s", message, container.State.Waiting.Message)
 						}
@@ -151,7 +151,7 @@ func (pm *PodsManager) watch(watchData WatchData) {
 					if container.State.Terminated != nil {
 
 						message := container.State.Terminated.Reason
-						containerLog.WithField("message", message).Debug("Container status is terminated")
+						containerLog.WithField("message", message).Debug("container status is terminated")
 						if container.State.Terminated.Message != "" {
 							message = fmt.Sprintf("%s - %s", message, container.State.Terminated.Message)
 						}
@@ -169,11 +169,11 @@ func (pm *PodsManager) watch(watchData WatchData) {
 				if pod.GetDeletionTimestamp() != nil {
 					status = "Terminated"
 				}
-				podLog.WithField("status", status).Debug("Pod status")
+				podLog.WithField("status", status).Debug("pod status")
 				watchData.RegistryData.UpdatePod(pod, status)
 
 			case <-watchData.Ctx.Done():
-				watchData.LogEntry.Info("Pod watcher was stopped. Got ctx done signal")
+				watchData.LogEntry.Info("pod watcher was stopped, got ctx done signal")
 				watcher.Stop()
 				return
 			}
@@ -185,7 +185,7 @@ func (pm *PodsManager) watch(watchData WatchData) {
 // watchEvents will start watch on pod event messages changes
 func (pm *PodsManager) watchEvents(ctx context.Context, lg log.Entry, registryData RegistryData, listOptions metaV1.ListOptions, namespace, podName string) {
 
-	lg.Info("Start watch on pod events")
+	lg.Info("starting to watch pod events")
 
 	watchData := WatchEvents{
 		ListOptions: listOptions,
@@ -201,7 +201,7 @@ func (pm *PodsManager) watchEvents(ctx context.Context, lg log.Entry, registryDa
 			case event := <-eventChan:
 				registryData.UpdatePodEvents(podName, event)
 			case <-ctx.Done():
-				lg.Info("Stop watch on pod events")
+				lg.Info("stop watching pod events")
 				return
 			}
 

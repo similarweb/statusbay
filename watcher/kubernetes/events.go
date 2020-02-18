@@ -47,7 +47,7 @@ func (em *EventsManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 		for {
 			select {
 			case <-ctx.Done():
-				log.Warn("Event Manager has been shut down")
+				log.Warn("event manager has been shut down")
 				wg.Done()
 				return
 			}
@@ -61,31 +61,30 @@ func (em *EventsManager) Watch(watchData WatchEvents) <-chan EventMessages {
 
 	responses := make(chan EventMessages, 0)
 
-	watchData.LogEntry.WithField("list_option", watchData.ListOptions.String()).Debug("Watch event started")
+	watchData.LogEntry.WithField("list_option", watchData.ListOptions.String()).Debug("events watcher started")
 
 	go func() {
 		watcher, err := em.client.CoreV1().Events("").Watch(watchData.ListOptions)
 		if err != nil {
-			watchData.LogEntry.Error("Failed to watch on events")
+			watchData.LogEntry.Error("failed to watch on events")
 			return
 		}
 		for {
 			select {
 			case event, watch := <-watcher.ResultChan():
 				if !watch {
-					watchData.LogEntry.WithField("timeout", watchData.ListOptions.TimeoutSeconds).Warn("Stop watching on events, got timeout")
+					watchData.LogEntry.WithField("timeout", watchData.ListOptions.TimeoutSeconds).Warn("stop watching on events, got timeout")
 					return
 				}
 
 				eventData, ok := event.Object.(*v1.Event)
 				if !ok {
-					watchData.LogEntry.Warn("Failed to parse event object")
+					watchData.LogEntry.Warn("failed to parse event object")
 					continue
 				}
 				diff := time.Now().Sub(eventData.GetCreationTimestamp().Time).Seconds()
 				// TODO:: move to configuration settup
 				if diff < 30 {
-
 					responses <- EventMessages{
 						Message:             eventData.Message,
 						Time:                eventData.GetCreationTimestamp().Time.UnixNano(),
@@ -97,11 +96,11 @@ func (em *EventsManager) Watch(watchData WatchEvents) <-chan EventMessages {
 						"Message": eventData.Message,
 						"time":    eventData.GetCreationTimestamp(),
 						"object":  event.Object,
-					}).Debug("The event to old, and not related to the current apply")
+					}).Debug("the event to old, and not related to the current apply")
 				}
 
 			case <-watchData.Ctx.Done():
-				watchData.LogEntry.Debug("Stop events watch. Got ctx done signal")
+				watchData.LogEntry.Debug("stop events watch, got ctx done signal")
 				watcher.Stop()
 				return
 			}

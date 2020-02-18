@@ -43,7 +43,7 @@ func TestClient(t *testing.T) {
 		t.Fatal(err)
 	}
 	if res.StatusCode != http.StatusOK {
-		t.Fatalf("handler returned wrong status code: got %v want %v", res.StatusCode, http.StatusOK)
+		t.Fatalf("unexpected status code: got %v want %v", res.StatusCode, http.StatusOK)
 	}
 
 	body, _ := ioutil.ReadAll(res.Body)

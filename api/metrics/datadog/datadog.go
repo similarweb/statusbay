@@ -33,15 +33,17 @@ type Datadog struct {
 	cacheExpiration      time.Duration
 	cacheResponses       map[string]cacheResponse
 	mu                   *sync.RWMutex
+	logger               *log.Entry
 }
 
 // NewDatadogManager creates a new NewDatadog
 func NewDatadogManager(cacheCleanupInterval, cacheExpiration time.Duration, apiKey, appKey string, client ClientDescriber) *Datadog {
 
 	if client == nil {
-		log.Info("Creating Datadog client")
+		log.Info("initializing Datadog client")
 		client = datadog.NewClient(apiKey, appKey)
 	}
+
 	return &Datadog{
 
 		client:               client,
@@ -49,6 +51,7 @@ func NewDatadogManager(cacheCleanupInterval, cacheExpiration time.Duration, apiK
 		cacheExpiration:      cacheExpiration,
 		cacheResponses:       make(map[string]cacheResponse, 0),
 		mu:                   &sync.RWMutex{},
+		logger:               log.WithField("metric_engine", "datadog"),
 	}
 
 }
@@ -62,7 +65,7 @@ func (dd *Datadog) Serve(ctx context.Context, wg *sync.WaitGroup) {
 			case <-time.After(dd.cacheCleanupInterval):
 				dd.DeleteCacheExpired()
 			case <-ctx.Done():
-				log.Warn("Datatog has been shut down")
+				dd.logger.Warn("Datatog has been shut down")
 				wg.Done()
 				return
 			}
@@ -78,24 +81,24 @@ func (dd *Datadog) GetMetric(query string, from, to time.Time) ([]httpresponse.M
 
 	hashKey := dd.generateMetricHash(query, from, to)
 	if metrics, ok := dd.cacheResponses[hashKey]; ok {
-		log.Debug("Return Datadog metric from cache")
+		dd.logger.Debug("found metric in cache")
 		return metrics.data, nil
 	}
 
-	log.WithFields(log.Fields{
+	dd.logger.WithFields(log.Fields{
 		"query": query,
 		"from":  from,
 		"to":    to,
-	}).Debug("Fetch data from Datadog")
+	}).Debug("fetching metrics")
 
 	metrics, err := dd.client.QueryMetrics(from.Unix(), to.Unix(), query)
 
 	if err != nil {
-		log.WithError(err).WithFields(log.Fields{
+		dd.logger.WithError(err).WithFields(log.Fields{
 			"query": query,
 			"from":  from,
 			"to":    to,
-		}).Warn("Error when trying to fetch data from datadog")
+		}).Warn("could not get metrics")
 		return nil, err
 	}
 
@@ -136,7 +139,7 @@ func (dd *Datadog) DeleteCacheExpired() {
 
 	for index, cache := range data {
 		if now.After(cache.ttl) {
-			log.Info("Metrics cache was deleted")
+			dd.logger.Info("ttl reached, clearing cache")
 			delete(data, index)
 			continue
 		}

@@ -35,7 +35,7 @@ func (sm *ServiceManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 			case data := <-sm.Watch:
 				sm.watch(data)
 			case <-ctx.Done():
-				log.Warn("Service Manager has been shut down")
+				log.Warn("service manager has been shut down")
 				wg.Done()
 				return
 			}
@@ -49,13 +49,13 @@ func (sm *ServiceManager) watch(watchData WatchData) {
 
 	go func() {
 
-		watchData.LogEntry.Info("Start watch on service")
+		watchData.LogEntry.Info("start watching service")
 
-		watchData.LogEntry.WithField("list_option", watchData.ListOptions).Debug("Start watch on service with list options")
+		watchData.LogEntry.WithField("list_option", watchData.ListOptions).Debug("start watch on service with list options")
 
 		services, err := sm.client.CoreV1().Services(watchData.Namespace).List(watchData.ListOptions)
 		if err != nil {
-			watchData.LogEntry.WithError(err).WithField("list_option", watchData.ListOptions.String()).Error("Error when trying to start watch on services")
+			watchData.LogEntry.WithError(err).WithField("list_option", watchData.ListOptions.String()).Error("error when trying to start watch on services")
 			return
 		}
 

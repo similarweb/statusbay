@@ -15,6 +15,7 @@ import (
 
 	"k8s.io/client-go/kubernetes/fake"
 
+	"statusbay/watcher/kubernetes/common"
 	"statusbay/watcher/kubernetes/testutil"
 )
 
@@ -146,8 +147,8 @@ func TestDaemonsetWatch(t *testing.T) {
 		if application.Schema.Namespace != "pe" {
 			t.Fatalf("unexpected application namespace, got %s expected %s", application.Schema.Namespace, "pe")
 		}
-		if application.Schema.DeploymentDescription != kuberneteswatcher.DeploymentStatusDescriptionRunning {
-			t.Fatalf("unexpected status description, got %s expected %s", application.Schema.Namespace, kuberneteswatcher.DeploymentStatusDescriptionRunning)
+		if application.Schema.DeploymentDescription != common.ApplyStatusDescriptionRunning {
+			t.Fatalf("unexpected status description, got %s expected %s", application.Schema.Namespace, common.ApplyStatusDescriptionRunning)
 		}
 	})
 }

@@ -16,21 +16,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-// DeploymentStatusDescription are the various descriptions of the states a deployment can be in.
-type DeploymentStatusDescription string
-
-const (
-
-	// DeploymentStatusDescriptionRunning running deployment
-	DeploymentStatusDescriptionRunning DeploymentStatusDescription = "Deployment is running"
-
-	// DeploymentStatusDescriptionSuccessful successfully deployment
-	DeploymentStatusDescriptionSuccessful DeploymentStatusDescription = "Deployment completed successfully"
-
-	// DeploymentStatusDescriptionProgressDeadline progress deadline ended
-	DeploymentStatusDescriptionProgressDeadline DeploymentStatusDescription = "Failed due to progress deadline"
-)
-
 // DeploymentManager defined deployment struct
 type DeploymentManager struct {
 

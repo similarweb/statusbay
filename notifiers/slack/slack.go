@@ -101,12 +101,12 @@ func (sl *Manager) sendToAll(stage ReportStage, message watcherCommon.Deployment
 				// TODO:: add cluster + namespace name
 				Fields: []slackApi.AttachmentField{
 					{
-						Title: "Application Name:",
+						Title: "Application",
 						Value: message.Name,
 						Short: true,
 					},
 					{
-						Title: "Cluster:",
+						Title: "Cluster",
 						Value: message.ClusterName,
 						Short: true,
 					},

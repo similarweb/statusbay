@@ -9,8 +9,8 @@ import (
 	"statusbay/api"
 	"statusbay/api/alerts"
 	"statusbay/api/kubernetes"
-	"statusbay/api/kubernetes/testutil"
 	"statusbay/api/metrics"
+	"statusbay/api/testutil"
 	"sync"
 	"testing"
 )

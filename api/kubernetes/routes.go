@@ -161,6 +161,7 @@ func (route *RouterKubernetesManager) GetDeployment(resp http.ResponseWriter, re
 
 	response := ResponseKubernetesDeployment{
 		Name:      deployment.Name,
+		DeployBy:  deployment.DeployBy,
 		Time:      deployment.Time,
 		Status:    deployment.Status,
 		Cluster:   deployment.Cluster,

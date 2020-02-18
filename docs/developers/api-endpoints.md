@@ -244,6 +244,7 @@ $ curl \
 ```json
 {
   "Name": "example-deployment",
+  "DeployBy": "foo@demo.com",
   "Cluster": "telaviv",
   "Namespace": "staging",
   "Status": "running",

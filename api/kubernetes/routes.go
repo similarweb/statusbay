@@ -60,14 +60,14 @@ func (route *RouterKubernetesManager) Applications(resp http.ResponseWriter, req
 
 	rows, err := route.storage.Applications(queryFilter)
 	if err != nil {
-		log.Error("could not return filtered applications")
+		log.WithError(err).Error("could not return filtered applications")
 		httpresponse.JSONWrite(resp, http.StatusNotFound, httpresponse.HTTPErrorResponse{Error: "Could not return applications"})
 		return
 	}
 
 	count, err := route.storage.ApplicationsCount(allFilter)
 	if err != nil {
-		log.Error("could not return all applications")
+		log.WithError(err).Error("could not return all applications")
 		httpresponse.JSONWrite(resp, http.StatusNotFound, httpresponse.HTTPErrorResponse{Error: "Could not return all applications"})
 		return
 	}

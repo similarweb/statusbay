@@ -76,7 +76,7 @@ func TestNewRequest(t *testing.T) {
 			response, err := client.newRequest("GET", "path", test.urlValues, nil)
 
 			if err != test.expectedErr {
-				t.Fatalf("unexpected response, got %d, expected %d", err, test.expectedErr)
+				t.Fatalf("unexpected response, got %v, expected %d", err, test.expectedErr)
 			}
 
 			if mockHTTP.RequestData.URL.String() != test.expectedURL {

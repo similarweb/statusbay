@@ -186,7 +186,7 @@ func (dm *DeploymentManager) watchDeployment(ctx context.Context, cancelFn conte
 
 	watcher, err := dm.client.AppsV1().Deployments(namespace).Watch(listOptions)
 	if err != nil {
-		deploymentLog.Error("could not start deployments watcher")
+		deploymentLog.WithError(err).Error("could not start deployments watcher")
 		return
 	}
 

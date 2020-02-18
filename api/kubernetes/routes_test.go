@@ -53,7 +53,7 @@ func TestApplicationsData(t *testing.T) {
 
 			ms.api.Router().ServeHTTP(rr, req)
 			if rr.Code != test.expectedStatusCode {
-				t.Fatalf("unexpected status code: got %v want %v", rr.Code, test.expectedStatusCode)
+				t.Fatalf("unexpected status code: got %d want %d", rr.Code, test.expectedStatusCode)
 			}
 
 			response := &kubernetes.ResponseKubernetesApplicationsCount{}
@@ -95,7 +95,7 @@ func TestApplicationsFiltersData(t *testing.T) {
 
 			ms.api.Router().ServeHTTP(rr, req)
 			if rr.Code != test.expectedStatusCode {
-				t.Fatalf("unexpected status code: got %v want %v", rr.Code, test.expectedStatusCode)
+				t.Fatalf("unexpected status code: got %d want %d", rr.Code, test.expectedStatusCode)
 			}
 
 			response := []string{}

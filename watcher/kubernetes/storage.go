@@ -114,7 +114,7 @@ func (my *MySQLStorage) GetAppliesByStatus(status common.DeploymentStatus) (map[
 		var resourceDetails DBSchema
 		err := json.Unmarshal([]byte(resource.Details), &resourceDetails)
 		if err != nil {
-			my.logger.WithError(err).WithFields(log.Fields{}).Error("could not parsing resource results")
+			my.logger.WithError(err).Error("could not parsing resource results")
 			continue
 		}
 		resources[resource.ApplyId] = resourceDetails

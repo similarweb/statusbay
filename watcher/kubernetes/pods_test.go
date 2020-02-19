@@ -43,7 +43,7 @@ func NewPodManagerMock() (*fake.Clientset, *kuberneteswatcher.PodsManager) {
 func TestPodWatch(t *testing.T) {
 	registry, storageMock := NewRegistryMock()
 
-	registryRow := registry.NewApplication("nginx", "default", map[string]string{}, common.DeploymentStatusRunning)
+	registryRow := registry.NewApplication("nginx", "default", map[string]string{}, common.ApplyStatusRunning)
 
 	apply := kuberneteswatcher.ApplyEvent{
 		Event:        "create",
@@ -149,7 +149,7 @@ func TestPodWatch(t *testing.T) {
 func TestPodWatchEvent(t *testing.T) {
 	registry, storageMock := NewRegistryMock()
 
-	registryRow := registry.NewApplication("nginx", "default", map[string]string{}, common.DeploymentStatusRunning)
+	registryRow := registry.NewApplication("nginx", "default", map[string]string{}, common.ApplyStatusRunning)
 
 	apply := kuberneteswatcher.ApplyEvent{
 		Event:        "create",

@@ -16,21 +16,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-// DeploymentStatusDescription are the various descriptions of the states a deployment can be in.
-type DeploymentStatusDescription string
-
-const (
-
-	// DeploymentStatusDescriptionRunning running deployment
-	DeploymentStatusDescriptionRunning DeploymentStatusDescription = "Deployment is running"
-
-	// DeploymentStatusDescriptionSuccessful successfully deployment
-	DeploymentStatusDescriptionSuccessful DeploymentStatusDescription = "Deployment completed successfully"
-
-	// DeploymentStatusDescriptionProgressDeadline progress deadline ended
-	DeploymentStatusDescriptionProgressDeadline DeploymentStatusDescription = "Failed due to progress deadline"
-)
-
 // DeploymentManager defined deployment struct
 type DeploymentManager struct {
 
@@ -123,6 +108,10 @@ func (dm *DeploymentManager) watchDeployments(ctx context.Context) {
 					continue
 				}
 
+				log.WithFields(log.Fields{
+					"name":      deployment.GetName(),
+					"namespace": deployment.GetNamespace(),
+				}).Debug("deployment event detected")
 				deploymentName := GetApplicationName(deployment.GetAnnotations(), deployment.GetName())
 
 				if common.IsSupportedEventType(event.Type) {
@@ -142,6 +131,9 @@ func (dm *DeploymentManager) watchDeployments(ctx context.Context) {
 					if applicationRegistry == nil {
 						continue
 					}
+					deploymentLog := applicationRegistry.Log()
+					deploymentLog.WithField("event", event.Type).Info("adding deployment to apply registry")
+
 					registryDeployment := dm.AddNewDeployment(apply, applicationRegistry, *deployment.Spec.Replicas)
 
 					deploymentWatchListOptions := metaV1.ListOptions{LabelSelector: labels.SelectorFromSet(deployment.GetLabels()).String()}
@@ -151,7 +143,7 @@ func (dm *DeploymentManager) watchDeployments(ctx context.Context) {
 					go dm.watchDeployment(
 						applicationRegistry.ctx,
 						applicationRegistry.cancelFn,
-						applicationRegistry.Log(),
+						deploymentLog,
 						registryDeployment,
 						deploymentWatchListOptions,
 						deployment.GetNamespace(),

@@ -52,7 +52,7 @@ func NewReplicasetMock(client *fake.Clientset) *kuberneteswatcher.ReplicaSetMana
 
 // 	registry, storageMock, _ := NewRegistryMock()
 
-// 	registryDeploymentData := createMockDeploymentData(registry, kuberneteswatcher.DeploymentStatusRunning)
+// 	registryDeploymentData := createMockDeploymentData(registry, kuberneteswatcher.ApplyStatusRunning)
 // lg := log.WithField("test", "TestReplicasetWatch")
 // 	ctx := context.Background()
 
@@ -113,7 +113,7 @@ func TestInvalidSelector(t *testing.T) {
 
 	registry, storageMock := NewRegistryMock()
 
-	registryRow := registry.NewApplication("nginx", "default", map[string]string{}, common.DeploymentStatusRunning)
+	registryRow := registry.NewApplication("nginx", "default", map[string]string{}, common.ApplyStatusRunning)
 
 	apply := kuberneteswatcher.ApplyEvent{
 		Event:        "create",

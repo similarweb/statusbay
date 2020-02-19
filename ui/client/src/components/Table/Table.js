@@ -16,6 +16,9 @@ import { useTranslation } from 'react-i18next';
 import * as PropTypes from 'prop-types';
 import Button from '@material-ui/core/Button';
 import makeStyles from '@material-ui/core/styles/makeStyles';
+import numeral from 'numeral';
+import ArrowBackIcon from '@material-ui/icons/ArrowBack';
+import Typography from '@material-ui/core/Typography';
 import MultiSelect from './Filters/MultiSelect';
 import TableStateless from './TableStateless';
 import CellStatus from './Cells/CellStatus';
@@ -30,7 +33,6 @@ import SearchField from './Filters/SearchField';
 import NoData from './NoData';
 import { useApplicationsData } from '../../Hooks/ApplicationsHooks';
 import ToggleFilter from './Filters/ToggleFilter';
-import PageTitle from '../Layout/PageTitle';
 
 const parseSortBy = (sortby = '|') => sortby.split('|');
 const paramToArray = (param = '') => (param ? param.split(',') : []);
@@ -189,7 +191,11 @@ const Table = ({
   const showNoData = !loading && (!tableData || tableData.rows.length === 0);
   const getTitle = useMemo(() => {
     if (tableData && tableData.totalCount > 0) {
-      return `${title} (${tableData.totalCount})`;
+      return (
+        <>
+          <Typography variant="h3" component="div">{title} <Typography variant="body1">({numeral(tableData.totalCount).format('0,0')})</Typography></Typography>
+        </>
+      );
     }
     return title;
   }, [title, tableData]);
@@ -198,9 +204,7 @@ const Table = ({
       {
         title && (
         <Box m={3}>
-          <PageTitle>
-            {getTitle}
-          </PageTitle>
+          {getTitle}
         </Box>
         )
       }

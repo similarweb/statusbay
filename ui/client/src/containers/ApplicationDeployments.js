@@ -4,7 +4,6 @@ import {
   useHistory,
   useParams,
 } from 'react-router-dom';
-import PageTitle from '../components/Layout/PageTitle';
 import Table from '../components/Table/Table';
 import PageContent from '../components/Layout/PageContent';
 

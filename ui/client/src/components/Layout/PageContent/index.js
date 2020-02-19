@@ -5,7 +5,7 @@ import Breadcrumbs from '../Breadcrumbs/index';
 
 const PageContent = ({ children }) => (
   <div>
-    <Box m={1}><Breadcrumbs /></Box>
+    {/*<Box m={1}><Breadcrumbs /></Box>*/}
     {children}
   </div>
 );

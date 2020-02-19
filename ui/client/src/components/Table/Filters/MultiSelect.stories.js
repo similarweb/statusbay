@@ -3,7 +3,7 @@ import { text } from '@storybook/addon-knobs';
 import MultiSelect from './MultiSelect';
 
 export default {
-  title: 'UI|Filters/Multi Select',
+  title: 'Table|Filters/Multi Select',
 };
 export const ToStory = () => {
   const [selectedValues, setSelectedValues] = useState([]);

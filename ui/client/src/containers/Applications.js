@@ -1,14 +1,14 @@
 import React, { useMemo } from 'react';
 import Box from '@material-ui/core/Box';
+import { useHistory } from 'react-router-dom';
 import PageTitle from '../components/Layout/PageTitle';
 import Table from '../components/Table/Table';
 import PageContent from '../components/Layout/PageContent';
-import { useHistory } from 'react-router-dom';
 
 const Applications = () => {
   const history = useHistory();
-  const onRowClick = (row) => () => {
-    // redirect to application deployment page
+  const onRowClick = (row) => (event) => {
+    // redirect to application deployments page
     history.push({
       pathname: `/applications/${row.name}`,
     });
@@ -18,14 +18,7 @@ const Applications = () => {
   }}, []);
   return (
     <PageContent>
-      <Box m={3}>
-        <PageTitle>
-        Applications
-        </PageTitle>
-      </Box>
-      <Box>
-        <Table onRowClick={onRowClick} filters={filters} />
-      </Box>
+      <Table onRowClick={onRowClick} filters={filters} title="Applications" />
     </PageContent>
   );
 };

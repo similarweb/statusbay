@@ -12,7 +12,7 @@ const ApplicationDeployments = () => {
   const { appName } = useParams();
   const history = useHistory();
   const onRowClick = (row) => () => {
-    // redirect to application deployment page
+    // redirect to deployment details page
     history.push({
       pathname: `/application/${row.id}`,
     });
@@ -21,18 +21,10 @@ const ApplicationDeployments = () => {
     distinct: true,
     name: appName,
   }), []);
+  const title = `Application: ${appName}`;
   return (
     <PageContent>
-      <Box m={3}>
-        <PageTitle>
-                  Application:
-          {' '}
-          {appName}
-        </PageTitle>
-      </Box>
-      <Box>
-        <Table hideNameFilter={true} filters={filters} onRowClick={onRowClick} />
-      </Box>
+      <Table hideNameFilter={true} filters={filters} onRowClick={onRowClick} title={title} />
     </PageContent>
   );
 };

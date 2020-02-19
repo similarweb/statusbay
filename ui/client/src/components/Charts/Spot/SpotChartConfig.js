@@ -66,7 +66,7 @@ export default (series) => {
       label: {
         enabled: false,
       },
-      data: buildData(series, theme.palette.error[theme.palette.type]),
+      data: buildData(series, theme.palette.error.main),
       dataLabels: {
         enabled: true,
       },

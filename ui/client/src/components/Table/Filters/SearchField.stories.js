@@ -4,7 +4,7 @@ import { action } from '@storybook/addon-actions';
 import SearchField from './SearchField';
 
 export default {
-  title: 'UI|Filters/Search Field',
+  title: 'Table|Filters/Search Field',
 };
 export const ToStory = () => <SearchField label={text('Label', 'Search')} onChange={action('Change')} defaultValue="" />;
 

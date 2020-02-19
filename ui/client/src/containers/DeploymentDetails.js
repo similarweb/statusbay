@@ -9,6 +9,7 @@ import {
   useParams,
 } from 'react-router-dom';
 import LinearProgress from '@material-ui/core/LinearProgress';
+import * as moment from 'moment';
 import PageTitle from '../components/Layout/PageTitle';
 import PageContent from '../components/Layout/PageContent';
 import ReplicasStats from '../DataComponents/ReplicasStats';
@@ -21,7 +22,7 @@ import DeploymentEvents from '../DataComponents/DeploymentEvents';
 import {
   DeploymentDetailsContextProvider,
 } from '../context/DeploymentDetailsContext';
-import * as moment from 'moment';
+import ArrowBackIcon from '@material-ui/icons/ArrowBack';
 
 const DeploymentDetails = () => {
   const location = useLocation();
@@ -29,7 +30,7 @@ const DeploymentDetails = () => {
   const { tab = '0' } = querystring.parse(location.search);
   const { deploymentId } = useParams();
   const handleTabChange = (event, newValue) => {
-    history.push({
+    history.replace({
       pathname: location.pathname,
       search: `?${new URLSearchParams({
         tab: newValue,
@@ -45,11 +46,20 @@ const DeploymentDetails = () => {
               <Grid container spacing={2} justify="space-between" alignContent="center">
                 <Grid item xs={12} xl={6}>
                   <PageTitle>
-                    {data.name}
-                    <Typography variant="body2">Namespace: {data.namespace}</Typography>
-                    <Typography variant="body2">Cluster: {data.cluster}</Typography>
-                    <Typography variant="body2">{moment.unix(data.time).utc().format('DD/MM/YYYY HH:MM:ss')}</Typography>
+                    <ArrowBackIcon fontSize="large" />{data.name}
                   </PageTitle>
+                  <Box mt={1}>
+                    <Typography variant="body2">
+Namespace:
+                      {data.namespace}
+                    </Typography>
+                    <Typography variant="body2">
+Cluster:
+                      {data.cluster}
+                    </Typography>
+                    <Typography variant="body2">{moment.unix(data.time).utc().format('DD/MM/YYYY HH:MM:ss')}</Typography>
+                  </Box>
+
                 </Grid>
                 <Grid container xs={12} xl={6} alignContent="center" direction="row-reverse">
                   <Grid item>
@@ -59,10 +69,10 @@ const DeploymentDetails = () => {
               </Grid>
             </Box>
             <Kinds selectedTab={parseInt(tab)} onTabChange={handleTabChange} />
-            <Box mt={2} mb={2}>
+            <Box mt={3} mb={3}>
               <ReplicasStats kindIndex={parseInt(tab)} />
             </Box>
-            <Box mt={2} mb={2}>
+            <Box mt={3} mb={3}>
               <PodEvents kindIndex={parseInt(tab)} />
               {/* <Metrics kindIndex={parseInt(tab)} /> */}
               <DeploymentEvents kindIndex={parseInt(tab)} />

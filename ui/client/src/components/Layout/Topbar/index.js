@@ -14,7 +14,7 @@ const Topbar = ({ onChangeThemeType, isDarkMode, className }) => (
     <Toolbar>
       <Box width="100%" display="flex" alignItems="center" justifyContent="space-between">
         <Link to="/"><img src={logo} height={59} alt="" /></Link>
-        <Box display="flex" alignItems="center">
+        <Box display="flex" alignItems="center" width={150} justifyContent="space-between">
           <FormControlLabel
             control={(
               <Switch
@@ -22,7 +22,7 @@ const Topbar = ({ onChangeThemeType, isDarkMode, className }) => (
                 onChange={onChangeThemeType}
               />
                           )}
-            label=""
+            label="Dark"
           />
           <a href="https://github.com/similarweb/statusbay"><GitHubIcon /></a>
         </Box>

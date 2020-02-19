@@ -15,7 +15,7 @@ const SpotChart = ({ series, deploymentTime, currentTime }) => {
   let options = SpotChartConfig(series);
 
   options = addPlotLine({
-    color: theme.palette.error[theme.palette.type],
+    color: theme.palette.error.main,
     value: deploymentTime,
     label: {
       align: 'center',

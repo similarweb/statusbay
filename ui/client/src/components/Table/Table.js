@@ -1,7 +1,7 @@
 import React, {
   useCallback,
   useContext,
-  useEffect, useState,
+  useEffect, useMemo, useState,
 } from 'react';
 import TableContainer from '@material-ui/core/TableContainer';
 import Paper from '@material-ui/core/Paper';
@@ -15,6 +15,7 @@ import TablePagination from '@material-ui/core/TablePagination';
 import { useTranslation } from 'react-i18next';
 import * as PropTypes from 'prop-types';
 import Button from '@material-ui/core/Button';
+import makeStyles from '@material-ui/core/styles/makeStyles';
 import MultiSelect from './Filters/MultiSelect';
 import TableStateless from './TableStateless';
 import CellStatus from './Cells/CellStatus';
@@ -29,6 +30,7 @@ import SearchField from './Filters/SearchField';
 import NoData from './NoData';
 import { useApplicationsData } from '../../Hooks/ApplicationsHooks';
 import ToggleFilter from './Filters/ToggleFilter';
+import PageTitle from '../Layout/PageTitle';
 
 const parseSortBy = (sortby = '|') => sortby.split('|');
 const paramToArray = (param = '') => (param ? param.split(',') : []);
@@ -39,7 +41,15 @@ const paramToNumber = (value) => {
   return null;
 };
 
-const Table = ({ hideNameFilter, onRowClick, filters }) => {
+const useStyles = makeStyles((theme) => ({
+  row: {
+    height: 49,
+  },
+}));
+
+const Table = ({
+  hideNameFilter, onRowClick, filters, title,
+}) => {
   const { appSettings, dispatch } = useContext(AppSettingsContext);
   const [tableFilters, setTableFilters, resetTableFilters] = useTableFilters({
     cluster: {
@@ -76,11 +86,9 @@ const Table = ({ hideNameFilter, onRowClick, filters }) => {
       transformValue: paramToNumber,
       defaultValue: appSettings.rowsPerPage,
     },
-    ...Object.fromEntries(Object.entries(filters).map(([name, value]) => {
-      return [name, {
-        defaultValue: value,
-      }];
-    })),
+    ...Object.fromEntries(Object.entries(filters).map(([name, value]) => [name, {
+      defaultValue: value,
+    }])),
   });
   const { data: tableData, loading } = useApplicationsData(tableFilters);
   const { t } = useTranslation();
@@ -102,20 +110,22 @@ const Table = ({ hideNameFilter, onRowClick, filters }) => {
 
   const handleDistinctChange = (event) => {
     setTableFilters('distinct', event.target.checked);
-  }
+  };
 
   const resetFilters = () => {
     resetTableFilters();
   };
 
-  const onSort = (id, direction) => {
+  const onSort = useCallback((id, direction) => {
     setTableFilters('sortBy', `${id}|${direction}`);
-  };
-  const tableConfig = {
+  }, []);
+  const classes = useStyles();
+  const tableConfig = useMemo(() => ({
     row: {
       render: (row, index) => ({ children }) => (
         <TableRow
-          onClick={onRowClick(row)}
+          classes={{ root: classes.row }}
+          onClickCapture={onRowClick(row)}
           hover
           key={`${row.name}-${index}`}
         >
@@ -163,25 +173,40 @@ const Table = ({ hideNameFilter, onRowClick, filters }) => {
       {
         id: 'details',
         name: '',
-        cell: (row) => (
+        cell: (row) => row.status !== 'deleted' && (
           <Link
             to={`/application/${row.id}`}
           >
             <Box display="flex" alignItems="center">
-              <Button variant="outlined" color="primary">Details</Button>
+              <Button variant="contained" color="primary">Details</Button>
             </Box>
           </Link>
         ),
         sortable: false,
       },
     ],
-  };
+  }), []);
   const showNoData = !loading && (!tableData || tableData.rows.length === 0);
+  const getTitle = useMemo(() => {
+    if (tableData && tableData.totalCount > 0) {
+      return `${title} (${tableData.totalCount})`;
+    }
+    return title;
+  }, [title, tableData]);
   return (
-    <Box m={2}>
-      <Paper>
-        <TableContainer component={Paper}>
-          <Toolbar>
+    <div>
+      {
+        title && (
+        <Box m={3}>
+          <PageTitle>
+            {getTitle}
+          </PageTitle>
+        </Box>
+        )
+      }
+      <Box m={2}>
+        <Paper>
+          <TableContainer component={Paper}>
             <Box m={1} display="flex" flexDirection="column">
               <Box display="flex" alignItems="center">
                 {
@@ -234,44 +259,46 @@ const Table = ({ hideNameFilter, onRowClick, filters }) => {
                 <Button variant="contained" color="secondary" onClick={resetFilters}>Reset</Button>
               </Box>
             </Box>
-          </Toolbar>
-          <TableStateless
-            data={tableData && tableData.rows}
-            config={tableConfig}
-            page={parseInt(tableFilters.page)}
-            loading={loading}
-            sortBy={sortByFiled}
-            sortDirection={sortDirection}
-            onSort={onSort}
-          />
-          {
-            !(loading || !tableData || !tableData.rows.length) && (
-              <TablePagination
-                rowsPerPageOptions={[20, 50, 100]}
-                rowsPerPage={tableFilters.rowsPerPage}
-                onChangeRowsPerPage={handleRowsPerPageChange}
-                count={tableData && tableData.totalCount}
-                page={tableFilters.page}
-                onChangePage={handlePageChange}
-              />
-            )
-          }
-          {
-            showNoData && <Box m={2}><NoData /></Box>
-          }
-        </TableContainer>
-      </Paper>
-    </Box>
+            <TableStateless
+              data={tableData && tableData.rows}
+              config={tableConfig}
+              page={parseInt(tableFilters.page)}
+              loading={loading}
+              sortBy={sortByFiled}
+              sortDirection={sortDirection}
+              onSort={onSort}
+            />
+            {
+              !(loading || !tableData || !tableData.rows.length) && (
+                <TablePagination
+                  rowsPerPageOptions={[20, 50, 100]}
+                  rowsPerPage={tableFilters.rowsPerPage}
+                  onChangeRowsPerPage={handleRowsPerPageChange}
+                  count={tableData && tableData.totalCount}
+                  page={tableFilters.page}
+                  onChangePage={handlePageChange}
+                />
+              )
+            }
+            {
+              showNoData && <Box m={2}><NoData /></Box>
+            }
+          </TableContainer>
+        </Paper>
+      </Box>
+    </div>
   );
 };
 Table.propTypes = {
   hideNameFilter: PropTypes.bool,
   onRowClick: PropTypes.func,
   filters: PropTypes.object,
+  title: PropTypes.string,
 };
 Table.defaultProps = {
   hideNameFilter: false,
   onRowClick: () => () => null,
   filters: {},
+  title: null,
 };
 export default Table;

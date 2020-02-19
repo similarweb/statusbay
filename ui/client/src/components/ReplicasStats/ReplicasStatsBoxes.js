@@ -16,7 +16,7 @@ const useStyles = makeStyles((theme) => ({
     color: theme.palette.text.secondary,
   },
   card: {
-    backgroundColor: (props) => (props.error ? theme.palette.error[theme.palette.type] : null),
+    backgroundColor: (props) => (props.error ? theme.palette.error.main : null),
   },
 }));
 

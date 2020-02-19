@@ -27,6 +27,7 @@ const useStyles = makeStyles((theme) => {
     },
     menu: {
       minWidth: 200,
+      maxHeight: 400,
     },
     placeholder: {
       opacity: light ? 0.42 : 0.5,
@@ -43,7 +44,7 @@ const useStyles = makeStyles((theme) => {
       },
     },
     menuItem: {
-      paddingRight: theme.spacing(1),
+      paddingRight: theme.spacing(3),
       paddingLeft: theme.spacing(1),
     },
   });

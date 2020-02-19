@@ -13,7 +13,7 @@ import TimelineErrorBox from './TimelineErrorBox';
 const useStyles = makeStyles((theme) => ({
   root: {
     '& svg': {
-      transform: 'scale(0.6)'
+      transform: 'scale(0.6)',
     },
   },
   label: {
@@ -22,7 +22,13 @@ const useStyles = makeStyles((theme) => ({
     },
   },
   error: {
-    color: theme.palette.error[theme.palette.type],
+    color: theme.palette.error.main,
+    '& svg': {
+      transform: 'scale(0.8)',
+    }
+  },
+  date: {
+    marginRight: 20,
   },
 }));
 const TimelineItem = ({
@@ -41,7 +47,10 @@ const TimelineItem = ({
       >
         <Box display="flex" justifyContent="space-between">
           <Typography variant="body2">{title}</Typography>
-          <Typography variant="body2">{moment(time / 1000000).format('DD/MM/YYYY HH:MM:SS')}</Typography>
+          <Box display="flex" alignItems="center">
+            <Typography classes={{ root: classes.date }} variant="body2">{moment(time / 1000000).format('DD/MM/YYYY')}</Typography>
+            <Typography variant="body2">{moment(time / 1000000).format('HH:MM:SS')}</Typography>
+          </Box>
         </Box>
       </StepLabel>
       {

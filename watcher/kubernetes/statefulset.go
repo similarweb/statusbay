@@ -266,7 +266,7 @@ func (ssm *StatefulsetManager) AddNewStatefulset(data ApplyEvent, applicationReg
 		Pods:                    make(map[string]DeploymenPod, 0),
 		ProgressDeadlineSeconds: GetProgressDeadlineApply(data.Annotations, ssm.maxDeploymentTime),
 	}
-	applicationRegistry.DBSchema.Resources.Statefulsets[data.ApplyName] = dd
+	applicationRegistry.DBSchema.Resources.Statefulsets[data.ResourceName] = dd
 
 	log.Info("daemonset was associated to the application")
 

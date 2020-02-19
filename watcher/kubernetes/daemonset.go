@@ -262,7 +262,7 @@ func (dsm *DaemonsetManager) AddNewDaemonset(data ApplyEvent, applicationRegistr
 		Pods:                    make(map[string]DeploymenPod, 0),
 		ProgressDeadlineSeconds: GetProgressDeadlineApply(data.Annotations, dsm.maxDeploymentTime),
 	}
-	applicationRegistry.DBSchema.Resources.Daemonsets[data.ApplyName] = dd
+	applicationRegistry.DBSchema.Resources.Daemonsets[data.ResourceName] = dd
 
 	log.Info("daemonset was associated to the application")
 

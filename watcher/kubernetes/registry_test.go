@@ -364,7 +364,7 @@ func TestSave(t *testing.T) {
 	apply2 := kuberneteswatcher.ApplyEvent{
 		Event:        "create",
 		ApplyName:    "nginx-deployment1",
-		ResourceName: "resourceName",
+		ResourceName: "resourceName2",
 		Namespace:    "default",
 		Kind:         "deployment",
 		Hash:         1234,

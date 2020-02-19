@@ -6,6 +6,7 @@ export default (series, plotlines) => {
   const isDarkMode = theme.palette.type === 'dark';
   return ({
     chart: {
+      marginTop: 20,
       zoomType: 'x',
       backgroundColor: isDarkMode ? '#424242' : '#ffffff',
     },
@@ -24,10 +25,19 @@ export default (series, plotlines) => {
         },
       },
       plotLines: plotlines.map((line) => ({
-        color: theme.palette.error[theme.palette.type],
+        color: theme.palette.error.main,
         dashStyle: 'dash',
         value: line,
         width: 1,
+        label: {
+          align: 'center',
+          rotation: 0,
+          x: 0,
+          y: -10,
+          formatter() {
+            return 'Deployment time: ';
+          },
+        },
       })),
     },
     yAxis: {
@@ -51,7 +61,6 @@ export default (series, plotlines) => {
         marker: {
           enabled: false,
         },
-
         lineWidth: 1,
         states: {
           hover: {

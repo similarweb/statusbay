@@ -6,6 +6,7 @@ import PropTypes from 'prop-types';
 import CellStatus from '../Table/Cells/CellStatus';
 import TableStateless from '../Table/TableStateless';
 import Box from '@material-ui/core/Box';
+import ArrowForwardIosIcon from '@material-ui/icons/ArrowForwardIos';
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -21,7 +22,7 @@ const useStyles = makeStyles((theme) => ({
   marker: {
     width: 10,
     height: 10,
-    backgroundColor: `${theme.palette.error[theme.palette.type]}`,
+    backgroundColor: `${theme.palette.error.main}`,
     borderRadius: `50%`,
     marginRight: 12
   }

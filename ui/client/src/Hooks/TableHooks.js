@@ -12,7 +12,7 @@ const useTableFilter = (name, valueTransformer, defaultValue) => {
   };
 
   useEffect(() => {
-    history.push({
+    history.replace({
       pathname: location.pathname,
       search: `?${new URLSearchParams({
         ...params,
@@ -87,7 +87,7 @@ export const useTableFilters = (filtersConfig = {}) => {
     const urlParams = {
       ...state,
     };
-    history.push({
+    history.replace({
       pathname: location.pathname,
       search: `?${getUrlParams(urlParams)}`,
     });

@@ -1,7 +1,18 @@
 import API from './index';
 
+const defaultMetaData = {
+  allClusters: [],
+  allNamespaces: [],
+  allStatuses: [],
+}
+
 export const getMetaData = async () => {
-  const { data: { allClusters, allNamespaces, allStatuses } } = await API('/api/metadata');
+  let { data } = await API('/api/metadata');
+  // use default meta data when server is down, or in case of error
+  if (!data) {
+    data = defaultMetaData
+  }
+  const { allClusters, allNamespaces, allStatuses } = data;
   return {
     clusters: allClusters,
     namespaces: allNamespaces,

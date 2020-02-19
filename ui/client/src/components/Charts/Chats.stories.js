@@ -47,6 +47,7 @@ const mock2 = [
 export const LineChartStory = () => (
   <LineChart
     series={mock}
+    deploymentTime={1577738820000}
   />
 );
 LineChartStory.story = 'Line Chart';

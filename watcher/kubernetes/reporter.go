@@ -52,13 +52,13 @@ func (re *ReporterManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 			case request := <-re.DeploymentFinished:
 				re.deploymentFinish(request)
 			case <-ctx.Done():
-				log.Warn("Reporter has been shut down")
+				log.Warn("reporter has been shut down")
 				wg.Done()
 				return
 			}
 		}
 	}()
-	log.Info("Reporter started")
+	log.Info("reporter started")
 
 }
 

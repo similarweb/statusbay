@@ -21,25 +21,27 @@ type ClientDescriber interface {
 
 // Prometheus is responsible for communicate with datadog and cache storage save/cleanup
 type Prometheus struct {
-	api ClientDescriber
+	api    ClientDescriber
+	logger *log.Entry
 }
 
 // NewPrometheusManager creates a new NewDatadog
 func NewPrometheusManager(address string, v1api ClientDescriber) *Prometheus {
 
 	if v1api == nil {
-		log.Info("Creating Prometheus client")
+		log.Info("initializing Prometheus client")
 		client, err := api.NewClient(api.Config{
 			Address: address,
 		})
 		if err != nil {
-			log.WithError(err).Fatal("Error creating client")
+			log.WithError(err).Fatal("could not create Prometheus client")
 		}
 
 		v1api = v1.NewAPI(client)
 	}
 	return &Prometheus{
-		api: v1api,
+		api:    v1api,
+		logger: log.WithField("metric_engine", "prometheus"),
 	}
 
 }
@@ -51,7 +53,7 @@ func (pm *Prometheus) Serve(ctx context.Context, wg *sync.WaitGroup) {
 		for {
 			select {
 			case <-ctx.Done():
-				log.Warn("Prometheus has been shut down")
+				pm.logger.Warn("Prometheus has been shut down")
 				wg.Done()
 				return
 			}
@@ -62,11 +64,11 @@ func (pm *Prometheus) Serve(ctx context.Context, wg *sync.WaitGroup) {
 
 // GetMetric communicates with Prometheus
 func (pm *Prometheus) GetMetric(query string, from, to time.Time) ([]httpresponse.MetricsQuery, error) {
-	log.WithFields(log.Fields{
+	pm.logger.WithFields(log.Fields{
 		"query": query,
 		"from":  from,
 		"to":    to,
-	}).Debug("Fetch data from Prometheus")
+	}).Debug("fetching metrics")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -79,11 +81,11 @@ func (pm *Prometheus) GetMetric(query string, from, to time.Time) ([]httprespons
 
 	val, _, err := pm.api.QueryRange(ctx, query, r)
 	if err != nil {
-		log.WithError(err).WithFields(log.Fields{
+		pm.logger.WithError(err).WithFields(log.Fields{
 			"query": query,
 			"from":  from,
 			"to":    to,
-		}).Warn("Error when trying to fetch data from Prometheus")
+		}).Warn("could not get metrics")
 		return nil, err
 	}
 
@@ -107,7 +109,7 @@ func (pm *Prometheus) GetMetric(query string, from, to time.Time) ([]httprespons
 		for _, dp := range metric.Values {
 			dpf, err := strconv.ParseFloat(dp.Value.String(), 64)
 			if err != nil {
-				log.WithError(err).Warn("could not convert datapoint to float")
+				pm.logger.WithError(err).Warn("could not convert datapoint to float")
 				continue
 			}
 

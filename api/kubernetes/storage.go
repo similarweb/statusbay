@@ -17,6 +17,7 @@ type Storage interface {
 
 type MySQLStorage struct {
 	client *state.MySQLManager
+	logger *log.Entry
 }
 
 //NewMysql create new MyySQL client
@@ -24,6 +25,7 @@ func NewMysql(db *state.MySQLManager) *MySQLStorage {
 
 	return &MySQLStorage{
 		client: db,
+		logger: log.WithField("storage_engine", "mysql"),
 	}
 }
 
@@ -34,7 +36,7 @@ func (my *MySQLStorage) ApplicationsCount(queryFillter FilterApplications) (int6
 	var count int64
 
 	if err := queryBuilder.Table(dummy.TableName()).Select("count(apply_id)").Count(&count).Error; err != nil {
-		log.WithError(err).Error("MYSQL: could not fetch application list for count")
+		my.logger.WithError(err).Error("could not fetch application list count")
 		return 0, err
 	}
 	return count, nil
@@ -47,7 +49,7 @@ func (my *MySQLStorage) Applications(queryFillter FilterApplications) (*[]state.
 	queryBuilder := my.builderApplications(queryFillter)
 
 	if err := queryBuilder.Find(table).Error; err != nil {
-		log.WithError(err).Error("MYSQL: could not fetch application list")
+		my.logger.WithError(err).Error("could not fetch application list")
 		return nil, err
 	}
 	return table, nil
@@ -63,10 +65,10 @@ func (my *MySQLStorage) GetUniqueFieldValues(tableName, columnName string) ([]st
 	defer rows.Close()
 
 	if err != nil {
-		log.WithError(err).WithFields(log.Fields{
+		my.logger.WithError(err).WithFields(log.Fields{
 			"table_name":  tableName,
 			"column_name": columnName,
-		}).Error("MYSQL: could not fetch uniq fields value")
+		}).Error("could not fetch unique field values")
 		return values, err
 	}
 
@@ -86,9 +88,9 @@ func (my *MySQLStorage) GetDeployment(applyID string) (state.TableKubernetes, er
 	deploymentRow := &state.TableKubernetes{}
 
 	if err := my.client.DB.Where(&state.TableKubernetes{ApplyId: applyID}).First(deploymentRow).Error; err != nil {
-		log.WithError(err).WithFields(log.Fields{
+		my.logger.WithError(err).WithFields(log.Fields{
 			"apply_id": applyID,
-		}).Error("MySQL: Error when trying to get deployment")
+		}).Error("could not get deployment")
 		return empty, err
 	}
 

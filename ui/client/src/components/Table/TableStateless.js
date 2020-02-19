@@ -7,6 +7,7 @@ import PropTypes from 'prop-types';
 import TableCell from '@material-ui/core/TableCell';
 import Skeleton from '@material-ui/lab/Skeleton';
 import TableSortLabel from '@material-ui/core/TableSortLabel';
+import makeStyles from '@material-ui/core/styles/makeStyles';
 
 const renderRows = (config, data, page) => data.map((row, rowIndex) => {
   const RowComponent = config.row.render(row, rowIndex);
@@ -24,7 +25,7 @@ const renderLoadingState = (config) => [...Array(10).keys()].map((index) => (
     {
         config.cells.map((cell) => (
           <TableCell>
-            <Skeleton variant="rect" width={150} height={37} />
+            <Skeleton variant="rect" width={150} height={27} />
           </TableCell>
         ))
       }

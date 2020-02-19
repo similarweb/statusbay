@@ -52,7 +52,7 @@ func NewReplicasetMock(client *fake.Clientset) *kuberneteswatcher.ReplicaSetMana
 
 // 	registry, storageMock, _ := NewRegistryMock()
 
-// 	registryDeploymentData := createMockDeploymentData(registry, kuberneteswatcher.DeploymentStatusRunning)
+// 	registryDeploymentData := createMockDeploymentData(registry, kuberneteswatcher.ApplyStatusRunning)
 // lg := log.WithField("test", "TestReplicasetWatch")
 // 	ctx := context.Background()
 
@@ -113,7 +113,7 @@ func TestInvalidSelector(t *testing.T) {
 
 	registry, storageMock := NewRegistryMock()
 
-	registryRow := registry.NewApplication("nginx", "default", map[string]string{}, common.DeploymentStatusRunning)
+	registryRow := registry.NewApplication("nginx", "default", map[string]string{}, common.ApplyStatusRunning)
 
 	apply := kuberneteswatcher.ApplyEvent{
 		Event:        "create",
@@ -152,7 +152,7 @@ func TestInvalidSelector(t *testing.T) {
 	time.Sleep(time.Second * 1)
 
 	time.Sleep(2 * time.Second)
-	deployment := storageMock.MockWriteDeployment["1"].Schema.Resources.Deployments["application"]
+	deployment := storageMock.MockWriteDeployment["1"].Schema.Resources.Deployments["resourceName"]
 	if len(deployment.Pods) != 0 {
 		t.Fatalf("unexpected pod count watch event count, got %d expected %d", len(deployment.Pods), 0)
 	}

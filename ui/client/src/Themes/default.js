@@ -1,8 +1,13 @@
 import createMuiTheme from '@material-ui/core/styles/createMuiTheme';
+import { green } from '@material-ui/core/colors';
 
 export default (type) => createMuiTheme({
   palette: {
     type,
+    secondary: {
+      main: green[500],
+      contrastText: '#ffffff',
+    },
   },
   typography: {
     fontWeightRegular: 300,
@@ -38,6 +43,11 @@ export default (type) => createMuiTheme({
     },
   },
   overrides: {
+    MuiTableCell: {
+      head: {
+        textTransform: 'uppercase'
+      }
+    },
     MuiTableRow: {
       hover: {
         cursor: 'pointer',
@@ -46,6 +56,15 @@ export default (type) => createMuiTheme({
     MuiOutlinedInput: {
       input: {
         padding: '7.5px 10px',
+      },
+    },
+    MuiPickersModal: {
+      dialogRoot: {
+        '& .MuiDialogActions-root button:last-of-type': {
+          color: '#ffffff',
+          backgroundColor: green[500],
+          borderColor: green[500],
+        },
       },
     },
   },

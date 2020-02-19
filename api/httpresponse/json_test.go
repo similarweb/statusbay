@@ -40,7 +40,7 @@ func TestJSONWrite(t *testing.T) {
 	httpresponse.JSONWrite(ts, 200, `{"key": "value"}`)
 
 	if len(ts.headers) != 1 {
-		t.Fatalf("unexpected json header counts, got %d expected %d", len(ts.headers), 1)
+		t.Fatalf("unexpected json header length, got %d expected %d", len(ts.headers), 1)
 	}
 
 	if ts.status != 200 {
@@ -60,7 +60,7 @@ func TestJSONError(t *testing.T) {
 }
 `
 	if string(ts.body) != expected {
-		t.Fatalf("unexpected json header counts, got %s expected %s", string(ts.body), expected)
+		t.Fatalf("unexpected json header length, got %s expected %s", string(ts.body), expected)
 	}
 
 }

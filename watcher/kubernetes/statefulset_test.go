@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	kuberneteswatcher "statusbay/watcher/kubernetes"
+	"statusbay/watcher/kubernetes/common"
 	"statusbay/watcher/kubernetes/testutil"
 	"sync"
 	"testing"
@@ -42,7 +43,7 @@ func createStatefulSetMock(client *fake.Clientset, name string, namespace string
 			Labels: labels,
 			Annotations: map[string]string{
 				"statusbay.io/application-name":          "application",
-				"statusbay.io/report-deploy-by":          "testme@similarweb.com",
+				"statusbay.io/report-deploy-by":          "foo@example.com",
 				"statusbay.io/report-slack-channels":     "#testchannel",
 				"statusbay.io/progress-deadline-seconds": "10",
 			},
@@ -147,10 +148,10 @@ func TestStatefulsetWatch(t *testing.T) {
 		if application.Schema.Namespace != namespace {
 			t.Fatalf("unexpected application namespace, got %s expected %s", application.Schema.Namespace, namespace)
 		}
-		if application.Schema.DeploymentDescription != kuberneteswatcher.DeploymentStatusDescriptionRunning {
-			t.Fatalf("unexpected status description, got %s expected %s", application.Schema.Namespace, kuberneteswatcher.DeploymentStatusDescriptionRunning)
+		if application.Schema.DeploymentDescription != common.ApplyStatusDescriptionRunning {
+			t.Fatalf("unexpected status description, got %s expected %s", application.Schema.Namespace, common.ApplyStatusDescriptionRunning)
 		}
-		if application.Schema.DeployBy != "testme@similarweb.com" {
+		if application.Schema.DeployBy != "foo@example.com" {
 			t.Fatalf("unexpected field deployby , got %s expected %s", application.Schema.DeployBy, statefulsetObj.ObjectMeta.Labels["statusbay.io/report-deploy-by"])
 		}
 		if application.Schema.Resources.Statefulsets["application"].ProgressDeadlineSeconds != expectedProgressDeadLine {

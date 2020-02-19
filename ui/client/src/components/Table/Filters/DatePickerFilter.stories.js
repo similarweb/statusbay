@@ -4,7 +4,7 @@ import { select } from '@storybook/addon-knobs';
 import DatePickerFilter from './DatePickerFilter';
 
 export default {
-  title: 'UI|Filters/Date Picker',
+  title: 'Table|Filters/Date Picker',
 };
 
 export const ToStory = () => {

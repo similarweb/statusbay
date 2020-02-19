@@ -23,15 +23,15 @@ func TestSlackLoadConfig(t *testing.T) {
 
 	t.Run("failed to decode common.NotifierConfig to `Config` struct", func(t *testing.T) {
 		if err := slackNotifier.LoadConfig(common.NotifierConfig{"default_channels": "fail"}); err == nil {
-			t.Error("Error expected")
+			t.Error("error expected")
 		}
 	})
 
 	t.Run("failed to decode common.NotifierConfig to `Config` struct", func(t *testing.T) {
 		if err := slackNotifier.LoadConfig(nil); err == nil {
-			t.Error("Error expected")
+			t.Error("error expected")
 		} else if err.Error() != slack.NoTokenErr.Error() {
-			t.Errorf("Expected error to be %s, instead got `%s`", slack.NoTokenErr.Error(), err.Error())
+			t.Errorf("expected error to be %s, instead got `%s`", slack.NoTokenErr.Error(), err.Error())
 		}
 	})
 }

@@ -18,8 +18,9 @@ func TestAPI(t *testing.T) {
 		config, err := config.LoadConfigAPI(fmt.Sprintf("%s/testutil/mock/test-config.yaml", currentFolderPath))
 
 		if err != nil {
-			t.Fatalf("unexpected error %s", err.Error())
+			t.Errorf("unexpected error: %v", err)
 		}
+
 		fmt.Println(reflect.TypeOf(config).String())
 		if reflect.TypeOf(config).String() != "config.API" {
 			t.Fatalf("unexpected configuration data")
@@ -31,14 +32,14 @@ func TestAPI(t *testing.T) {
 		_, err := config.LoadConfigAPI(fmt.Sprintf("%s/testutil/mock/no-config.yaml", currentFolderPath))
 
 		if err == nil {
-			t.Fatalf("unexpected load configuration error")
+			t.Errorf("unexpected error: %v", err)
 		}
 	})
 	t.Run("invalid_schema", func(t *testing.T) {
 		data, err := config.LoadConfigAPI(fmt.Sprintf("%s/testutil/mock/no-config.yaml", currentFolderPath))
 
 		if err == nil {
-			t.Fatalf("unexpected load configuration error")
+			t.Errorf("unexpected error: %v", err)
 		}
 		t.Log(data)
 	})

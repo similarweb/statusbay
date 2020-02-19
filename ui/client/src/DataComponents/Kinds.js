@@ -9,6 +9,12 @@ const useStyles = makeStyles((theme) => ({
   root: {
     boxShadow: 'none',
   },
+  indicator: {
+    height: 4,
+  },
+  tab: {
+    padding: '6px 24px'
+  }
 }));
 
 const Kinds = ({ selectedTab, onTabChange }) => {
@@ -19,9 +25,9 @@ const Kinds = ({ selectedTab, onTabChange }) => {
   }
   return (
     <AppBar position="static" color="primary" classes={{ root: classes.root }}>
-      <Tabs value={selectedTab} onChange={onTabChange}>
+      <Tabs value={selectedTab} onChange={onTabChange} classes={{indicator: classes.indicator}}>
         {
-          data.kinds.map((kind, index) => <Tab label={kind.name} value={index} disableRipple />)
+          data.kinds.map((kind, index) => <Tab classes={{root: classes.tab}} label={kind.name} value={index} disableRipple />)
       }
       </Tabs>
     </AppBar>

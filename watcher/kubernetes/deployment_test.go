@@ -3,6 +3,7 @@ package kuberneteswatcher_test
 import (
 	"context"
 	kuberneteswatcher "statusbay/watcher/kubernetes"
+	"statusbay/watcher/kubernetes/common"
 	"statusbay/watcher/kubernetes/testutil"
 	"sync"
 	"testing"
@@ -54,7 +55,7 @@ func createDeploymentMock(client *fake.Clientset, name string, labels map[string
 			Labels: labels,
 			Annotations: map[string]string{
 				"statusbay.io/application-name":       "custom-application-name",
-				"statusbay.io/report-deploy-by":       "elad.kaplan@similarweb.com",
+				"statusbay.io/report-deploy-by":       "foo@example.com",
 				"statusbay.io/report-slack-channels":  "#channel",
 				"statusbay.io/alerts-statuscake-tags": "nginx",
 				"statusbay.io/kibana-query":           "application: statusbay AND mode: watcher",
@@ -77,7 +78,7 @@ func GetFakeDeployment(progressDeadlineSeconds int32) *appsV1.Deployment {
 		ObjectMeta: metaV1.ObjectMeta{
 			Namespace: "pe",
 			Annotations: map[string]string{
-				"statusbay.io/report-deploy-by":      "elad.kaplan@similarweb.com",
+				"statusbay.io/report-deploy-by":      "foo@example.com",
 				"statusbay.io/report-slack-channels": "#channel",
 			},
 		},
@@ -107,7 +108,6 @@ func NewDeploymentManagerMock(client *fake.Clientset) (*kuberneteswatcher.Deploy
 
 }
 
-// ELAD:: TODO
 func TestDeploymentsWatch(t *testing.T) {
 	client := fake.NewSimpleClientset()
 	_, storage := NewDeploymentManagerMock(client)
@@ -150,7 +150,7 @@ func TestDeploymentsWatch(t *testing.T) {
 
 	application := storage.MockWriteDeployment["1"]
 
-	deployment := application.Schema.Resources.Deployments["custom-application-name"]
+	deployment := application.Schema.Resources.Deployments["test-deployment"]
 
 	t.Run("deployment_schema_data", func(t *testing.T) {
 
@@ -169,8 +169,8 @@ func TestDeploymentsWatch(t *testing.T) {
 		if application.Schema.Namespace != "pe" {
 			t.Fatalf("unexpected application namespace, got %s expected %s", application.Schema.Namespace, "pe")
 		}
-		if application.Schema.DeploymentDescription != kuberneteswatcher.DeploymentStatusDescriptionRunning {
-			t.Fatalf("unexpected status description, got %s expected %s", application.Schema.Namespace, kuberneteswatcher.DeploymentStatusDescriptionRunning)
+		if application.Schema.DeploymentDescription != common.ApplyStatusDescriptionRunning {
+			t.Fatalf("unexpected status description, got %s expected %s", application.Schema.Namespace, common.ApplyStatusDescriptionRunning)
 		}
 
 	})

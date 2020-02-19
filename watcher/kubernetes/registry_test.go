@@ -40,7 +40,7 @@ func TestNewApplicationDeployment(t *testing.T) {
 	registry, _ := NewRegistryMock()
 
 	fakeDeployment := GetFakeDeployment(300)
-	registryRow := registry.NewApplication("nginx", fakeDeployment.GetNamespace(), fakeDeployment.GetAnnotations(), common.DeploymentStatusRunning)
+	registryRow := registry.NewApplication("nginx", fakeDeployment.GetNamespace(), fakeDeployment.GetAnnotations(), common.ApplyStatusRunning)
 
 	testCases := []struct {
 		description string
@@ -60,7 +60,7 @@ func TestNewApplicationDeployment(t *testing.T) {
 		{
 			"deploy by",
 			func(row *kuberneteswatcher.RegistryRow) interface{} { return row.DBSchema.DeployBy },
-			"elad.kaplan@similarweb.com",
+			"foo@example.com",
 		},
 		{
 			"report to count",
@@ -82,7 +82,7 @@ func TestNewApplicationDeployment(t *testing.T) {
 
 	t.Run("get_application", func(t *testing.T) {
 
-		row := registry.Get("nginx", "pe")
+		row := registry.Get("nginx", "pe", "")
 		for _, tc := range testCases {
 			value := tc.mutate(row)
 			if value != tc.expected {
@@ -109,10 +109,10 @@ func TestAddDeployment(t *testing.T) {
 
 	fakeDeployment := GetFakeDeployment(300)
 	annotations := map[string]string{
-		"statusbay.io/report-deploy-by":      "elad.kaplan@similarweb.com",
+		"statusbay.io/report-deploy-by":      "foo@example.com",
 		"statusbay.io/report-slack-channels": "#channel",
 	}
-	registryRow := registry.NewApplication("nginx", fakeDeployment.GetNamespace(), annotations, common.DeploymentStatusRunning)
+	registryRow := registry.NewApplication("nginx", fakeDeployment.GetNamespace(), annotations, common.ApplyStatusRunning)
 
 	// data := registryRow.AddDeployment("nginx-deployment", "pe", labels, annotations, 3, 300)
 
@@ -177,7 +177,7 @@ func TestAddDeployment(t *testing.T) {
 
 	t.Run("registry_deployment", func(t *testing.T) {
 
-		row := registry.Get("nginx", "pe")
+		row := registry.Get("nginx", "pe", "")
 		if len(row.DBSchema.Resources.Deployments) != 1 {
 			t.Fatalf("unexpected deployment count, got %d expected %d", len(row.DBSchema.Resources.Deployments), 1)
 		}
@@ -190,11 +190,11 @@ func TestDeploymentData(t *testing.T) {
 	registry, _ := NewRegistryMock()
 
 	annotations := map[string]string{
-		"statusbay.io/report-deploy-by":      "elad.kaplan@similarweb.com",
+		"statusbay.io/report-deploy-by":      "foo@example.com",
 		"statusbay.io/report-slack-channels": "#channel",
 	}
 
-	registryRow := registry.NewApplication("nginx", "default", annotations, common.DeploymentStatusRunning)
+	registryRow := registry.NewApplication("nginx", "default", annotations, common.ApplyStatusRunning)
 
 	apply := kuberneteswatcher.ApplyEvent{
 		Event:        "create",
@@ -344,10 +344,10 @@ func TestSave(t *testing.T) {
 	registry, storage := NewRegistryMock()
 
 	annotations := map[string]string{
-		"statusbay.io/report-deploy-by":      "elad.kaplan@similarweb.com",
+		"statusbay.io/report-deploy-by":      "foo@example.com",
 		"statusbay.io/report-slack-channels": "#channel",
 	}
-	registryRow := registry.NewApplication("nginx", "default", annotations, common.DeploymentStatusRunning)
+	registryRow := registry.NewApplication("nginx", "default", annotations, common.ApplyStatusRunning)
 
 	apply := kuberneteswatcher.ApplyEvent{
 		Event:        "create",
@@ -364,7 +364,7 @@ func TestSave(t *testing.T) {
 	apply2 := kuberneteswatcher.ApplyEvent{
 		Event:        "create",
 		ApplyName:    "nginx-deployment1",
-		ResourceName: "resourceName",
+		ResourceName: "resourceName2",
 		Namespace:    "default",
 		Kind:         "deployment",
 		Hash:         1234,
@@ -409,10 +409,10 @@ func TestDeploymentFinishSuccessful(t *testing.T) {
 	registry, storage := NewRegistryMock()
 
 	annotations := map[string]string{
-		"statusbay.io/report-deploy-by":      "elad.kaplan@similarweb.com",
+		"statusbay.io/report-deploy-by":      "foo@example.com",
 		"statusbay.io/report-slack-channels": "#channel",
 	}
-	registryRow := registry.NewApplication("nginx", "default", annotations, common.DeploymentStatusRunning)
+	registryRow := registry.NewApplication("nginx", "default", annotations, common.ApplyStatusRunning)
 
 	replicasetStatus := appsV1.ReplicaSetStatus{
 		Replicas:      3,
@@ -436,19 +436,15 @@ func TestDeploymentFinishSuccessful(t *testing.T) {
 	data.UpdateReplicasetStatus("replicaset-name", replicasetStatus)
 
 	time.Sleep(time.Second * 10)
-	if storage.MockWriteDeployment["1"].Status != common.DeploymentSuccessful {
-		t.Errorf("unexpected deployment status, got %s expected %s", storage.MockWriteDeployment["1"].Status, common.DeploymentSuccessful)
+	if storage.MockWriteDeployment["1"].Status != common.ApplySuccessful {
+		t.Errorf("unexpected deployment status, got %s expected %s", storage.MockWriteDeployment["1"].Status, common.ApplySuccessful)
 	}
-	// TODO ask elad to explain
-	//if len(mockSlack.PostMessageRequest) != 4 {
-	//	t.Fatalf("unexpected slack reporters, got %d expected %d", len(mockSlack.PostMessageRequest), 4)
-	//}
 }
 func TestDeploymentFinishProgressDeadLine(t *testing.T) {
 
 	registry, storage := NewRegistryMock()
 
-	registryRow := registry.NewApplication("nginx", "default", map[string]string{}, common.DeploymentStatusRunning)
+	registryRow := registry.NewApplication("nginx", "default", map[string]string{}, common.ApplyStatusRunning)
 
 	replicasetStatus := appsV1.ReplicaSetStatus{
 		Replicas:      3,
@@ -470,18 +466,13 @@ func TestDeploymentFinishProgressDeadLine(t *testing.T) {
 	data.UpdateReplicasetStatus("replicaset-name", replicasetStatus)
 
 	time.Sleep(time.Second * 8)
-	if storage.MockWriteDeployment["1"].Status != common.DeploymentStatusFailed {
-		t.Fatalf("unexpected deployment status, got %s expected %s", storage.MockWriteDeployment["1"].Status, common.DeploymentStatusFailed)
+	if storage.MockWriteDeployment["1"].Status != common.ApplyStatusFailed {
+		t.Fatalf("unexpected deployment status, got %s expected %s", storage.MockWriteDeployment["1"].Status, common.ApplyStatusFailed)
 	}
 
-	if storage.MockWriteDeployment["1"].Schema.DeploymentDescription != kuberneteswatcher.DeploymentStatusDescriptionProgressDeadline {
-		t.Fatalf("unexpected deployment message description, got %s expected %s", storage.MockWriteDeployment["1"].Schema.DeploymentDescription, kuberneteswatcher.DeploymentStatusDescriptionProgressDeadline)
+	if storage.MockWriteDeployment["1"].Schema.DeploymentDescription != common.ApplyStatusDescriptionProgressDeadline {
+		t.Fatalf("unexpected deployment message description, got %s expected %s", storage.MockWriteDeployment["1"].Schema.DeploymentDescription, common.ApplyStatusDescriptionProgressDeadline)
 	}
-	// TODO ask elad to explain
-	//if len(mockSlack.PostMessageRequest) != 4 {
-	//	t.Fatalf("unexpected slack reporters, got %d expected %d", len(mockSlack.PostMessageRequest), 4)
-	//}
-
 }
 
 func TestGetApplyID(t *testing.T) {
@@ -489,7 +480,7 @@ func TestGetApplyID(t *testing.T) {
 	registry, _ := NewRegistryMock()
 
 	fakeDeployment := GetFakeDeployment(1)
-	registryRow := registry.NewApplication("nginx", fakeDeployment.GetNamespace(), fakeDeployment.GetAnnotations(), common.DeploymentStatusRunning)
+	registryRow := registry.NewApplication("nginx", fakeDeployment.GetNamespace(), fakeDeployment.GetAnnotations(), common.ApplyStatusRunning)
 	registryRow.DBSchema.CreationTimestamp = 12345
 	applyID := registryRow.GetApplyID()
 

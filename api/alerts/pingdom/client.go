@@ -62,7 +62,7 @@ func (pc *Client) newRequest(method string, path string, v url.Values, body io.R
 	req, err := pc.client.Request("GET", url, v, body)
 
 	if err != nil {
-		lg.WithError(err).Error("Error when trying to create HTTP client request")
+		lg.WithError(err).Error("could not create HTTP client request")
 		return nil, err
 	}
 
@@ -70,18 +70,13 @@ func (pc *Client) newRequest(method string, path string, v url.Values, body io.R
 
 	resp, err := pc.client.DO(req)
 	if err != nil {
-		lg.WithError(err).Error("Error when trying to send HTTP request")
+		lg.WithError(err).Error("cloud not send HTTP client request")
 		return nil, err
 	}
 	defer resp.Body.Close()
 
-	if err != nil {
-		lg.WithError(err).Error("HTTP request failed")
-		return nil, err
-	}
-
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		lg.WithField("status_code", resp.StatusCode).Error("HTTP response return with invalid status code")
+		lg.WithField("status_code", resp.StatusCode).Error("unexpected status code")
 		return nil, &request.HttpError{
 			Status:     resp.Status,
 			StatusCode: resp.StatusCode,
@@ -91,7 +86,7 @@ func (pc *Client) newRequest(method string, path string, v url.Values, body io.R
 	b, err := ioutil.ReadAll(resp.Body)
 
 	if err != nil {
-		lg.WithError(err).Error("Error when trying to read http body response")
+		lg.WithError(err).Error("could not read response body")
 		return nil, err
 	}
 

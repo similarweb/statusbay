@@ -16,9 +16,9 @@ func TestNotifierRegistration(t *testing.T) {
 
 	t.Run("Checking if the notifier was registered", func(t *testing.T) {
 		if testMakerFunc, err := notifiers.GetNotifierMaker(notifierName); err != nil {
-			t.Errorf("Unexpected error %v", err.Error())
+			t.Errorf("unexpected error: %v", err)
 		} else if testMakerFunc == nil {
-			t.Error("Unexpected nil maker func")
+			t.Error("unexpected nil maker func")
 		}
 	})
 
@@ -26,13 +26,13 @@ func TestNotifierRegistration(t *testing.T) {
 
 	t.Run("Checking if the notifier was de-registered", func(t *testing.T) {
 		if _, err := notifiers.GetNotifierMaker(notifierName); err == nil {
-			t.Error("Error expected")
+			t.Error("error expected")
 		}
 	})
 
 	t.Run("Checking if an unregistered notifier is returned", func(t *testing.T) {
 		if _, err := notifiers.GetNotifierMaker("unregistered_notifier"); err == nil {
-			t.Error("Error expected")
+			t.Error("error expected")
 		}
 	})
 }
@@ -61,16 +61,16 @@ func TestMultipleNotifierRegistration(t *testing.T) {
 	t.Run("Checking if all notifiers were registered", func(t *testing.T) {
 		for notifierName := range notifiersToRegister {
 			if testMakerFunc, err := notifiers.GetNotifierMaker(notifierName); err != nil {
-				t.Errorf("Unexpected error %v", err.Error())
+				t.Errorf("unexpected error: %v", err)
 			} else if testMakerFunc == nil {
-				t.Error("Unexpected nil maker func")
+				t.Error("unexpected nil maker func")
 			}
 		}
 	})
 
 	t.Run("Checking if an unregistered notifier is returned", func(t *testing.T) {
 		if _, err := notifiers.GetNotifierMaker("test_notifier4"); err == nil {
-			t.Error("Error expected")
+			t.Error("error expected")
 		}
 	})
 
@@ -81,7 +81,7 @@ func TestMultipleNotifierRegistration(t *testing.T) {
 	t.Run("Checking if the notifier was de-registered", func(t *testing.T) {
 		for notifierName := range notifiersToRegister {
 			if _, err := notifiers.GetNotifierMaker(notifierName); err == nil {
-				t.Error("Error expected")
+				t.Error("error expected")
 			}
 		}
 	})

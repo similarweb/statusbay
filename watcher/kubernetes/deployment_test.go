@@ -149,7 +149,7 @@ func TestDeploymentsWatch(t *testing.T) {
 
 	application := storage.MockWriteDeployment["1"]
 
-	deployment := application.Schema.Resources.Deployments["custom-application-name"]
+	deployment := application.Schema.Resources.Deployments["test-deployment"]
 
 	t.Run("deployment_schema_data", func(t *testing.T) {
 

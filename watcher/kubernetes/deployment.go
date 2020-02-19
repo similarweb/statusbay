@@ -293,7 +293,7 @@ func (dm *DeploymentManager) AddNewDeployment(data ApplyEvent, applicationRegist
 		Replicaset:              make(map[string]Replicaset, 0),
 		ProgressDeadlineSeconds: GetProgressDeadlineApply(data.Annotations, dm.maxDeploymentTime),
 	}
-	applicationRegistry.DBSchema.Resources.Deployments[data.ApplyName] = dd
+	applicationRegistry.DBSchema.Resources.Deployments[data.ResourceName] = dd
 
 	log.Info("deployment was associated with application")
 

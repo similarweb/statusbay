@@ -21,6 +21,7 @@ type Storage interface {
 // MySQLStorage ...
 type MySQLStorage struct {
 	client *state.MySQLManager
+	logger *log.Entry
 }
 
 // NewMysql create new MyySQL client
@@ -28,15 +29,16 @@ func NewMysql(db *state.MySQLManager) *MySQLStorage {
 
 	return &MySQLStorage{
 		client: db,
+		logger: log.WithField("storage_engine", "mysql"),
 	}
 }
 
 // CreateApply creating a new apply row
 func (my *MySQLStorage) CreateApply(data *RegistryRow, status common.DeploymentStatus) (string, error) {
 
-	log.WithFields(log.Fields{
+	my.logger.WithFields(log.Fields{
 		"name": data.DBSchema.Application,
-	}).Debug("Save new apply")
+	}).Debug("save new apply")
 
 	deploymentDetails, err := json.Marshal(data.DBSchema)
 	if err != nil {
@@ -56,10 +58,10 @@ func (my *MySQLStorage) CreateApply(data *RegistryRow, status common.DeploymentS
 	}
 
 	if err := my.client.DB.Create(&apply).Error; err != nil {
-		log.WithError(err).WithFields(log.Fields{
+		my.logger.WithError(err).WithFields(log.Fields{
 			"name":     data.DBSchema.Application,
 			"apply_id": applyID,
-		}).Error("MySQL: Error when trying to create a new apply")
+		}).Error("error when trying to create a new apply")
 		return "", err
 	}
 
@@ -70,10 +72,10 @@ func (my *MySQLStorage) CreateApply(data *RegistryRow, status common.DeploymentS
 // UpdateApply update current deployment
 func (my *MySQLStorage) UpdateApply(applyID string, data *RegistryRow, status common.DeploymentStatus) (bool, error) {
 
-	log.WithFields(log.Fields{
+	my.logger.WithFields(log.Fields{
 		"name":     data.DBSchema.Application,
 		"apply_id": applyID,
-	}).Debug("Update apply")
+	}).Debug("update apply")
 
 	applyDetails, err := json.Marshal(data.DBSchema)
 	if err != nil {
@@ -85,9 +87,9 @@ func (my *MySQLStorage) UpdateApply(applyID string, data *RegistryRow, status co
 		Details: string(applyDetails),
 		Time:    data.DBSchema.CreationTimestamp,
 	}).Error; err != nil {
-		log.WithError(err).WithFields(log.Fields{
+		my.logger.WithError(err).WithFields(log.Fields{
 			"apply_id": applyID,
-		}).Error("MySQL: Error when trying to update apply")
+		}).Error("error when trying to update apply")
 		return false, err
 	}
 
@@ -102,9 +104,9 @@ func (my *MySQLStorage) GetAppliesByStatus(status common.DeploymentStatus) (map[
 	resources := map[string]DBSchema{}
 
 	if err := my.client.DB.Where(map[string]interface{}{"status": status}).Select("apply_id, details").Find(appRow).Error; err != nil {
-		log.WithError(err).WithFields(log.Fields{
+		my.logger.WithError(err).WithFields(log.Fields{
 			"status": status,
-		}).Error("MySQL: Error when trying to get applications by status")
+		}).Error("error when trying to get applications by status")
 		return resources, err
 	}
 
@@ -112,7 +114,7 @@ func (my *MySQLStorage) GetAppliesByStatus(status common.DeploymentStatus) (map[
 		var resourceDetails DBSchema
 		err := json.Unmarshal([]byte(resource.Details), &resourceDetails)
 		if err != nil {
-			log.WithError(err).WithFields(log.Fields{}).Error("MySQL: Could not parsing resource results")
+			my.logger.WithError(err).Error("could not parsing resource results")
 			continue
 		}
 		resources[resource.ApplyId] = resourceDetails
@@ -135,26 +137,26 @@ func (my *MySQLStorage) UpdateAppliesVersionHistory(applyName string, hash uint6
 				Deployment: applyName,
 				Hash:       hash,
 			})
-			log.WithFields(log.Fields{
+			my.logger.WithFields(log.Fields{
 				"apply_name": applyName,
 				"hash":       hash,
-			}).Debug("Apply hash version not found in storage, creating one")
+			}).Debug("apply hash version not found in storage, creating one")
 			return true
 		}
 		return false
 	} else if row.Hash == hash {
-		log.WithFields(log.Fields{
+		my.logger.WithFields(log.Fields{
 			"apply_name": applyName,
 			"spec_hash":  hash,
-		}).Info("Apply version already exists, the spec data is equal the the last apply")
+		}).Info("apply version already exists, the spec data is equal the the last apply")
 		return false
 	}
 
 	my.client.DB.Model(&row).Where("deployment = ?", applyName).Update("hash", hash)
-	log.WithFields(log.Fields{
+	my.logger.WithFields(log.Fields{
 		"apply_name": applyName,
 		"spec_hash":  hash,
-	}).Info("Apply version updated")
+	}).Info("apply version updated")
 	return true
 
 }

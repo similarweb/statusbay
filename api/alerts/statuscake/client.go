@@ -67,7 +67,7 @@ func (sc *Client) newRequest(method string, path string, v url.Values, body io.R
 	req, err := sc.client.Request("GET", url, v, body)
 
 	if err != nil {
-		lg.WithError(err).Error("Error when trying to create HTTP client request")
+		lg.WithError(err).Error("could not create HTTP client request")
 		return nil, err
 	}
 
@@ -76,17 +76,13 @@ func (sc *Client) newRequest(method string, path string, v url.Values, body io.R
 
 	resp, err := sc.client.DO(req)
 	if err != nil {
-		lg.WithError(err).Error("Error when trying to send HTTP request")
+		lg.WithError(err).Error("could not send HTTP client request")
 		return nil, err
 	}
 	defer resp.Body.Close()
-	if err != nil {
-		lg.WithError(err).Error("HTTP request failed")
-		return nil, err
-	}
 
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		lg.WithField("status_code", resp.StatusCode).Error("HTTP response return with invalid status code")
+		lg.WithField("status_code", resp.StatusCode).Error("unexpected status code returned")
 		return nil, &request.HttpError{
 			Status:     resp.Status,
 			StatusCode: resp.StatusCode,

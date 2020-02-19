@@ -51,7 +51,7 @@ func createDaemonSetMock(client *fake.Clientset, name string, labels map[string]
 			Labels: labels,
 			Annotations: map[string]string{
 				"statusbay.io/application-name":       "custom-application-name",
-				"statusbay.io/report-deploy-by":       "test@similarweb.com",
+				"statusbay.io/report-deploy-by":       "test@example.com",
 				"statusbay.io/report-slack-channels":  "#channel",
 				"statusbay.io/alerts-statuscake-tags": "fluentd",
 			},

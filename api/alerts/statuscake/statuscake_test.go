@@ -66,11 +66,11 @@ func TestGetAlertByTags(t *testing.T) {
 	t.Run("validate checks", func(t *testing.T) {
 
 		if err != nil {
-			t.Fatalf("unexpected error")
+			t.Errorf("unexpected error: %v", err)
 		}
 
 		if len(checks) != 2 {
-			t.Fatalf("unexpected checks count, got %d expected %d", len(checks), 2)
+			t.Fatalf("unexpected checks length, got %d expected %d", len(checks), 2)
 		}
 
 		check := checks[0]
@@ -84,7 +84,7 @@ func TestGetAlertByTags(t *testing.T) {
 		}
 
 		if check.Name != "foo2" {
-			t.Fatalf("unexpected check Name, got %s expected %s", check.Name, "foo2")
+			t.Fatalf("unexpected check name, got %s expected %s", check.Name, "foo2")
 		}
 
 		if len(check.Periods) != 2 {
@@ -92,15 +92,15 @@ func TestGetAlertByTags(t *testing.T) {
 		}
 
 		if check.Periods[0].Status != "up" {
-			t.Fatalf("unexpected periods check count, got %s expected %s", check.Periods[0].Status, "up")
+			t.Fatalf("unexpected period status, got %s expected %s", check.Periods[0].Status, "up")
 		}
 
 		if check.Periods[0].StartUnix != 1577836801 {
-			t.Fatalf("unexpected periods check count, got %d expected %d", check.Periods[0].StartUnix, 1577836801)
+			t.Fatalf("unexpected period start time, got %d expected %d", check.Periods[0].StartUnix, 1577836801)
 		}
 
 		if check.Periods[0].EndUnix != 1577923100 {
-			t.Fatalf("unexpected periods check count, got %d expected %d", check.Periods[0].EndUnix, 1577923100)
+			t.Fatalf("unexpected period end time, got %d expected %d", check.Periods[0].EndUnix, 1577923100)
 		}
 
 	})

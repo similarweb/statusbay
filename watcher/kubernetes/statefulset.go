@@ -55,7 +55,7 @@ func (ssm *StatefulsetManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 		for {
 			select {
 			case <-ctx.Done():
-				log.Warn("Statefulsets Manager has been shut down")
+				log.Warn("statefulsets manager has been shut down")
 				wg.Done()
 				return
 			}
@@ -82,23 +82,23 @@ func (ssm *StatefulsetManager) watchStatefulsets(ctx context.Context) {
 	statefulsetWatchListOptions := metaV1.ListOptions{ResourceVersion: statefulsetsList.GetResourceVersion()}
 	watcher, err := ssm.client.AppsV1().StatefulSets("").Watch(statefulsetWatchListOptions)
 	if err != nil {
-		log.WithError(err).WithField("list_option", statefulsetWatchListOptions.String()).Error("Could not start a watcher on statefulset")
+		log.WithError(err).WithField("list_option", statefulsetWatchListOptions.String()).Error("could not start watching statefulset")
 		return
 	}
 	go func() {
-		log.WithField("resource_version", statefulsetsList.GetResourceVersion()).Info("Statefulsets watcher was started")
+		log.WithField("resource_version", statefulsetsList.GetResourceVersion()).Info("statefulsets watcher started")
 		for {
 			select {
 			case event, watch := <-watcher.ResultChan():
 				if !watch {
-					log.WithField("list_options", statefulsetWatchListOptions.String()).Info("Statefulsets watcher was stopped. Reopen the channel")
+					log.WithField("list_options", statefulsetWatchListOptions.String()).Info("statefulsets watcher was stopped, reopening the channel")
 					ssm.watchStatefulsets(ctx)
 					return
 				}
 				statefulset, ok := event.Object.(*appsV1.StatefulSet)
 
 				if !ok {
-					log.WithField("object", event.Object).Warn("Failed to parse statefulset watcher data")
+					log.WithField("object", event.Object).Warn("failed to parse statefulset watcher data")
 					continue
 				}
 
@@ -140,10 +140,10 @@ func (ssm *StatefulsetManager) watchStatefulsets(ctx context.Context) {
 					log.WithFields(log.Fields{
 						"event_type":  event.Type,
 						"statefulset": statefulsetName,
-					}).Info("Event type not supported")
+					}).Info("event type not supported")
 				}
 			case <-ctx.Done():
-				log.Warn("Statefulset watcher was stopped. Got ctx done signal")
+				log.Warn("statefulset watcher was stopped, got ctx done signal")
 				watcher.Stop()
 				return
 			}
@@ -156,12 +156,12 @@ func (ssm *StatefulsetManager) watchStatefulset(ctx context.Context, cancelFn co
 
 	statefulsetLog := lg.WithField("statefulset_name", registryStatefulset.GetName())
 
-	statefulsetLog.Info("Starting Statefulset watcher")
-	statefulsetLog.WithField("list_option", listOptions.String()).Debug("List option for statefulset filtering")
+	statefulsetLog.Info("start watching statefulset")
+	statefulsetLog.WithField("list_option", listOptions.String()).Debug("list option for statefulset filtering")
 
 	watcher, err := ssm.client.AppsV1().StatefulSets(namespace).Watch(listOptions)
 	if err != nil {
-		statefulsetLog.WithError(err).Error("Could not start statefulset watcher")
+		statefulsetLog.WithError(err).Error("could not start statefulset watcher")
 		return
 	}
 	firstInit := true
@@ -169,13 +169,13 @@ func (ssm *StatefulsetManager) watchStatefulset(ctx context.Context, cancelFn co
 		select {
 		case event, watch := <-watcher.ResultChan():
 			if !watch {
-				statefulsetLog.Warn("Statefulset watcher was stopped. Channel was closed")
+				statefulsetLog.Warn("statefulset watcher was stopped, channel was closed")
 				cancelFn()
 				return
 			}
 			statefulset, isOk := event.Object.(*appsV1.StatefulSet)
 			if !isOk {
-				statefulsetLog.WithField("object", event.Object).Warn("Failed to parse statefulset watcher data")
+				statefulsetLog.WithField("object", event.Object).Warn("failed to parse statefulset watcher data")
 				continue
 			}
 			if firstInit {
@@ -211,7 +211,7 @@ func (ssm *StatefulsetManager) watchStatefulset(ctx context.Context, cancelFn co
 			}
 			registryStatefulset.UpdateApplyStatus(statefulset.Status)
 		case <-ctx.Done():
-			statefulsetLog.Debug("Statefulset watcher was stopped. Got ctx done signal")
+			statefulsetLog.Debug("statefulset watcher was stopped, got ctx done signal")
 			watcher.Stop()
 			return
 		}
@@ -221,7 +221,7 @@ func (ssm *StatefulsetManager) watchStatefulset(ctx context.Context, cancelFn co
 // watchEvents will watch for events relate d to the Statefulset Resources
 func (ssm *StatefulsetManager) watchEvents(ctx context.Context, lg log.Entry, registryStatefulset *StatefulsetData, listOptions metaV1.ListOptions, namespace string) {
 
-	lg.Info("Started the event watcher on statefulset events")
+	lg.Info("started the event watcher on statefulset events")
 	watchData := WatchEvents{
 		ListOptions: listOptions,
 		Namespace:   namespace,
@@ -236,7 +236,7 @@ func (ssm *StatefulsetManager) watchEvents(ctx context.Context, lg log.Entry, re
 			case event := <-eventChan:
 				registryStatefulset.UpdateStatefulsetEvents(event)
 			case <-ctx.Done():
-				lg.Info("Stopped the event watcher on statefulset events")
+				lg.Info("stopped the event watcher on statefulset events")
 				return
 			}
 		}
@@ -259,9 +259,9 @@ func (ssm *StatefulsetManager) AddNewStatefulset(data ApplyEvent, applicationReg
 		Pods:                    make(map[string]DeploymenPod, 0),
 		ProgressDeadlineSeconds: GetProgressDeadlineApply(data.Annotations, ssm.maxDeploymentTime),
 	}
-	applicationRegistry.DBSchema.Resources.Statefulsets[data.ApplyName] = dd
+	applicationRegistry.DBSchema.Resources.Statefulsets[data.ResourceName] = dd
 
-	log.Info("Daemonset was associated to the application")
+	log.Info("daemonset was associated to the application")
 
 	return dd
 

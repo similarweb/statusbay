@@ -101,12 +101,12 @@ func (sl *Manager) sendToAll(stage ReportStage, message watcherCommon.Deployment
 				// TODO:: add cluster + namespace name
 				Fields: []slackApi.AttachmentField{
 					{
-						Title: "Application Name:",
+						Title: "Application",
 						Value: message.Name,
 						Short: true,
 					},
 					{
-						Title: "Cluster:",
+						Title: "Cluster",
 						Value: message.ClusterName,
 						Short: true,
 					},
@@ -115,7 +115,7 @@ func (sl *Manager) sendToAll(stage ReportStage, message watcherCommon.Deployment
 			sl.send(toChannel, attachment, message.LogEntry)
 
 		} else {
-			message.LogEntry.WithField("to", to).Debug("Slack id not found")
+			message.LogEntry.WithField("to", to).Debug("slack id not found")
 		}
 
 	}
@@ -157,7 +157,7 @@ func (sl *Manager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 			case <-time.After(UpdateSlackUserInterval):
 				sl.updateUsers()
 			case <-ctx.Done():
-				log.Warn("Slack Loop has been shut down")
+				log.Warn("slack loop has been shut down")
 				wg.Done()
 				return
 			}
@@ -183,17 +183,17 @@ func (sl *Manager) updateUsers() {
 	}
 	if len(currentUsers) != len(sl.emailToUser) {
 		sl.emailToUser = currentUsers
-		log.Info(fmt.Sprintf("Found %d slack users", len(sl.emailToUser)))
+		log.Info(fmt.Sprintf("found %d slack users", len(sl.emailToUser)))
 	}
 }
 
 // getUserIdByEmail return slack user by email
 func (sl *Manager) getUserIdByEmail(email string) (string, error) {
-	if userId, ok := sl.emailToUser[email]; !ok {
+	if userID, ok := sl.emailToUser[email]; !ok {
 		//log.WithField("email", email).Warn("Slack user by email not found")
 		return "", errors.New("slack user by email not found")
 	} else {
-		return userId, nil
+		return userID, nil
 	}
 }
 
@@ -202,10 +202,10 @@ func (sl *Manager) send(channelID string, attachment slackApi.Attachment, lg log
 	_, _, err := sl.client.PostMessage(channelID, slackApi.MsgOptionAttachments(attachment), slackApi.MsgOptionAsUser(true))
 	if err != nil {
 
-		lg.WithError(err).WithField("channel_id", channelID).Debug("Error when trying to send post message")
+		lg.WithError(err).WithField("channel_id", channelID).Debug("error when trying to send post message")
 
 	}
-	lg.WithField("channel_id", channelID).Debug("Slack message was sent")
+	lg.WithField("channel_id", channelID).Debug("slack message was sent")
 }
 
 // GetChannelId returns the channel id. if is it email, search the user channel id by his email

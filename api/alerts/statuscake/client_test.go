@@ -80,19 +80,19 @@ func TestNewRequest(t *testing.T) {
 			}
 
 			if mockHTTP.RequestData.URL.String() != test.expectedURL {
-				t.Fatalf("unexpected http URL, got %s, expected %s", mockHTTP.RequestData.URL, test.expectedURL)
+				t.Fatalf("unexpected URL, got %s, expected %s", mockHTTP.RequestData.URL, test.expectedURL)
 			}
 
 			if mockHTTP.RequestData.Header["Username"][0] != test.expectedUsername {
-				t.Fatalf("unexpected http URL, got %s expected %s", mockHTTP.RequestData.Header["Username"][0], test.expectedUsername)
+				t.Fatalf("unexpected username header, got %s expected %s", mockHTTP.RequestData.Header["Username"][0], test.expectedUsername)
 			}
 
 			if mockHTTP.RequestData.Header["Api"][0] != test.expectedKey {
-				t.Fatalf("unexpected http URL, got %s expected %s", mockHTTP.RequestData.Header["Api"][0], test.expectedKey)
+				t.Fatalf("unexpected api header, got %s expected %s", mockHTTP.RequestData.Header["Api"][0], test.expectedKey)
 			}
 
 			if response.StatusCode != test.expectedStatusCode {
-				t.Fatalf("unexpected http status code, got %d, expected %d", response.StatusCode, test.expectedStatusCode)
+				t.Fatalf("unexpected status code, got %d, expected %d", response.StatusCode, test.expectedStatusCode)
 			}
 
 		})
@@ -127,13 +127,13 @@ func TestGetTests(t *testing.T) {
 
 			if err != nil {
 				if err != test.err {
-					t.Fatalf("unexpected error response")
+					t.Errorf("unexpected error: %v", err)
 				}
 				return
 			}
 
 			if len(resp) != test.expectedCheckCount {
-				t.Fatalf("unexpected test count response, got %d expected %d", len(resp), test.expectedCheckCount)
+				t.Fatalf("unexpected test check count, got %d expected %d", len(resp), test.expectedCheckCount)
 			}
 
 		})
@@ -168,14 +168,14 @@ func TestPeriods(t *testing.T) {
 
 			if err != nil {
 				if err != test.err {
-					t.Fatalf("unexpected error response")
+					t.Errorf("unexpected error: %v", err)
 				}
 
 				return
 			}
 
 			if len(resp) != test.expectedCheckCount {
-				t.Fatalf("unexpected test count response, got %d expected %d", len(resp), test.expectedCheckCount)
+				t.Fatalf("unexpected test check count, got %d expected %d", len(resp), test.expectedCheckCount)
 			}
 
 		})

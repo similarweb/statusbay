@@ -36,7 +36,7 @@ type MessageDeploy struct {
 	Labels            map[string]string `json:"Labels"`
 }
 
-// Deployment struct  TODO ::
+// MetaData struct  TODO ::
 type MetaData struct {
 	Name         string            `json:"Name"`
 	Namespace    string            `json:"Namespace"`

@@ -13,9 +13,9 @@ const Applications = () => {
       pathname: `/applications/${row.name}`,
     });
   };
-  const filters = useMemo(() => ({
-    distinct: false,
-  }), []);
+  const filters = useMemo(() => {return {
+    distinct: false
+  }}, []);
   return (
     <PageContent>
       <Table onRowClick={onRowClick} filters={filters} title="Applications" />

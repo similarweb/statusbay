@@ -35,7 +35,7 @@ func TestServe(t *testing.T) {
 		time.Sleep(time.Millisecond)
 
 		if slackManager.emailToUser == nil {
-			t.Errorf("expected the goroutine to stop running and stop updating the users")
+			t.Error("expected the goroutine to stop running and stop updating the users")
 		}
 	})
 
@@ -56,7 +56,7 @@ func TestServe(t *testing.T) {
 
 		time.Sleep(time.Millisecond)
 		if len(slackManager.emailToUser) != 0 {
-			t.Errorf("expected to have no users available")
+			t.Error("expected to have no users available")
 		}
 
 		// add one user to the returned from the api
@@ -65,7 +65,7 @@ func TestServe(t *testing.T) {
 		})
 		time.Sleep(time.Millisecond)
 		if len(slackManager.emailToUser) != 1 {
-			t.Errorf("expected to get exactly one user")
+			t.Error("expected to get exactly one user")
 		}
 
 		// add 2 more users
@@ -74,14 +74,14 @@ func TestServe(t *testing.T) {
 			slack.User{Profile: slack.UserProfile{Email: "user3"}})
 		time.Sleep(time.Millisecond)
 		if len(slackManager.emailToUser) != 3 {
-			t.Errorf("expected to get exactly three users")
+			t.Error("expected to get exactly three users")
 		}
 
 		// return no users
 		mockClient.users = nil
 		time.Sleep(time.Millisecond)
 		if len(slackManager.emailToUser) != 0 {
-			t.Errorf("expected to have no users available")
+			t.Error("expected to have no users available")
 		}
 	})
 }

@@ -36,6 +36,6 @@ func SetLoggingLevel(level string) {
 	case "panic":
 		log.SetLevel(log.PanicLevel)
 	default:
-		log.WithFields(log.Fields{"level": level}).Warn("Invalid log level, not setting")
+		log.WithFields(log.Fields{"level": level}).Warn("invalid log level, not setting")
 	}
 }

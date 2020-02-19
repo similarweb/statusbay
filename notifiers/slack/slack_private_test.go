@@ -73,20 +73,20 @@ func TestSlackLoadConfig(t *testing.T) {
 		}
 
 		if err := slackManager.LoadConfig(common.NotifierConfig{"token": "test_token"}); err != nil {
-			t.Error("Unexpected error")
+			t.Errorf("unexpected error: %v", err)
 		}
 
 		for stage, message := range slackManager.config.MessageTemplates {
 			if defaultConfig[stage].Title != message.Title {
-				t.Errorf("Expected to still have %s (default) for Title in %s. instead got `%s`", defaultConfig[stage].Title, stage, message.Title)
+				t.Errorf("expected to still have %s (default) for Title in %s. instead got `%s`", defaultConfig[stage].Title, stage, message.Title)
 			}
 
 			if defaultConfig[stage].Pretext != message.Pretext {
-				t.Errorf("Expected to still have %s (default) for Pretext in %s. instead got `%s`", defaultConfig[stage].Pretext, stage, message.Pretext)
+				t.Errorf("expected to still have %s (default) for Pretext in %s. instead got `%s`", defaultConfig[stage].Pretext, stage, message.Pretext)
 			}
 
 			if defaultConfig[stage].Text != message.Text {
-				t.Errorf("Expected to still have %s (default) for Text in %s. instead got `%s`", defaultConfig[stage].Text, stage, message.Text)
+				t.Errorf("expected to still have %s (default) for Text in %s. instead got `%s`", defaultConfig[stage].Text, stage, message.Text)
 			}
 		}
 	})
@@ -113,7 +113,7 @@ func TestSlackLoadConfig(t *testing.T) {
 
 			t.Run(fmt.Sprintf("provided new value for %s only", updatedStage), func(t *testing.T) {
 				if err := slackManager.LoadConfig(newConfig); err != nil {
-					t.Error("Unexpected error")
+					t.Errorf("unexpected error: %v", err)
 				}
 
 				for stage, message := range slackManager.config.MessageTemplates {
@@ -121,27 +121,27 @@ func TestSlackLoadConfig(t *testing.T) {
 					if stage == updatedStage {
 						expectedStageConfig := newConfig["message_templates"].(map[string]interface{})[string(stage)].(map[string]string)
 						if expectedStageConfig["title"] != message.Title {
-							t.Errorf("Expected to still have %s (updated) for Title in %s. instead got `%s`", expectedStageConfig["title"], stage, message.Title)
+							t.Errorf("expected to still have %s (updated) for Title in %s. instead got `%s`", expectedStageConfig["title"], stage, message.Title)
 						}
 
 						if expectedStageConfig["pretext"] != message.Pretext {
-							t.Errorf("Expected to still have %s (updated) for Pretext in %s. instead got `%s`", expectedStageConfig["pretext"], stage, message.Pretext)
+							t.Errorf("expected to still have %s (updated) for Pretext in %s. instead got `%s`", expectedStageConfig["pretext"], stage, message.Pretext)
 						}
 
 						if expectedStageConfig["text"] != message.Text {
-							t.Errorf("Expected to still have %s (updated) for Text in %s. instead got `%s`", expectedStageConfig["text"], stage, message.Text)
+							t.Errorf("expected to still have %s (updated) for Text in %s. instead got `%s`", expectedStageConfig["text"], stage, message.Text)
 						}
 					} else {
 						if initialConfig[stage].Title != message.Title {
-							t.Errorf("Expected to still have %s (default) for Title in %s. instead got `%s`", defaultConfig[stage].Title, stage, message.Title)
+							t.Errorf("expected to still have %s (default) for Title in %s. instead got `%s`", defaultConfig[stage].Title, stage, message.Title)
 						}
 
 						if initialConfig[stage].Pretext != message.Pretext {
-							t.Errorf("Expected to still have %s (default) for Pretext in %s. instead got `%s`", defaultConfig[stage].Pretext, stage, message.Pretext)
+							t.Errorf("expected to still have %s (default) for Pretext in %s. instead got `%s`", defaultConfig[stage].Pretext, stage, message.Pretext)
 						}
 
 						if initialConfig[stage].Text != message.Text {
-							t.Errorf("Expected to still have %s (default) for Text in %s. instead got `%s`", defaultConfig[stage].Text, stage, message.Text)
+							t.Errorf("expected to still have %s (default) for Text in %s. instead got `%s`", defaultConfig[stage].Text, stage, message.Text)
 						}
 					}
 				}
@@ -159,7 +159,7 @@ func TestReplacePlaceholders(t *testing.T) {
 		input := "nothing to replace here, {test}"
 
 		if result := replacePlaceholders(input, statusValue, linkValue, deployedByValue); result != input {
-			t.Errorf("Expected result to be `%s` but got `%s`", input, result)
+			t.Errorf("expected result to be `%s` but got `%s`", input, result)
 		}
 	})
 
@@ -170,11 +170,11 @@ func TestReplacePlaceholders(t *testing.T) {
 
 		result := replacePlaceholders(input, "status", "link", "deployed_by")
 		if result == input {
-			t.Errorf("Expected result to be `%s` but got `%s`", expected, result)
+			t.Errorf("expected result to be `%s` but got `%s`", expected, result)
 		}
 
 		if result != expected {
-			t.Errorf("Expected result to be `%s` but got `%s`", expected, result)
+			t.Errorf("expected result to be `%s` but got `%s`", expected, result)
 		}
 
 	})
@@ -274,11 +274,11 @@ func TestGetUserIdByEmail(t *testing.T) {
 
 	t.Run("check for available emails", func(t *testing.T) {
 		for email, id := range availableEmails {
-			resultId, err := slackManager.getUserIdByEmail(email)
+			resultID, err := slackManager.getUserIdByEmail(email)
 			if err != nil {
-				t.Errorf("unexpected error %s", err.Error())
-			} else if resultId != id {
-				t.Errorf("resultId (`%s`) does not match expected id (`%s`)", resultId, id)
+				t.Errorf("unexpected error: %v", err)
+			} else if resultID != id {
+				t.Errorf("resultID (`%s`) does not match expected id (`%s`)", resultID, id)
 			}
 
 		}
@@ -317,11 +317,11 @@ func TestGetChannelId(t *testing.T) {
 
 	t.Run("check for different inputs", func(t *testing.T) {
 		for input, expected := range inputToExpected {
-			resultId, err := slackManager.GetChannelId(input)
+			resultID, err := slackManager.GetChannelId(input)
 			if err != nil {
-				t.Errorf("unexpected error %s", err.Error())
-			} else if resultId != expected {
-				t.Errorf("resultId (`%s`) does not match expected id (`%s`)", resultId, expected)
+				t.Errorf("unexpected error: %v", err)
+			} else if resultID != expected {
+				t.Errorf("resultID (`%s`) does not match expected id (`%s`)", resultID, expected)
 			}
 
 		}
@@ -329,11 +329,11 @@ func TestGetChannelId(t *testing.T) {
 
 	t.Run("check for unavailable emails", func(t *testing.T) {
 		if _, err := slackManager.GetChannelId("email3"); err == nil {
-			t.Errorf("expected error")
+			t.Error("expected error")
 		}
 
 		if _, err := slackManager.GetChannelId("email6i5"); err == nil {
-			t.Errorf("expected error")
+			t.Error("expected error")
 		}
 	})
 }

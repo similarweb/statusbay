@@ -79,7 +79,7 @@ type RegistryManager struct {
 // NewRegistryManager create new schema registry instance
 func NewRegistryManager(saveInterval time.Duration, checkFinishDelay time.Duration, collectDataAfterApplyFinish time.Duration, storage Storage, reporter *ReporterManager, clusterName string) *RegistryManager {
 	if clusterName == "" {
-		log.Panic("cluster name is mandatory field")
+		log.Panic("cluster name is a mandatory field")
 		os.Exit(1)
 	}
 
@@ -107,7 +107,7 @@ func (dr *RegistryManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 			case <-time.After(dr.saveInterval):
 				dr.save()
 			case <-ctx.Done():
-				log.Warn("Registry save schema has been shut down")
+				log.Warn("registry save schema has been shut down")
 				wg.Done()
 				return
 			}
@@ -121,7 +121,7 @@ func (dr *RegistryManager) LoadRunningApplies() []*RegistryRow {
 
 	rows := []*RegistryRow{}
 	apps, _ := dr.storage.GetAppliesByStatus(common.DeploymentStatusRunning)
-	log.WithField("count", len(apps)).Info("Loading running job from DB")
+	log.WithField("count", len(apps)).Info("loading running job from database")
 
 	for applyID, appSchema := range apps {
 
@@ -233,10 +233,10 @@ func (dr *RegistryManager) NewApplication(appName string, namespace string, anno
 			ClusterName: dr.clusterName,
 		}
 	default:
-		lg.WithField("status", status).Info("Reporter status not supported")
+		lg.WithField("status", status).Info("reporter status not supported")
 	}
 
-	lg.Info("New application created in registry")
+	lg.Info("new application created in registry")
 
 	go row.isFinish(dr.checkFinishDelay)
 	return &row
@@ -308,7 +308,7 @@ func (wbr *RegistryRow) isDeploymentFinish() (bool, error) {
 			lg.WithFields(log.Fields{
 				"progress_deadline_seconds": deployment.ProgressDeadlineSeconds,
 				"deploy_time":               diff,
-			}).Error("Deployment Failed due to progress deadline")
+			}).Error("deployment failed due to progress deadline")
 			return isFinished, errors.New("ProgrogressDeadline has passed")
 		}
 
@@ -318,14 +318,14 @@ func (wbr *RegistryRow) isDeploymentFinish() (bool, error) {
 		"desired_state_count":  desiredStateCount,
 		"ready_replicas_count": readyReplicasCount,
 		"count_deployments":    len(wbr.DBSchema.Resources.Deployments),
-	}).Info("Deployment status")
+	}).Info("deployment status")
 	deploymentsNum := len(wbr.DBSchema.Resources.Deployments)
 	if deploymentsNum == countOfRunningReplicas && desiredStateCount == readyReplicasCount || wbr.status == common.DeploymentStatusDeleted {
 		lg.WithFields(log.Fields{
 			"replicaset_count":     countOfRunningReplicas,
 			"desired_state_count":  desiredStateCount,
 			"ready_replicas_count": readyReplicasCount,
-		}).Info("Deployment apply has finished successfully")
+		}).Info("deployment has finished successfully")
 
 		// Wating few minutes to collect more event after deployment finished
 		isFinished = true
@@ -355,7 +355,7 @@ func (wbr *RegistryRow) isDaemonSetFinish() (bool, error) {
 			lg.WithFields(log.Fields{
 				"progress_deadline_seconds": daemonset.ProgressDeadlineSeconds,
 				"deploy_time":               diff,
-			}).Error("DaemonSet failed due to progress deadline")
+			}).Error("daemonset failed due to progress deadline")
 			return isFinished, errors.New("ProgrogressDeadline has passed")
 		}
 	}
@@ -363,13 +363,13 @@ func (wbr *RegistryRow) isDaemonSetFinish() (bool, error) {
 		"total_daemonsets_desired_pods": totalDesiredPods,
 		"current_pods_count":            totalCurrentPods,
 		"total_daemonsets":              len(wbr.DBSchema.Resources.Daemonsets),
-	}).Debug("DaemonSet status")
+	}).Debug("daemonset status")
 	if totalDesiredPods == totalCurrentPods && totalDesiredPods == totalUpdatedPodsOnNodes || wbr.status == common.DeploymentStatusDeleted {
 		lg.WithFields(log.Fields{
 			"total_daemonsets_desired_pods": totalDesiredPods,
 			"current_pods_count":            totalCurrentPods,
 			"total_daemonsets":              len(wbr.DBSchema.Resources.Daemonsets),
-		}).Info("Daemonset apply has finished successfully")
+		}).Info("daemonset has finished successfully")
 		// Wating few minutes to collect more event after deployment finished
 		isFinished = true
 		return isFinished, nil
@@ -404,7 +404,7 @@ func (wbr *RegistryRow) isStatefulSetFinish() (bool, error) {
 			lg.WithFields(log.Fields{
 				"progress_deadline_seconds": statefulset.ProgressDeadlineSeconds,
 				"deploy_time":               diff,
-			}).Error("Statefulset failed due to progress deadline")
+			}).Error("statefulset failed due to progress deadline")
 			return isFinished, errors.New("ProgressDeadLine has passed")
 		}
 	}
@@ -413,14 +413,14 @@ func (wbr *RegistryRow) isStatefulSetFinish() (bool, error) {
 		"total_statefulsets_in_state_pods": countOfPodsInState,
 		"current_pods_count":               countOfRunningPods,
 		"total_statefulsets":               len(wbr.DBSchema.Resources.Statefulsets),
-	}).Info("Statefulset status")
+	}).Info("statefulset status")
 	if totalDesiredPods == readyPodsCount && countOfPodsInState == countOfRunningPods || wbr.status == common.DeploymentStatusDeleted {
 		lg.WithFields(log.Fields{
 			"total_statefulset_desired_pods":   totalDesiredPods,
 			"total_statefulsets_in_state_pods": countOfPodsInState,
 			"current_pods_count":               countOfRunningPods,
 			"total_statefulsets":               len(wbr.DBSchema.Resources.Statefulsets),
-		}).Info("Statefulset apply has finished successfully")
+		}).Info("statefulset has finished successfully")
 		// Wating few minutes to collect more event after deployment finished
 		isFinished = true
 		return isFinished, nil
@@ -468,7 +468,7 @@ func (wbr *RegistryRow) isFinish(checkFinishDelay time.Duration) {
 				wbr.cancelFn()
 			}
 		case <-wbr.ctx.Done():
-			lg.Debug("isFinish function watch was stopped. Got ctx done signal")
+			lg.Debug("isFinish function watch was stopped, got ctx done signal")
 			return
 
 		}
@@ -478,7 +478,7 @@ func (wbr *RegistryRow) isFinish(checkFinishDelay time.Duration) {
 // Stop will marked the row as finish
 func (wbr *RegistryRow) Stop(status common.DeploymentStatus, message DeploymentStatusDescription) {
 	lg := wbr.Log()
-	lg.WithField("status", status).Debug("Marked apply as done")
+	lg.WithField("status", status).Debug("marked as done")
 
 	time.Sleep(wbr.collectDataAfterDeploymentFinish)
 	wbr.DBSchema.DeploymentDescription = message
@@ -546,8 +546,8 @@ func (dd *DeploymentData) NewPod(pod *v1.Pod) error {
 // UpdatePodEvents will add event to pod events list
 func UpdatePodEvents(pods map[string]DeploymenPod, podName string, event EventMessages) error {
 	if _, found := pods[podName]; !found {
-		log.WithField("pod", podName).Warn("Pod not exists in pod list")
-		return errors.New("Pod not exists in pod list")
+		log.WithField("pod", podName).Warn("pod does not exist in pod list")
+		return errors.New("pod does not exist in pod list")
 	}
 	// Validate that we not inset duplicated events
 	for _, saveEvent := range *pods[podName].Events {
@@ -573,8 +573,8 @@ func (dd *DeploymentData) GetName() string {
 // UpdatePodStatus will change pod status
 func UpdatePodStatus(pods map[string]DeploymenPod, pod *v1.Pod, status string) error {
 	if _, found := pods[pod.GetName()]; !found {
-		log.WithField("pod", pod.GetName()).Warn("Pod not exists in pod list")
-		return errors.New("Pod not exists in pod list")
+		log.WithField("pod", pod.GetName()).Warn("pod does not exist in pod list")
+		return errors.New("pod does not exist in pod list")
 	}
 	*pods[pod.GetName()].Phase = status
 	return nil
@@ -672,7 +672,7 @@ func (dr *RegistryManager) save() {
 
 			log.WithFields(log.Fields{
 				"name": data.DBSchema.Application,
-			}).Debug("Deployment was saved")
+			}).Debug("deployment was saved")
 
 			if data.finish {
 

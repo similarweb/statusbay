@@ -97,6 +97,7 @@ type ResponseDeploymentData struct {
 
 type ResponseKubernetesDeployment struct {
 	Name      string                 `json:"Name"`
+	DeployBy  string                 `json:"DeployBy"`
 	Cluster   string                 `json:"Cluster"`
 	Namespace string                 `json:"Namespace"`
 	Status    string                 `json:"Status"`

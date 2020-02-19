@@ -71,7 +71,7 @@ type RegistryManager struct {
 	checkFinishDelay            time.Duration
 	collectDataAfterApplyFinish time.Duration
 	saveLock                    *sync.Mutex
-	newAppLock                  *sync.Mutex
+	applyLock                   *sync.Mutex
 	storage                     Storage
 	reporter                    *ReporterManager
 	lastDeploymentHistory       map[string]time.Time
@@ -95,7 +95,7 @@ func NewRegistryManager(saveInterval time.Duration, checkFinishDelay time.Durati
 		registryData:          make(map[string]*RegistryRow),
 		lastDeploymentHistory: make(map[string]time.Time),
 		saveLock:              &sync.Mutex{},
-		newAppLock:            &sync.Mutex{},
+		applyLock:             &sync.Mutex{},
 	}
 }
 
@@ -150,37 +150,53 @@ func (dr *RegistryManager) LoadRunningApplies() []*RegistryRow {
 
 func (dr *RegistryManager) NewApplyEvent(data ApplyEvent) *RegistryRow {
 
-	appRegistry := dr.Get(data.ApplyName, data.Namespace)
+	dr.applyLock.Lock()
+	defer dr.applyLock.Unlock()
+
+	var appRegistry *RegistryRow
 
 	if data.Event == fmt.Sprintf("%v", eventwatch.Deleted) {
+		// Check if the resource already detected in StatusBasy
+		appRegistry = dr.Get(data.ApplyName, data.Namespace, data.Event)
 
-		// Once the event is deleted, we needs to delete apply version from DB and
-		// stop the apply watcher.
 		dr.deleteAppliedVersion(data.ResourceName, data.Namespace, data.Kind)
-		if appRegistry.beforeFinish {
+		if appRegistry != nil && appRegistry.beforeFinish {
 			return nil
 		}
-		appRegistry.Stop(common.ApplyCanceled, common.ApplyStatusDescriptionCanceled)
 
-		// needs to reset the appRegistry for create a new application row in DB with deleted status
-		appRegistry = nil
+		// Check if the resource in running status, it mean that the resource apply to kubernetes,
+		// the apply not finished, and Kubernetes got event for delete this resource
+		runningApply := dr.Get(data.ApplyName, data.Namespace, "")
 
+		// if apply found in registry, the apply going to be canceled
+		if runningApply != nil {
+			lg := runningApply.Log()
+			lg.Info("apply was canceled, got delete event")
+			go runningApply.Stop(common.ApplyCanceled, common.ApplyStatusDescriptionCanceled)
+		}
 	} else {
+
+		appRegistry = dr.Get(data.ApplyName, data.Namespace, "")
 		if !dr.updateAppliesVersionHistory(data.ResourceName, data.Namespace, data.Kind, data.Hash) {
+			log.WithFields(log.Fields{
+				"resource_name": data.ResourceName,
+				"namespace":     data.Namespace,
+				"cluster":       dr.clusterName,
+				"resource_kind": data.Kind,
+			}).Debug("resource already deployed")
 			return nil
 		}
 	}
 
+	// If apply not found in memory (first event of the apply), we needs to create new application apply
+	// for create new strcut that include all the resources
 	if appRegistry == nil {
 		status := common.ApplyStatusRunning
 		if data.Event == fmt.Sprintf("%v", eventwatch.Deleted) {
 			status = common.ApplyStatusDeleted
 		}
 
-		appRegistry = dr.NewApplication(data.ApplyName,
-			data.Namespace,
-			data.Annotations,
-			status)
+		appRegistry = dr.NewApplication(data.ApplyName, data.Namespace, data.Annotations, status)
 	}
 
 	return appRegistry
@@ -189,8 +205,6 @@ func (dr *RegistryManager) NewApplyEvent(data ApplyEvent) *RegistryRow {
 
 // NewApplication will creates a new deployment row
 func (dr *RegistryManager) NewApplication(appName string, namespace string, annotations map[string]string, status common.DeploymentStatus) *RegistryRow {
-	dr.newAppLock.Lock()
-	defer dr.newAppLock.Unlock()
 
 	encodedID := generateID(appName, namespace, dr.clusterName)
 	reportTo := GetMetadataByPrefix(annotations, fmt.Sprintf("%s/%s-", annotationPrefix, annotationPrefixAllReporter))
@@ -264,9 +278,13 @@ func (dr *RegistryManager) NewApplication(appName string, namespace string, anno
 }
 
 // Get will return deployment row that exists in memory
-func (dr *RegistryManager) Get(name, namespace string) *RegistryRow {
+func (dr *RegistryManager) Get(name, namespace, prefix string) *RegistryRow {
 
 	encodedID := generateID(name, namespace, dr.clusterName)
+	if prefix != "" {
+		encodedID = fmt.Sprintf("%s-%s", prefix, encodedID)
+
+	}
 	if row, found := dr.registryData[encodedID]; found {
 		return row
 	}
@@ -498,7 +516,6 @@ func (wbr *RegistryRow) Stop(status common.DeploymentStatus, message common.Depl
 	lg.WithField("status", status).Debug("marked as done")
 
 	wbr.beforeFinish = true
-	log.WithField("status", status).Info("Marked apply as done")
 	time.Sleep(wbr.collectDataAfterDeploymentFinish)
 	wbr.DBSchema.DeploymentDescription = message
 	wbr.finish = true

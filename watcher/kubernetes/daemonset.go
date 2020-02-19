@@ -104,6 +104,10 @@ func (dsm *DaemonsetManager) watchDaemonsets(ctx context.Context) {
 					continue
 				}
 
+				log.WithFields(log.Fields{
+					"name":      daemonset.GetName(),
+					"namespace": daemonset.GetNamespace(),
+				}).Debug("daemonset event detected")
 				daemonsetName := GetApplicationName(daemonset.GetAnnotations(), daemonset.GetName())
 
 				if common.IsSupportedEventType(event.Type) {
@@ -123,6 +127,8 @@ func (dsm *DaemonsetManager) watchDaemonsets(ctx context.Context) {
 					if appRegistry == nil {
 						continue
 					}
+					daemonsetLog := appRegistry.Log()
+					daemonsetLog.WithField("event", event.Type).Info("adding demonset to apply registry")
 
 					registryApply := dsm.AddNewDaemonset(apply, appRegistry, daemonset.Status.DesiredNumberScheduled)
 
@@ -132,7 +138,7 @@ func (dsm *DaemonsetManager) watchDaemonsets(ctx context.Context) {
 					go dsm.watchDaemonset(
 						appRegistry.ctx,
 						appRegistry.cancelFn,
-						appRegistry.Log(),
+						daemonsetLog,
 						registryApply,
 						daemonsetWatchListOptions,
 						daemonset.GetNamespace(),

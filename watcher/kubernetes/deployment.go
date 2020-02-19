@@ -108,6 +108,10 @@ func (dm *DeploymentManager) watchDeployments(ctx context.Context) {
 					continue
 				}
 
+				log.WithFields(log.Fields{
+					"name":      deployment.GetName(),
+					"namespace": deployment.GetNamespace(),
+				}).Debug("deployment event detected")
 				deploymentName := GetApplicationName(deployment.GetAnnotations(), deployment.GetName())
 
 				if common.IsSupportedEventType(event.Type) {
@@ -127,6 +131,9 @@ func (dm *DeploymentManager) watchDeployments(ctx context.Context) {
 					if applicationRegistry == nil {
 						continue
 					}
+					deploymentLog := applicationRegistry.Log()
+					deploymentLog.WithField("event", event.Type).Info("adding deployment to apply registry")
+
 					registryDeployment := dm.AddNewDeployment(apply, applicationRegistry, *deployment.Spec.Replicas)
 
 					deploymentWatchListOptions := metaV1.ListOptions{LabelSelector: labels.SelectorFromSet(deployment.GetLabels()).String()}
@@ -136,7 +143,7 @@ func (dm *DeploymentManager) watchDeployments(ctx context.Context) {
 					go dm.watchDeployment(
 						applicationRegistry.ctx,
 						applicationRegistry.cancelFn,
-						applicationRegistry.Log(),
+						deploymentLog,
 						registryDeployment,
 						deploymentWatchListOptions,
 						deployment.GetNamespace(),

@@ -82,7 +82,7 @@ func TestNewApplicationDeployment(t *testing.T) {
 
 	t.Run("get_application", func(t *testing.T) {
 
-		row := registry.Get("nginx", "pe")
+		row := registry.Get("nginx", "pe", "")
 		for _, tc := range testCases {
 			value := tc.mutate(row)
 			if value != tc.expected {
@@ -177,7 +177,7 @@ func TestAddDeployment(t *testing.T) {
 
 	t.Run("registry_deployment", func(t *testing.T) {
 
-		row := registry.Get("nginx", "pe")
+		row := registry.Get("nginx", "pe", "")
 		if len(row.DBSchema.Resources.Deployments) != 1 {
 			t.Fatalf("unexpected deployment count, got %d expected %d", len(row.DBSchema.Resources.Deployments), 1)
 		}

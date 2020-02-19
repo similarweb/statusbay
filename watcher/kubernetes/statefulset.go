@@ -102,6 +102,10 @@ func (ssm *StatefulsetManager) watchStatefulsets(ctx context.Context) {
 					continue
 				}
 
+				log.WithFields(log.Fields{
+					"name":      statefulset.GetName(),
+					"namespace": statefulset.GetNamespace(),
+				}).Debug("statefulset event detected")
 				statefulsetName := GetApplicationName(statefulset.GetAnnotations(), statefulset.GetName())
 
 				if common.IsSupportedEventType(event.Type) {
@@ -121,6 +125,9 @@ func (ssm *StatefulsetManager) watchStatefulsets(ctx context.Context) {
 					if appRegistry == nil {
 						continue
 					}
+
+					statefulsetLog := appRegistry.Log()
+					statefulsetLog.WithField("event", event.Type).Info("adding statefulset to apply registry")
 
 					registryApply := ssm.AddNewStatefulset(apply, appRegistry, *statefulset.Spec.Replicas)
 

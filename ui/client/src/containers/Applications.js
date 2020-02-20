@@ -1,7 +1,5 @@
 import React, { useMemo } from 'react';
-import Box from '@material-ui/core/Box';
 import { useHistory } from 'react-router-dom';
-import PageTitle from '../components/Layout/PageTitle';
 import Table from '../components/Table/Table';
 import PageContent from '../components/Layout/PageContent';
 

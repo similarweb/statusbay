@@ -10,7 +10,8 @@ import {
 } from 'react-router-dom';
 import LinearProgress from '@material-ui/core/LinearProgress';
 import * as moment from 'moment';
-import PageTitle from '../components/Layout/PageTitle';
+import ArrowBackIcon from '@material-ui/icons/ArrowBack';
+import Chip from '@material-ui/core/Chip';
 import PageContent from '../components/Layout/PageContent';
 import ReplicasStats from '../DataComponents/ReplicasStats';
 import PodEvents from '../DataComponents/PodEvents';
@@ -22,7 +23,18 @@ import DeploymentEvents from '../DataComponents/DeploymentEvents';
 import {
   DeploymentDetailsContextProvider,
 } from '../context/DeploymentDetailsContext';
-import ArrowBackIcon from '@material-ui/icons/ArrowBack';
+import makeStyles from '@material-ui/core/styles/makeStyles';
+import Loader from '../components/Loader/Loader';
+
+const useStyles = makeStyles(theme => {
+  return {
+    chips: {
+      '& > *': {
+        margin: theme.spacing(0.5),
+      },
+    }
+  }
+})
 
 const DeploymentDetails = () => {
   const location = useLocation();
@@ -37,36 +49,21 @@ const DeploymentDetails = () => {
       })}`,
     });
   };
+  const classes = useStyles();
   return (
     <DeploymentDetailsContextProvider id={`${deploymentId}`}>
       {
-        ({ data, loading }) => (loading ? <Box m={2} flexGrow={1} justifyContent="space-around" display="flex" flexDirection="column"><LinearProgress /></Box> : (
+        ({ data, loading }) => (loading ? <Box m={2} flexGrow={1} justifyContent="space-around" display="flex" flexDirection="column"><Loader /></Box> : (
           <PageContent>
             <Box mt={3} mb={3}>
-              <Grid container spacing={2} justify="space-between" alignContent="center">
-                <Grid item xs={12} xl={6}>
-                  <PageTitle>
-                    <ArrowBackIcon fontSize="large" />{data.name}
-                  </PageTitle>
-                  <Box mt={1}>
-                    <Typography variant="body2">
-Namespace:
-                      {data.namespace}
-                    </Typography>
-                    <Typography variant="body2">
-Cluster:
-                      {data.cluster}
-                    </Typography>
-                    <Typography variant="body2">{moment.unix(data.time).utc().format('DD/MM/YYYY HH:MM:ss')}</Typography>
-                  </Box>
-
-                </Grid>
-                <Grid container xs={12} xl={6} alignContent="center" direction="row-reverse">
-                  <Grid item>
-                    <DeploymentStatus />
-                  </Grid>
-                </Grid>
-              </Grid>
+              <Typography variant="h3"><ArrowBackIcon fontSize="large" />
+                {data.name}</Typography>
+              <Box mt={1} mb={1} className={classes.chips}>
+                <DeploymentStatus />
+                <Chip label={<Typography>Namespace: {data.namespace}</Typography>} />
+                <Chip label={<Typography>Cluster: {data.cluster}</Typography>} />
+                <Chip label={<Typography>Deployment Time: {moment.unix(data.time).utc().format('DD/MM/YYYY HH:MM:ss')}</Typography>} />
+              </Box>
             </Box>
             <Kinds selectedTab={parseInt(tab)} onTabChange={handleTabChange} />
             <Box mt={3} mb={3}>

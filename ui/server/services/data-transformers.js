@@ -1,7 +1,8 @@
 const kinds = {
   Deployment: 'deployment',
   DaemonSet: 'daemonSet',
-}
+  StatefulSet: 'statefulSet',
+};
 
 const createDeploymentData = ([name, rawData]) => {
   return {
@@ -198,6 +199,16 @@ const createDaemonSetData = ([name, rawData]) => {
   }
 }
 
+const createStatefulSetData = ([name, rawData]) => {
+  return {
+    name: name,
+    type: kinds.StatefulSet,
+    stats: transformers.status(rawData),
+    deploymentEvents: transformers.statefulSetEvents(rawData),
+    podEvents: transformers.podEvents(rawData),
+  }
+}
+
 const convertDeploymentDetailsData = (data) => {
   return {
     name: data.Name,
@@ -208,6 +219,7 @@ const convertDeploymentDetailsData = (data) => {
     kinds: [
       ...Object.entries(data.Details.Resources.Deployments).map(createDeploymentData),
       ...Object.entries(data.Details.Resources.Daemonsets).map(createDaemonSetData),
+      ...Object.entries(data.Details.Resources.Statefulsets).map(createStatefulSetData),
     ]
   }
 };
@@ -233,6 +245,16 @@ const transformers = {
     })
   },
   daemonSetEvents: (rawData) => {
+    return rawData.Events.map(event => {
+      return {
+        title: event.Message,
+        time: event.Time,
+        content: event.MarkDescriptions && event.MarkDescriptions.length > 0 && event.MarkDescriptions[0],
+        error: event.MarkDescriptions ? event.MarkDescriptions.length > 0 : false,
+      }
+    })
+  },
+  statefulSetEvents: (rawData) => {
     return rawData.Events.map(event => {
       return {
         title: event.Message,

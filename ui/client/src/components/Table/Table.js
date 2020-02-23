@@ -47,6 +47,10 @@ const useStyles = makeStyles((theme) => ({
   row: {
     height: 49,
   },
+  iconName: {
+    float: 'left',
+    padding: '0 5px 0 0',
+  }
 }));
 
 const Table = ({
@@ -139,15 +143,10 @@ const Table = ({
       {
         id: 'name',
         name: t('table.filters.name'),
-        cell: (row) => row.name,
+      cell: (row) => <><div className={classes.iconName} ><CellStatus status={row.status}/></div><span>{row.name}</span></>,
         sortable: true,
       },
-      {
-        id: 'status',
-        name: t('table.filters.status'),
-        cell: (row) => <CellStatus status={row.status} />,
-        sortable: true,
-      },
+     
       {
         id: 'cluster',
         name: t('table.filters.cluster'),

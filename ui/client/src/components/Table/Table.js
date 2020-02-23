@@ -143,7 +143,7 @@ const Table = ({
       {
         id: 'name',
         name: t('table.filters.name'),
-      cell: (row) => <><div className={classes.iconName} ><CellStatus status={row.status}/></div><span>{row.name}</span></>,
+        cell: (row) => <><div className={classes.iconName} ><CellStatus status={row.status}/></div><span>{row.name}</span></>,
         sortable: true,
       },
       {

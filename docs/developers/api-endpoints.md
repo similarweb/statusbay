@@ -12,7 +12,7 @@ This endpoint returns the health status of the API application.
 | GET           | /api/v1/health | 	application/json |
 
 #### Request Sample
-
+   
 ```bash
 $ curl \
   'http://127.0.0.1:8080/api/v1/health'
@@ -22,6 +22,31 @@ $ curl \
 ```json
 {
   "status": true
+}
+```
+
+# Latest version
+
+The endpoint returns the latest StatusBay version
+
+| Method        | Path            | Produces          |
+| :------------ |:----------------| :-----------------|
+| GET           | /api/v1/version |  application/json |
+
+#### Request Sample
+   
+```bash
+$ curl \
+  'http://127.0.0.1:8080/api/v1/version'
+```
+
+#### Response Sample
+```json
+{
+  "LatestVersion": "1.0.1",
+  "LatestReleaseDate": 12345,
+  "Outdated": true,
+  "Notifications": []
 }
 ```
 

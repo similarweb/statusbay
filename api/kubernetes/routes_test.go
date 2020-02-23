@@ -21,9 +21,10 @@ type testServer struct {
 
 func MockServer(t *testing.T, storageMockFile string, metrics map[string]metrics.MetricManagerDescriber, alertsClient map[string]alerts.AlertsManagerDescriber) testServer {
 
+	version := testutil.NewMockVersion()
 	storage := testutil.NewMockStorage()
 	return testServer{
-		api: api.NewServer(storage, "8080", "api/kubernetes/testutil/events.yaml", metrics, alertsClient),
+		api: api.NewServer(storage, "8080", "api/kubernetes/testutil/events.yaml", metrics, alertsClient, version),
 	}
 }
 

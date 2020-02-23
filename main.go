@@ -13,6 +13,7 @@ import (
 	"statusbay/config"
 	"statusbay/serverutil"
 	"statusbay/state"
+	"statusbay/version"
 	"statusbay/visibility"
 	kuberneteswatcher "statusbay/watcher/kubernetes"
 	"statusbay/watcher/kubernetes/client"
@@ -71,6 +72,9 @@ func main() {
 }
 
 func startKubernetesWatcher(ctx context.Context, configPath, kubeconfig, apiserverHost string) *serverutil.Runner {
+
+	version.NewVersion(ctx, "wacher_kubernetes", 12*time.Hour)
+
 	watcherConfig, err := config.LoadKubernetesConfig(configPath)
 	if err != nil {
 		log.WithError(err).Panic("could not load Kubernetes configuration file")
@@ -128,8 +132,10 @@ func startKubernetesWatcher(ctx context.Context, configPath, kubeconfig, apiserv
 
 	// ControllerRevision Manager
 	controllerRevisionManager := kuberneteswatcher.NewControllerRevisionManager(kubernetesClientset, podsManager)
+
 	// Daemonset manager
 	daemonsetManager := kuberneteswatcher.NewDaemonsetManager(kubernetesClientset, eventManager, registryManager, serviceManager, controllerRevisionManager, watcherConfig.Applies.MaxApplyTime)
+
 	//Statefulset manager
 	statefulsetManager := kuberneteswatcher.NewStatefulsetManager(kubernetesClientset, eventManager, registryManager, serviceManager, controllerRevisionManager, watcherConfig.Applies.MaxApplyTime)
 
@@ -143,6 +149,8 @@ func startKubernetesWatcher(ctx context.Context, configPath, kubeconfig, apiserv
 }
 
 func startAPIServer(ctx context.Context, configPath, eventConfigPath string) *serverutil.Runner {
+
+	version := version.NewVersion(ctx, "webserver", 12*time.Hour)
 
 	apiConfig, err := config.LoadConfigAPI(configPath)
 	if err != nil {
@@ -170,7 +178,7 @@ func startAPIServer(ctx context.Context, configPath, eventConfigPath string) *se
 	alertsProviders := alerts.Load(apiConfig.AlertProvider)
 
 	//Start the server
-	server := api.NewServer(kubernetesStorage, "8080", eventConfigPath, metricsProviders, alertsProviders)
+	server := api.NewServer(kubernetesStorage, "8080", eventConfigPath, metricsProviders, alertsProviders, version)
 
 	servers := []serverutil.Server{
 		server,

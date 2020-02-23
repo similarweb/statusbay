@@ -123,6 +123,7 @@ func TestInvalidSelector(t *testing.T) {
 		Kind:         "deployment",
 		Hash:         1234,
 		Annotations:  map[string]string{},
+		Labels:       map[string]string{},
 	}
 
 	registryDeploymentData := createMockDeploymentData(registry, registryRow, apply, "10m")

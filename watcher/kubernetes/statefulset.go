@@ -119,6 +119,7 @@ func (ssm *StatefulsetManager) watchStatefulsets(ctx context.Context) {
 						Kind:         "statefulset",
 						Hash:         hash,
 						Annotations:  statefulset.GetAnnotations(),
+						Labels:       map[string]string{},
 					}
 
 					appRegistry := ssm.registryManager.NewApplyEvent(apply)
@@ -259,6 +260,7 @@ func (ssm *StatefulsetManager) AddNewStatefulset(data ApplyEvent, applicationReg
 			Name:         data.ApplyName,
 			Namespace:    data.Namespace,
 			Annotations:  data.Annotations,
+			Labels:       data.Labels,
 			Metrics:      GetMetricsDataFromAnnotations(data.Annotations),
 			Alerts:       GetAlertsDataFromAnnotations(data.Annotations),
 			DesiredState: desiredState,

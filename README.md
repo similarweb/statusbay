@@ -35,6 +35,7 @@ We've also created an API to provide an easy way to access the data and built a 
 
 ## Documentation & Guides
 
+* [Events](/docs/events.md): Help us to get better by adding K8S events with your recommendation!
 * [Developer Guide](/docs/developers/README.md): If you are interested in contributing, read the developer guide.
 * [Working with Multiple Clusters](/docs/clusters/README.md): If you have multiple K8S clusters and you wish to have a unified deployment view, take a look at this guide.
 * [Integrations](/docs/integrations.md): List of StatusBay supported integrations.

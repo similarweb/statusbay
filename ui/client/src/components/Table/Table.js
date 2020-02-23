@@ -146,7 +146,6 @@ const Table = ({
       cell: (row) => <><div className={classes.iconName} ><CellStatus status={row.status}/></div><span>{row.name}</span></>,
         sortable: true,
       },
-     
       {
         id: 'cluster',
         name: t('table.filters.cluster'),

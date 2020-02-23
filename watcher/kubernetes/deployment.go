@@ -1,4 +1,4 @@
-package kuberneteswatcher
+ package kuberneteswatcher
 
 import (
 	"context"
@@ -69,6 +69,14 @@ func (dm *DeploymentManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 	for _, application := range runningDeploymentApplication {
 		for _, deploymentData := range application.DBSchema.Resources.Deployments {
 			deploymentWatchListOptions := metaV1.ListOptions{LabelSelector: labels.SelectorFromSet(deploymentData.Deployment.Labels).String()}
+			// dm.recoverEvents(deploymentData, application.ctx, application.cancelFn, application.Log(), deploymentData, deploymentWatchListOptions, deploymentData.Deployment.Namespace, deploymentData.ProgressDeadlineSeconds)
+			fmt.Println("##############################################")
+			fmt.Println("Replicas = ", deploymentData.Status.Replicas)
+			fmt.Println("UpdatedReplicas = ", deploymentData.Status.UpdatedReplicas)
+			fmt.Println("ReadyReplicas = ", deploymentData.Status.ReadyReplicas)
+			fmt.Println("AvailableReplicas = ", deploymentData.Status.AvailableReplicas)
+			fmt.Println("UnavailableReplicas = ", deploymentData.Status.UnavailableReplicas)
+			fmt.Println("##############################################")
 			go dm.watchDeployment(application.ctx, application.cancelFn, application.Log(), deploymentData, deploymentWatchListOptions, deploymentData.Deployment.Namespace, deploymentData.ProgressDeadlineSeconds)
 		}
 	}
@@ -86,7 +94,6 @@ func (dm *DeploymentManager) watchDeployments(ctx context.Context) {
 
 	if err != nil {
 		log.WithError(err).WithField("list_option", deploymentWatchListOptions.String()).Error("could not start deployments watcher")
-
 		return
 	}
 
@@ -169,13 +176,45 @@ func (dm *DeploymentManager) watchDeployments(ctx context.Context) {
 
 }
 
+func (dm *DeploymentManager) recoverEvents(deploymentData *DeploymentData, ctx context.Context, cancelFn context.CancelFunc, lg log.Entry, registryDeployment *DeploymentData, listOptions metaV1.ListOptions, namespace string, maxWatchTime int64) {
+	deployments, err := dm.client.AppsV1().Deployments(namespace).List(metaV1.ListOptions{})
+	if err != nil {
+		fmt.Println("isan: error watching deployments!")
+		return
+	}
+	fmt.Println("isan all deployments are good! = ", len(deployments.Items))
+	for _, dep := range deployments.Items {
+		fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@a@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+		fmt.Println("Name = ", dep.Name)
+		fmt.Println("----------------------------------------------------------")
+		fmt.Println("Replicas = ", deploymentData.Status.Replicas)
+		fmt.Println("UpdatedReplicas = ", deploymentData.Status.UpdatedReplicas)
+		fmt.Println("ReadyReplicas = ", deploymentData.Status.ReadyReplicas)
+		fmt.Println("AvailableReplicas = ", deploymentData.Status.AvailableReplicas)
+		fmt.Println("UnavailableReplicas = ", deploymentData.Status.UnavailableReplicas)
+		fmt.Println("----------------------------------------------------------")
+		deploymentData.Status.Replicas = dep.Status.Replicas
+		deploymentData.Status.UpdatedReplicas = dep.Status.UpdatedReplicas
+		deploymentData.Status.ReadyReplicas = dep.Status.ReadyReplicas
+		deploymentData.Status.AvailableReplicas = dep.Status.AvailableReplicas
+		deploymentData.Status.UnavailableReplicas = dep.Status.UnavailableReplicas
+		fmt.Println("Replicas = ", dep.Status.Replicas)
+		fmt.Println("UpdatedReplicas = ", dep.Status.UpdatedReplicas)
+		fmt.Println("ReadyReplicas = ", dep.Status.ReadyReplicas)
+		fmt.Println("AvailableReplicas = ", dep.Status.AvailableReplicas)
+		fmt.Println("UnavailableReplicas = ", dep.Status.UnavailableReplicas)
+		fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+	}
+}
+
 //watchDeployment will watch on one running deployment
 func (dm *DeploymentManager) watchDeployment(ctx context.Context, cancelFn context.CancelFunc, lg log.Entry, registryDeployment *DeploymentData, listOptions metaV1.ListOptions, namespace string, maxWatchTime int64) {
 
 	deploymentLog := lg.WithField("deployment_name", registryDeployment.GetName())
 	deploymentLog.Info("initializing deployments watcher")
 	deploymentLog.WithField("list_option", listOptions.String()).Debug("list option for deployment filtering")
-
+	// ISAN: ADDED NOW resource version
+	listOptions.ResourceVersion = "0"
 	watcher, err := dm.client.AppsV1().Deployments(namespace).Watch(listOptions)
 	if err != nil {
 		deploymentLog.WithError(err).Error("could not start deployments watcher")

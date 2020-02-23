@@ -87,7 +87,6 @@ func (rm *ReplicaSetManager) watch(replicaData WatchReplica) {
 
 					return
 				}
-
 				replicaset, ok := event.Object.(*appsV1.ReplicaSet)
 				if !ok {
 					replicaData.LogEntry.WithField("object", event.Object).Warn("failed to parse replicaset watch data")

@@ -1,6 +1,7 @@
 module statusbay
 
 require (
+	github.com/aliyun/alibaba-cloud-sdk-go v1.60.387
 	github.com/apex/log v1.1.1
 	github.com/armon/go-metrics v0.3.2
 	github.com/cenkalti/backoff v2.1.1+incompatible // indirect

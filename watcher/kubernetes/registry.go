@@ -324,6 +324,9 @@ func (wbr *RegistryRow) GetURI() string {
 
 // isDeploymentFinish will check for Deployment resource and see if it finished or errord due to timeout.
 func (wbr *RegistryRow) isDeploymentFinish() (bool, error) {
+	fmt.Println("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
+	fmt.Println("isFinishedDeployment is running!")
+
 	lg := wbr.Log()
 	isFinished := false
 	diff := time.Now().Sub(time.Unix(wbr.DBSchema.CreationTimestamp, 0)).Seconds()
@@ -335,8 +338,10 @@ func (wbr *RegistryRow) isDeploymentFinish() (bool, error) {
 	var desiredStateCount int32
 	var readyReplicasCount int32
 	for _, deployment := range wbr.DBSchema.Resources.Deployments {
+		fmt.Println("isFinishedDeployment enter deployment!")
 		desiredStateCount = desiredStateCount + deployment.Deployment.DesiredState
 		for _, replica := range deployment.Replicaset {
+			fmt.Println("isFinishedDeployment deployment.Replicaset!")
 			if replica.Status.Replicas > 0 {
 				countOfRunningReplicas = countOfRunningReplicas + 1
 			}
@@ -351,6 +356,7 @@ func (wbr *RegistryRow) isDeploymentFinish() (bool, error) {
 		}
 
 	}
+	fmt.Println("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
 	lg.WithFields(log.Fields{
 		"replicaset_count":     countOfRunningReplicas,
 		"desired_state_count":  desiredStateCount,
@@ -358,6 +364,8 @@ func (wbr *RegistryRow) isDeploymentFinish() (bool, error) {
 		"count_deployments":    len(wbr.DBSchema.Resources.Deployments),
 	}).Info("deployment status")
 	deploymentsNum := len(wbr.DBSchema.Resources.Deployments)
+	// ... && 2 == 0 || ...
+	// readyReplicasCount = 2 
 	if deploymentsNum == countOfRunningReplicas && desiredStateCount == readyReplicasCount || wbr.status == common.ApplyStatusDeleted {
 		lg.WithFields(log.Fields{
 			"replicaset_count":     countOfRunningReplicas,

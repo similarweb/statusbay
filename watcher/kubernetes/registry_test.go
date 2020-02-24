@@ -124,6 +124,7 @@ func TestAddDeployment(t *testing.T) {
 		Kind:         "deployment",
 		Hash:         1234,
 		Annotations:  fakeDeployment.GetAnnotations(),
+		Labels:       fakeDeployment.GetLabels(),
 	}
 
 	data := createMockDeploymentData(registry, registryRow, apply, "10m")
@@ -204,6 +205,7 @@ func TestDeploymentData(t *testing.T) {
 		Kind:         "deployment",
 		Hash:         1234,
 		Annotations:  annotations,
+		Labels:       map[string]string{},
 	}
 
 	data := createMockDeploymentData(registry, registryRow, apply, "10m")
@@ -357,6 +359,7 @@ func TestSave(t *testing.T) {
 		Kind:         "deployment",
 		Hash:         1234,
 		Annotations:  annotations,
+		Labels:       map[string]string{},
 	}
 
 	createMockDeploymentData(registry, registryRow, apply, "10m")
@@ -369,6 +372,7 @@ func TestSave(t *testing.T) {
 		Kind:         "deployment",
 		Hash:         1234,
 		Annotations:  annotations,
+		Labels:       map[string]string{},
 	}
 	createMockDeploymentData(registry, registryRow, apply2, "10m")
 
@@ -427,6 +431,7 @@ func TestDeploymentFinishSuccessful(t *testing.T) {
 		Kind:         "deployment",
 		Hash:         1234,
 		Annotations:  annotations,
+		Labels:       map[string]string{},
 	}
 
 	data := createMockDeploymentData(registry, registryRow, apply, "10m")
@@ -458,6 +463,7 @@ func TestDeploymentFinishProgressDeadLine(t *testing.T) {
 		Kind:         "deployment",
 		Hash:         1234,
 		Annotations:  map[string]string{},
+		Labels:       map[string]string{},
 	}
 	data := createMockDeploymentData(registry, registryRow, apply, "1s")
 

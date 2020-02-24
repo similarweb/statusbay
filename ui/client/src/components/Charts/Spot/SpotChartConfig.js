@@ -1,5 +1,6 @@
 import * as moment from 'moment';
 import useTheme from '@material-ui/core/styles/useTheme';
+import numeral from 'numeral';
 
 const buildData = (series, color) => series.reduce((result, serie, index) => {
   serie.data.forEach((point) => {
@@ -13,7 +14,7 @@ const buildData = (series, color) => series.reduce((result, serie, index) => {
   return result;
 }, []);
 
-export default (series) => {
+export default (series, deploymentTime) => {
   const theme = useTheme();
   const isDarkMode = theme.palette.type === 'dark';
   return ({
@@ -29,25 +30,33 @@ export default (series) => {
     xAxis: {
       labels: {
         formatter() {
-          return moment.unix(this.value).format('HH:MM:SS');
+          return moment.unix(this.value).utc().format('HH:mm:ss');
+        },
+        style: {
+          color: isDarkMode ? '#ffffff' : '#666666',
         },
       },
+      min: moment.unix(deploymentTime).utc().subtract(30, 'm').valueOf() / 1000,
+      max: moment.unix(deploymentTime).utc().add(30, 'm').valueOf() / 1000,
+      startOnTick: true,
+      endOnTick: true,
     },
     yAxis: {
       title: null,
       categories: [],
-      reversed: true,
       labels: {
-        useHTML: true,
         formatter() {
-          return `<a href="${series[this.value].link}">${series[this.value].name}</a>`;
+          return `<a style="color: ${theme.palette.primary.light}" href="${series[this.value].link}" target="_blank">${series[this.value].name}</a>`;
         },
       },
     },
     tooltip: {
       useHTML: true,
       formatter() {
-        return `<b>${series[this.y].name}</b><br /><b>Downtime:</b> ${moment.unix(this.x2).diff(moment.unix(this.x), 'minutes')} minutes`;
+        const downTime = numeral(moment.unix(this.x2).utc().diff(moment.unix(this.x).utc(), 'minutes')).format('0,0');
+        return `<b>${series[this.y].name}</b><br /><b>Downtime:</b> ${downTime} minutes
+<br /><b>From:</b> ${moment.unix(this.x).utc().format('DD/MM/YYYY HH:mm:ss')}
+<br /><b>To:</b> ${moment.unix(this.x2).utc().format('DD/MM/YYYY HH:mm:ss')}`
       },
     },
     series: [{

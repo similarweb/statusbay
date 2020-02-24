@@ -19,6 +19,7 @@ import { getMetaData } from './Services/API/TableApi';
 import { AppSettingsContext } from './context/AppSettingsContext';
 import useDarkMode from './Hooks/DarkMode';
 import Grid from '@material-ui/core/Grid';
+import Loader from './components/Loader/Loader';
 
 const drawerWidth = 190;
 
@@ -92,10 +93,10 @@ function App() {
           />
           <main className={classes.main}>
             <div className={classes.toolbar} />
-            <Grid container justify="center">
-              <Grid item xl={10}>
+            <Grid container spacing={0} justify="center">
+              <Grid item xl={10} lg={11} xs={12}>
                 {
-                  loadSettings ? <Box m={2} flexGrow={1} justifyContent="space-around" display="flex" flexDirection="column"><LinearProgress /></Box> : (
+                  loadSettings ? <Box m={2} flexGrow={1} justifyContent="space-around" display="flex" flexDirection="column"><Loader /></Box> : (
                     <RouterSwitch>
                       <Route exact path="/">
                         <Applications />

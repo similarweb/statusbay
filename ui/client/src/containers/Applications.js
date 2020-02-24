@@ -1,7 +1,5 @@
 import React, { useMemo } from 'react';
-import Box from '@material-ui/core/Box';
 import { useHistory } from 'react-router-dom';
-import PageTitle from '../components/Layout/PageTitle';
 import Table from '../components/Table/Table';
 import PageContent from '../components/Layout/PageContent';
 
@@ -10,16 +8,14 @@ const Applications = () => {
   const onRowClick = (row) => (event) => {
     // redirect to application deployments page
     history.push({
-      pathname: `/applications/${row.name}`,
+      pathname: `/application/${row.id}`,
     });
   };
   const filters = useMemo(() => {return {
     distinct: false
   }}, []);
   return (
-    <PageContent>
-      <Table onRowClick={onRowClick} filters={filters} title="Applications" />
-    </PageContent>
+    <Table onRowClick={onRowClick} filters={filters} title="Applications" showHistoryBtn={true} />
   );
 };
 

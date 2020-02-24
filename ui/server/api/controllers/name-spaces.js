@@ -4,6 +4,6 @@ const urlPath = `/applications/values/namespace`;
 module.exports = {
     urlPath,
     async getAll() {
-        return axios.get(`${config.apiBaseUrl}${urlPath}`)
+        return axios.get(`${config.kubernetesApiUrl}${urlPath}`)
     }
 };

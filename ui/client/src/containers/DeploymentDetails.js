@@ -12,8 +12,8 @@ import LinearProgress from '@material-ui/core/LinearProgress';
 import * as moment from 'moment';
 import ArrowBackIcon from '@material-ui/icons/ArrowBack';
 import Chip from '@material-ui/core/Chip';
-import makeStyles from '@material-ui/core/styles/makeStyles';
 import IconButton from '@material-ui/core/IconButton';
+import makeStyles from '@material-ui/core/styles/makeStyles';
 import PageContent from '../components/Layout/PageContent';
 import ReplicasStats from '../DataComponents/ReplicasStats';
 import PodEvents from '../DataComponents/PodEvents';
@@ -55,17 +55,28 @@ const DeploymentDetails = () => {
   return (
     <DeploymentDetailsContextProvider id={`${deploymentId}`}>
       {
-        ({ data, loading }) => (loading ? <Box m={2} flexGrow={1} justifyContent="space-around" display="flex" flexDirection="column"><Loader /></Box> : (
-          <PageContent>
-            <Box mt={3} mb={3}>
-              <Typography variant="h3">
-                <IconButton aria-label="back" onClick={onClickBack}>
+        ({ data, loading }) => (loading
+          ? (
+            <Box
+              m={2}
+              flexGrow={1}
+              justifyContent="space-around"
+              display="flex"
+              flexDirection="column"
+            >
+              <Loader />
+            </Box>
+          ) : (
+            <PageContent>
+              <Box mt={3} mb={3}>
+                <Typography variant="h3">
+                  <IconButton aria-label="back" onClick={onClickBack}>
                   <ArrowBackIcon fontSize="large" />
                 </IconButton>
-                {data.name}
-              </Typography>
-              <Box mt={1} mb={1} className={classes.chips}>
-                <DeploymentStatus />
+                  {data.name}
+                </Typography>
+                <Box mt={1} mb={1} className={classes.chips}>
+                  <DeploymentStatus />
                 <Chip label={(
                   <Typography>
 Namespace:
@@ -87,21 +98,21 @@ Deployment Time:
                   </Typography>
 )}
                 />
+                </Box>
               </Box>
-            </Box>
-            <Kinds selectedTab={parseInt(tab)} onTabChange={handleTabChange} />
-            <Box mt={3} mb={3}>
-              <ReplicasStats kindIndex={parseInt(tab)} />
-            </Box>
-            <Box mt={3} mb={3}>
-              <PodEvents kindIndex={parseInt(tab)} />
-              {/* <Metrics kindIndex={parseInt(tab)} /> */}
-              <DeploymentEvents kindIndex={parseInt(tab)} />
-              {/* <Alerts kindIndex={parseInt(tab)} /> */}
-            </Box>
-          </PageContent>
+              <Kinds selectedTab={parseInt(tab)} onTabChange={handleTabChange} />
+              <Box mt={3} mb={3}>
+                <ReplicasStats kindIndex={parseInt(tab)} />
+              </Box>
+              <Box mt={3} mb={3}>
+                <PodEvents kindIndex={parseInt(tab)} />
+                <DeploymentEvents kindIndex={parseInt(tab)} />
+                <Metrics kindIndex={parseInt(tab)} />
+                <Alerts kindIndex={parseInt(tab)} />
+              </Box>
+            </PageContent>
 
-        ))
+          ))
 
       }
     </DeploymentDetailsContextProvider>

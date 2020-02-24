@@ -3,7 +3,8 @@ import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
 import PropTypes from 'prop-types';
 import {
-  blue, cyan, deepPurple, teal,
+  amber,
+  blue, brown, cyan, deepPurple, lightGreen, lime, teal,
 } from '@material-ui/core/colors';
 import LineChartConfig from './LineChartConfig';
 
@@ -21,12 +22,7 @@ Highcharts.setOptions({
   },
 });
 
-const colors = [
-  deepPurple[500],
-  blue[500],
-  cyan[500],
-  teal[500],
-];
+
 
 const fillColor = (color) => ({
   fillColor: {
@@ -47,14 +43,13 @@ const buildSeries = (series) => series.map((serie, index) => ({
   name: serie.name,
   data: serie.points,
   showInLegend: true,
-  color: colors[index],
   lineWidth: 1,
   states: {
     hover: {
       enabled: false,
     },
   },
-  ...fillColor(colors[index]),
+  // ...fillColor(colors[index]),
 }));
 
 const LineChart = ({ series, deploymentTime }) => {

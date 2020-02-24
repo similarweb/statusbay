@@ -8,8 +8,8 @@ const {info} = require('./logger');
 const axios = require('axios');
 const config = require('./config');
 
-// if apiBaseUrl isn't set, use the mock data
-if (!config.apiBaseUrl) {
+// if kubernetesApiUrl isn't set, use the mock data
+if (!process.env.API_URL) {
     require('./mock');
 }
 

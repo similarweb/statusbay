@@ -6,9 +6,9 @@ import PageContent from '../components/Layout/PageContent';
 const Applications = () => {
   const history = useHistory();
   const onRowClick = (row) => (event) => {
-    // redirect to application deployments page
+    // redirect to application deployments page    
     history.push({
-      pathname: `/applications/${row.name}`,
+      pathname: `/application/${row.id}`,
     });
   };
   const filters = useMemo(() => {return {
@@ -16,7 +16,7 @@ const Applications = () => {
   }}, []);
   return (
     <PageContent>
-      <Table onRowClick={onRowClick} filters={filters} title="Applications" />
+      <Table onRowClick={onRowClick} filters={filters} title="Applications" showHistoryBtn={true} />
     </PageContent>
   );
 };

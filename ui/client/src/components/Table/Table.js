@@ -46,15 +46,26 @@ const paramToNumber = (value) => {
 const useStyles = makeStyles((theme) => ({
   row: {
     height: 49,
+    "&:hover $actions": {
+      opacity: 1,
+    }
   },
   iconName: {
     float: 'left',
     padding: '0 5px 0 0',
+  },
+  actions: {
+    opacity: 0,
+    'text-align': 'right',
+  },
+  detailsLink: {
+    display: 'inline-block',
+    margin: '0 0 0 5px',
   }
 }));
 
 const Table = ({
-  hideNameFilter, onRowClick, filters, title,
+  hideNameFilter, onRowClick, filters, title, showHistoryBtn,
 }) => {
   const { appSettings, dispatch } = useContext(AppSettingsContext);
   const [tableFilters, setTableFilters, resetTableFilters] = useTableFilters({
@@ -174,13 +185,24 @@ const Table = ({
         id: 'details',
         name: '',
         cell: (row) => row.status !== 'deleted' && (
-          <Link
-            to={`/application/${row.id}`}
-          >
-            <Box display="flex" alignItems="center">
-              <Button variant="contained" color="primary">Details</Button>
-            </Box>
-          </Link>
+          <div className={classes.actions}>
+            {showHistoryBtn &&
+              <div className={classes.detailsLink} >
+                <Link to={`/applications/${row.name}`}>
+                  <Box display="flex" alignItems="center">
+                    <Button variant="contained" color="primary">History</Button>
+                  </Box>
+                </Link>
+              </div>
+            }
+            <div className={classes.detailsLink} >
+              <Link to={`/application/${row.id}`}>
+                <Box display="flex" alignItems="center">
+                  <Button variant="contained" color="primary">Details</Button>
+                </Box>
+              </Link>            
+            </div>
+          </div>
         ),
         sortable: false,
       },
@@ -296,11 +318,13 @@ Table.propTypes = {
   onRowClick: PropTypes.func,
   filters: PropTypes.object,
   title: PropTypes.string,
+  showHistoryBtn: PropTypes.bool,
 };
 Table.defaultProps = {
   hideNameFilter: false,
   onRowClick: () => () => null,
   filters: {},
   title: null,
+  showHistoryBtn: false,
 };
 export default Table;

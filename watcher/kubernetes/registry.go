@@ -76,6 +76,7 @@ type RegistryManager struct {
 	storage                     Storage
 	reporter                    *ReporterManager
 	lastDeploymentHistory       map[string]time.Time
+	runningApplies              []*RegistryRow
 }
 
 // NewRegistryManager create new schema registry instance
@@ -97,6 +98,7 @@ func NewRegistryManager(saveInterval time.Duration, checkFinishDelay time.Durati
 		lastDeploymentHistory: make(map[string]time.Time),
 		saveLock:              &sync.Mutex{},
 		applyLock:             &sync.Mutex{},
+		runningApplies:        nil,
 	}
 }
 
@@ -120,7 +122,9 @@ func (dr *RegistryManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 
 // LoadRunningApps TODO:: fix me
 func (dr *RegistryManager) LoadRunningApplies() []*RegistryRow {
-
+	if dr.runningApplies != nil {
+		return dr.runningApplies
+	}
 	rows := []*RegistryRow{}
 	apps, _ := dr.storage.GetAppliesByStatus(common.ApplyStatusRunning)
 	log.WithField("count", len(apps)).Info("loading running job from database")
@@ -145,9 +149,8 @@ func (dr *RegistryManager) LoadRunningApplies() []*RegistryRow {
 		rows = append(rows, &row)
 
 	}
-
+	dr.runningApplies = rows
 	return rows
-
 }
 
 func (dr *RegistryManager) NewApplyEvent(data ApplyEvent) *RegistryRow {

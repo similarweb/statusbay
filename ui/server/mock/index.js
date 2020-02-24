@@ -42,22 +42,22 @@ const filter = (params, data) => {
     return {results: filtered.slice(limitNum * offsetNum, limitNum * offsetNum + limitNum), totalCount: filtered.length};
 };
 
-mock.onGet(`${config.apiBaseUrl}${clusters.urlPath}`)
+mock.onGet(`${config.kubernetesApiUrl}${clusters.urlPath}`)
     .reply(200, mockClusters.getAll());
-mock.onGet(`${config.apiBaseUrl}${nameSpaces.urlPath}`)
+mock.onGet(`${config.kubernetesApiUrl}${nameSpaces.urlPath}`)
     .reply(200, mockNameSpaces.getAll());
- mock.onGet(`${config.apiBaseUrl}${statuses.urlPath}`)
+ mock.onGet(`${config.kubernetesApiUrl}${statuses.urlPath}`)
  .reply(200, mockStatuses.getAll());
 
 
- mock.onGet(new RegExp(`${config.apiBaseUrl}${applications.urlPath}/*`))
+ mock.onGet(new RegExp(`${config.kubernetesApiUrl}${applications.urlPath}/*`))
  .reply((config) => {
      const params = getQuery(config.url);
      return [200, filter(params, mockApps.getAll())]
  });
 
 // mock socket data
-mock.onGet(`${config.apiBaseUrl}${deploymentDetails.urlPath}`)
+mock.onGet(`${config.kubernetesApiUrl}${deploymentDetails.urlPath}`)
 .reply(() => {
     return Promise.resolve([200, mockDeploymentDetails.getAll()])
 });

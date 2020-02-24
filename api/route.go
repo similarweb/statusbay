@@ -125,6 +125,16 @@ func (server *Server) AlertsHandler(resp http.ResponseWriter, req *http.Request)
 	httpresponse.JSONWrite(resp, http.StatusOK, alerts)
 }
 
+// VersionHandler returns the latest StatusBay version
+func (server *Server) VersionHandler(resp http.ResponseWriter, req *http.Request) {
+	version, err := server.version.Get()
+	if err != nil {
+		httpresponse.JSONWrite(resp, http.StatusOK, httpresponse.EmptyResponse{})
+		return
+	}
+	httpresponse.JSONWrite(resp, http.StatusOK, version)
+}
+
 // NotFoundRoute a 404 handler
 func (server *Server) NotFoundRoute(resp http.ResponseWriter, req *http.Request) {
 	httpresponse.JSONError(resp, http.StatusNotFound, errors.New("path not found"))

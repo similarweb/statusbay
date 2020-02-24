@@ -14,6 +14,7 @@ import (
 	"statusbay/api/alerts"
 	"statusbay/api/kubernetes"
 	"statusbay/api/metrics"
+	"statusbay/version"
 )
 
 const (
@@ -30,10 +31,11 @@ type Server struct {
 	kubernetesMarkEventsPath string
 	metricClientProviders    map[string]metrics.MetricManagerDescriber
 	alertClientProviders     map[string]alerts.AlertsManagerDescriber
+	version                  version.VersionDescriptor
 }
 
 // NewServer returns a new Server
-func NewServer(kubernetesStorage kubernetes.Storage, port string, kubernetesMarkEventsPath string, metricClientProviders map[string]metrics.MetricManagerDescriber, alertClientProviders map[string]alerts.AlertsManagerDescriber) *Server {
+func NewServer(kubernetesStorage kubernetes.Storage, port string, kubernetesMarkEventsPath string, metricClientProviders map[string]metrics.MetricManagerDescriber, alertClientProviders map[string]alerts.AlertsManagerDescriber, version version.VersionDescriptor) *Server {
 
 	router := mux.NewRouter()
 	corsObj := handlers.AllowedOrigins([]string{"*"})
@@ -43,6 +45,7 @@ func NewServer(kubernetesStorage kubernetes.Storage, port string, kubernetesMark
 		kubernetesMarkEventsPath: kubernetesMarkEventsPath,
 		metricClientProviders:    metricClientProviders,
 		alertClientProviders:     alertClientProviders,
+		version:                  version,
 		httpserver: &http.Server{
 			Handler: handlers.CORS(corsObj)(router),
 			Addr:    fmt.Sprintf("0.0.0.0:%s", port),
@@ -78,6 +81,7 @@ func (server *Server) BindEndpoints() {
 
 	// Genetic routes
 	server.router.HandleFunc("/api/v1/health", server.HealthCheckHandler).Methods("GET")
+	server.router.HandleFunc("/api/v1/version", server.VersionHandler).Methods("GET")
 	server.router.HandleFunc("/api/v1/application/metric", server.MetricHandler).Methods("GET")
 	server.router.HandleFunc("/api/v1/application/alerts", server.AlertsHandler).Methods("GET")
 	server.router.NotFoundHandler = http.HandlerFunc(server.NotFoundRoute)

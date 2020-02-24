@@ -13,17 +13,29 @@ const useStyles = makeStyles((theme) => ({
 
 const Widget = ({ title, children }) => {
   const classes = useStyles();
-  const t = title;
   return (
     <Card>
-      <CardHeader title={t} titleTypographyProps={{ variant: 'h6' }} classes={{ root: classes.header }} />
-      <CardContent>{children}</CardContent>
+      {title && (
+      <CardHeader
+        title={title}
+        titleTypographyProps={{ variant: 'h6' }}
+        classes={{ root: classes.header }}
+      />
+      )}
+
+      <CardContent>
+        {children}
+      </CardContent>
     </Card>
   );
 };
 Widget.propTypes = {
-  title: PropTypes.string.isRequired,
+  title: PropTypes.string,
   children: PropTypes.node.isRequired,
 };
+
+Widget.defaultProps = {
+  title: null
+}
 
 export default Widget;

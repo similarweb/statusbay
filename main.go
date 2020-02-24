@@ -110,7 +110,6 @@ func startKubernetesWatcher(ctx context.Context, configPath, kubeconfig, apiserv
 
 	//Registry manager
 	registryManager := kuberneteswatcher.NewRegistryManager(watcherConfig.Applies.SaveInterval, watcherConfig.Applies.CheckFinishDelay, watcherConfig.Applies.CollectDataAfterApplyFinish, mysql, reporter, watcherConfig.ClusterName)
-
 	//Event manager
 	eventManager := kuberneteswatcher.NewEventsManager(kubernetesClientset)
 

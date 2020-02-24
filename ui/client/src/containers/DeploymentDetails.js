@@ -49,7 +49,11 @@ const DeploymentDetails = () => {
     });
   };
   const onClickBack = () => {
-    history.goBack();
+    if(history.length <= 2){
+      history.push('/');
+    } else {
+      history.goBack();
+    }
   };
   const classes = useStyles();
   return (

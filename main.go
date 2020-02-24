@@ -137,7 +137,7 @@ func startKubernetesWatcher(ctx context.Context, configPath, kubeconfig, apiserv
 	daemonsetManager := kuberneteswatcher.NewDaemonsetManager(kubernetesClientset, eventManager, registryManager, serviceManager, controllerRevisionManager, runningApplies, watcherConfig.Applies.MaxApplyTime)
 
 	//Statefulset manager
-	statefulsetManager := kuberneteswatcher.NewStatefulsetManager(kubernetesClientset, eventManager, registryManager, serviceManager, controllerRevisionManager,runningApplies,  watcherConfig.Applies.MaxApplyTime)
+	statefulsetManager := kuberneteswatcher.NewStatefulsetManager(kubernetesClientset, eventManager, registryManager, serviceManager, controllerRevisionManager, runningApplies, watcherConfig.Applies.MaxApplyTime)
 
 	servers := []serverutil.Server{
 		eventManager, podsManager, deploymentManager, daemonsetManager, statefulsetManager, replicasetManager, registryManager, serviceManager, reporter,

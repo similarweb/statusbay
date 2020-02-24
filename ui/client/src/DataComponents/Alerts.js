@@ -3,11 +3,11 @@ import Grid from '@material-ui/core/Grid';
 import * as PropTypes from 'prop-types';
 import Box from '@material-ui/core/Box';
 import Widget from '../components/Widget/Widget';
-import SpotChart from '../components/Charts/Spot/SpotChart';
 import DeploymentDetailsSection from '../components/DeploymentDetailsSection';
 import { useDeploymentDetailsContext } from '../context/DeploymentDetailsContext';
 import AlertsChartContainer from './AlertsChartContainer';
-import MetricIntegrationModal from '../components/MetricIntegrationModal';
+import AlertsIntegrationModal
+  from '../components/IntergationModals/AlertsIntegrationModal/AlertsIntegrationModal';
 
 const Alerts = ({ kindIndex }) => {
   const { data } = useDeploymentDetailsContext();
@@ -26,7 +26,7 @@ const Alerts = ({ kindIndex }) => {
             display="flex"
             justifyContent="space-around"
           >
-            <MetricIntegrationModal />
+            <AlertsIntegrationModal />
           </Box>
         </Widget>
       </Grid>

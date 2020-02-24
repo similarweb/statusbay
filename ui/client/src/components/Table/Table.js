@@ -46,6 +46,9 @@ const paramToNumber = (value) => {
 };
 
 const useStyles = makeStyles((theme) => ({
+  subTitle:{
+    display: 'inline-block',
+  },
   row: {
     height: 49,
     '&:hover $actions': {
@@ -216,7 +219,7 @@ const Table = ({
           <Typography variant="h3" component="div">
             {title}
             {' '}
-            <Typography variant="body1">
+            <Typography className={classes.subTitle}  variant="body1">
               (
               {numeral(tableData.totalCount).format('0,0')}
               )

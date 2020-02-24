@@ -190,15 +190,16 @@ const Table = ({
       {
         id: 'details',
         name: '',
-        cell: (row) => row.status !== 'deleted' && (
+        cell: (row) => <>
           <div className={classes.actions}>
-            <Link to={`/application/${row.id}`}>
-              <Box display="flex" alignItems="center" ml={1}>
-                <Button variant="contained" color="primary">Details</Button>
-              </Box>
-            </Link>
-            {showHistoryBtn
-            && (
+            {row.status !== 'deleted' && (
+              <Link to={`/application/${row.id}`}>
+                <Box display="flex" alignItems="center" ml={1}>
+                  <Button variant="contained" color="primary">Details</Button>
+                </Box>
+              </Link>
+            )}
+            {showHistoryBtn && (
               <Link to={`/applications/${row.name}`}>
                 <Box display="flex" alignItems="center" ml={1}>
                   <Button variant="contained" color="primary">History</Button>
@@ -206,7 +207,7 @@ const Table = ({
               </Link>
             )}
           </div>
-        ),
+        </>,
         sortable: false,
       },
     ],

@@ -54,7 +54,6 @@ const DeploymentStatusBox = ({ status }) => {
   if (status) {
     return (
       <Chip
-        icon={icons[status]}
         label={messages[status]}
         classes={{ root: classes.root, icon: classes.icon }}
       />

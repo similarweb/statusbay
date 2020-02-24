@@ -49,6 +49,7 @@ type ApplyEvent struct {
 	Kind         string
 	Hash         uint64
 	Annotations  map[string]string
+	Labels       map[string]string
 }
 
 // RegistryRow defined row data of deployment

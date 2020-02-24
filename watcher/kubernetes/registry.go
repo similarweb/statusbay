@@ -62,6 +62,7 @@ type RegistryRow struct {
 	cancelFn                         context.CancelFunc
 	collectDataAfterDeploymentFinish time.Duration
 	DBSchema                         DBSchema
+	reloadRestartTime                int64
 }
 
 // RegistryManager defined multiple rows data
@@ -137,7 +138,8 @@ func (dr *RegistryManager) LoadRunningApplies() []*RegistryRow {
 			status:   common.ApplyStatusRunning,
 			DBSchema: appSchema,
 		}
-
+		// update reload time to calculate progress dead line correctly the deployment
+		row.reloadRestartTime = time.Now().Unix()
 		go row.isFinish(dr.checkFinishDelay)
 		dr.registryData[encodedID] = &row
 
@@ -320,12 +322,28 @@ func (wbr *RegistryRow) GetURI() string {
 	return fmt.Sprintf("deployments/%s/%d", wbr.DBSchema.Application, wbr.DBSchema.CreationTimestamp)
 
 }
+func (wbr *RegistryRow) getCreationDeployTime() int64 {
+	creation := wbr.DBSchema.CreationTimestamp
+	if wbr.reloadRestartTime > 0 {
+		creation = wbr.reloadRestartTime
+	}
+	wbr.Log().Logger.WithField("creationTimestamp", creation).Debug("returning creation timestamp")
+	return creation
+}
+func (wbr *RegistryRow) getDeploymentDiff(progressDeadlineSeconds int64) float64 {
+	creation := wbr.getCreationDeployTime()
+	diff := time.Now().Sub(time.Unix(creation, 0)).Seconds()
+	return diff
+}
+func (wbr *RegistryRow) isWithinProgressDeadline(progressDeadlineSeconds int64) bool {
+	diff := wbr.getDeploymentDiff(progressDeadlineSeconds)
+	return progressDeadlineSeconds < int64(diff)
+}
 
 // isDeploymentFinish will check for Deployment resource and see if it finished or errord due to timeout.
 func (wbr *RegistryRow) isDeploymentFinish() (bool, error) {
 	lg := wbr.Log()
 	isFinished := false
-	diff := time.Now().Sub(time.Unix(wbr.DBSchema.CreationTimestamp, 0)).Seconds()
 	if len(wbr.DBSchema.Resources.Deployments) == 0 {
 		isFinished = true
 		return isFinished, nil
@@ -341,10 +359,10 @@ func (wbr *RegistryRow) isDeploymentFinish() (bool, error) {
 			}
 			readyReplicasCount = readyReplicasCount + replica.Status.ReadyReplicas
 		}
-		if deployment.ProgressDeadlineSeconds < int64(diff) {
+		if wbr.isWithinProgressDeadline(deployment.ProgressDeadlineSeconds) {
 			lg.WithFields(log.Fields{
 				"progress_deadline_seconds": deployment.ProgressDeadlineSeconds,
-				"deploy_time":               diff,
+				"deploy_time":               wbr.getDeploymentDiff(deployment.ProgressDeadlineSeconds),
 			}).Error("deployment failed due to progress deadline")
 			return isFinished, errors.New("ProgrogressDeadline has passed")
 		}
@@ -381,16 +399,15 @@ func (wbr *RegistryRow) isDaemonSetFinish() (bool, error) {
 	totalDesiredPods := int32(0)
 	totalUpdatedPodsOnNodes := int32(0)
 	totalCurrentPods := int32(0)
-	diff := time.Now().Sub(time.Unix(wbr.DBSchema.CreationTimestamp, 0)).Seconds()
 	for _, daemonset := range wbr.DBSchema.Resources.Daemonsets {
 		totalDesiredPods = totalDesiredPods + daemonset.Status.DesiredNumberScheduled
 		totalUpdatedPodsOnNodes = totalUpdatedPodsOnNodes + daemonset.Status.DesiredNumberScheduled
 		totalCurrentPods = totalCurrentPods + daemonset.Status.CurrentNumberScheduled
 
-		if daemonset.ProgressDeadlineSeconds < int64(diff) {
+		if wbr.isWithinProgressDeadline(daemonset.ProgressDeadlineSeconds) {
 			lg.WithFields(log.Fields{
 				"progress_deadline_seconds": daemonset.ProgressDeadlineSeconds,
-				"deploy_time":               diff,
+				"deploy_time":               wbr.getDeploymentDiff(daemonset.ProgressDeadlineSeconds),
 			}).Error("daemonset failed due to progress deadline")
 			return isFinished, errors.New("ProgrogressDeadline has passed")
 		}
@@ -421,7 +438,6 @@ func (wbr *RegistryRow) isDaemonSetFinish() (bool, error) {
 func (wbr *RegistryRow) isStatefulSetFinish() (bool, error) {
 	lg := wbr.Log()
 	isFinished := false
-	diff := time.Now().Sub(time.Unix(wbr.DBSchema.CreationTimestamp, 0)).Seconds()
 	if len(wbr.DBSchema.Resources.Statefulsets) == 0 {
 		isFinished = true
 		return isFinished, nil
@@ -436,10 +452,10 @@ func (wbr *RegistryRow) isStatefulSetFinish() (bool, error) {
 		readyPodsCount = readyPodsCount + statefulset.Status.ReadyReplicas
 		countOfPodsInState = int32(len(statefulset.Pods))
 
-		if statefulset.ProgressDeadlineSeconds < int64(diff) {
+		if wbr.isWithinProgressDeadline(statefulset.ProgressDeadlineSeconds) {
 			lg.WithFields(log.Fields{
 				"progress_deadline_seconds": statefulset.ProgressDeadlineSeconds,
-				"deploy_time":               diff,
+				"deploy_time":               wbr.getDeploymentDiff(statefulset.ProgressDeadlineSeconds),
 			}).Error("statefulset failed due to progress deadline")
 			return isFinished, errors.New("ProgressDeadLine has passed")
 		}

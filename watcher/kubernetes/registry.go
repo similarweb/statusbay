@@ -331,7 +331,7 @@ func (wbr *RegistryRow) GetURI() string {
 func (wbr *RegistryRow) isDeploymentFinish() (bool, error) {
 	lg := wbr.Log()
 	isFinished := false
-	_ = time.Now().Sub(time.Unix(wbr.DBSchema.CreationTimestamp, 0)).Seconds()
+	diff := time.Now().Sub(time.Unix(wbr.DBSchema.CreationTimestamp, 0)).Seconds()
 	if len(wbr.DBSchema.Resources.Deployments) == 0 {
 		isFinished = true
 		return isFinished, nil
@@ -347,13 +347,13 @@ func (wbr *RegistryRow) isDeploymentFinish() (bool, error) {
 			}
 			readyReplicasCount = readyReplicasCount + replica.Status.ReadyReplicas
 		}
-		// if deployment.ProgressDeadlineSeconds < int64(diff) {
-		// 	lg.WithFields(log.Fields{
-		// 		"progress_deadline_seconds": deployment.ProgressDeadlineSeconds,
-		// 		"deploy_time":               diff,
-		// 	}).Error("deployment failed due to progress deadline")
-		// 	return isFinished, errors.New("ProgrogressDeadline has passed")
-		// }
+		if deployment.ProgressDeadlineSeconds < int64(diff) {
+			lg.WithFields(log.Fields{
+				"progress_deadline_seconds": deployment.ProgressDeadlineSeconds,
+				"deploy_time":               diff,
+			}).Error("deployment failed due to progress deadline")
+			return isFinished, errors.New("ProgrogressDeadline has passed")
+		}
 	}
 	lg.WithFields(log.Fields{
 		"replicaset_count":     countOfRunningReplicas,
@@ -387,19 +387,19 @@ func (wbr *RegistryRow) isDaemonSetFinish() (bool, error) {
 	totalDesiredPods := int32(0)
 	totalUpdatedPodsOnNodes := int32(0)
 	totalCurrentPods := int32(0)
-	_ = time.Now().Sub(time.Unix(wbr.DBSchema.CreationTimestamp, 0)).Seconds()
+	diff := time.Now().Sub(time.Unix(wbr.DBSchema.CreationTimestamp, 0)).Seconds()
 	for _, daemonset := range wbr.DBSchema.Resources.Daemonsets {
 		totalDesiredPods = totalDesiredPods + daemonset.Status.DesiredNumberScheduled
 		totalUpdatedPodsOnNodes = totalUpdatedPodsOnNodes + daemonset.Status.DesiredNumberScheduled
 		totalCurrentPods = totalCurrentPods + daemonset.Status.CurrentNumberScheduled
 
-		// if daemonset.ProgressDeadlineSeconds < int64(diff) {
-		// 	lg.WithFields(log.Fields{
-		// 		"progress_deadline_seconds": daemonset.ProgressDeadlineSeconds,
-		// 		"deploy_time":               diff,
-		// 	}).Error("daemonset failed due to progress deadline")
-		// 	return isFinished, errors.New("ProgrogressDeadline has passed")
-		// }
+		if daemonset.ProgressDeadlineSeconds < int64(diff) {
+			lg.WithFields(log.Fields{
+				"progress_deadline_seconds": daemonset.ProgressDeadlineSeconds,
+				"deploy_time":               diff,
+			}).Error("daemonset failed due to progress deadline")
+			return isFinished, errors.New("ProgrogressDeadline has passed")
+		}
 	}
 	lg.WithFields(log.Fields{
 		"total_daemonsets_desired_pods": totalDesiredPods,
@@ -427,7 +427,7 @@ func (wbr *RegistryRow) isDaemonSetFinish() (bool, error) {
 func (wbr *RegistryRow) isStatefulSetFinish() (bool, error) {
 	lg := wbr.Log()
 	isFinished := false
-	_ = time.Now().Sub(time.Unix(wbr.DBSchema.CreationTimestamp, 0)).Seconds()
+	diff := time.Now().Sub(time.Unix(wbr.DBSchema.CreationTimestamp, 0)).Seconds()
 	if len(wbr.DBSchema.Resources.Statefulsets) == 0 {
 		isFinished = true
 		return isFinished, nil
@@ -442,13 +442,13 @@ func (wbr *RegistryRow) isStatefulSetFinish() (bool, error) {
 		readyPodsCount = readyPodsCount + statefulset.Status.ReadyReplicas
 		countOfPodsInState = int32(len(statefulset.Pods))
 
-		// if statefulset.ProgressDeadlineSeconds < int64(diff) {
-		// 	lg.WithFields(log.Fields{
-		// 		"progress_deadline_seconds": statefulset.ProgressDeadlineSeconds,
-		// 		"deploy_time":               diff,
-		// 	}).Error("statefulset failed due to progress deadline")
-		// 	return isFinished, errors.New("ProgressDeadLine has passed")
-		// }
+		if statefulset.ProgressDeadlineSeconds < int64(diff) {
+			lg.WithFields(log.Fields{
+				"progress_deadline_seconds": statefulset.ProgressDeadlineSeconds,
+				"deploy_time":               diff,
+			}).Error("statefulset failed due to progress deadline")
+			return isFinished, errors.New("ProgressDeadLine has passed")
+		}
 	}
 	lg.WithFields(log.Fields{
 		"total_statefulsets_desired_pods":  totalDesiredPods,

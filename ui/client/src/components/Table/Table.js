@@ -46,11 +46,22 @@ const paramToNumber = (value) => {
 const useStyles = makeStyles((theme) => ({
   row: {
     height: 49,
+    '&:hover $actions': {
+      opacity: 1,
+    },
   },
+  iconName: {
+    marginRight: 5,
+  },
+  actions: {
+    opacity: 0,
+    display: 'flex',
+    flexDirection: 'row-reverse',
+  }
 }));
 
 const Table = ({
-  hideNameFilter, onRowClick, filters, title,
+  hideNameFilter, onRowClick, filters, title, showHistoryBtn,
 }) => {
   const { appSettings, dispatch } = useContext(AppSettingsContext);
   const [tableFilters, setTableFilters, resetTableFilters] = useTableFilters({
@@ -139,13 +150,12 @@ const Table = ({
       {
         id: 'name',
         name: t('table.filters.name'),
-        cell: (row) => row.name,
-        sortable: true,
-      },
-      {
-        id: 'status',
-        name: t('table.filters.status'),
-        cell: (row) => <CellStatus status={row.status} />,
+        cell: (row) => (
+          <Box display="flex" alignItems="center">
+            <div className={classes.iconName}><CellStatus status={row.status} /></div>
+            <span>{row.name}</span>
+          </Box>
+        ),
         sortable: true,
       },
       {
@@ -176,24 +186,40 @@ const Table = ({
         id: 'details',
         name: '',
         cell: (row) => row.status !== 'deleted' && (
-          <Link
-            to={`/application/${row.id}`}
-          >
-            <Box display="flex" alignItems="center">
-              <Button variant="contained" color="primary">Details</Button>
-            </Box>
-          </Link>
+          <div className={classes.actions}>
+            <Link to={`/application/${row.id}`}>
+              <Box display="flex" alignItems="center" ml={1}>
+                <Button variant="contained" color="primary">Details</Button>
+              </Box>
+            </Link>
+            {showHistoryBtn
+            && (
+              <Link to={`/applications/${row.name}`}>
+                <Box display="flex" alignItems="center" ml={1}>
+                  <Button variant="contained" color="primary">History</Button>
+                </Box>
+              </Link>
+            )}
+          </div>
         ),
         sortable: false,
       },
     ],
-  }), []);
+  }), [classes]);
   const showNoData = !loading && (!tableData || tableData.rows.length === 0);
   const getTitle = useMemo(() => {
     if (tableData && tableData.totalCount > 0) {
       return (
         <>
-          <Typography variant="h3" component="div">{title} <Typography variant="body1">({numeral(tableData.totalCount).format('0,0')})</Typography></Typography>
+          <Typography variant="h3" component="div">
+            {title}
+            {' '}
+            <Typography variant="body1">
+(
+              {numeral(tableData.totalCount).format('0,0')}
+)
+            </Typography>
+          </Typography>
         </>
       );
     }
@@ -298,11 +324,13 @@ Table.propTypes = {
   onRowClick: PropTypes.func,
   filters: PropTypes.object,
   title: PropTypes.string,
+  showHistoryBtn: PropTypes.bool,
 };
 Table.defaultProps = {
   hideNameFilter: false,
   onRowClick: () => () => null,
   filters: {},
   title: null,
+  showHistoryBtn: false,
 };
 export default Table;

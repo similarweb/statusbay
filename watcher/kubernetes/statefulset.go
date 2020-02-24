@@ -68,6 +68,7 @@ func (ssm *StatefulsetManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 
 	// Continue watching on running statefulsets from storage state
 	runningStatefulsetApps := ssm.initialRunningApplies
+	log.WithField("running_apps", len(runningStatefulsetApps)).Debug("Loaded Running Applications in StatefulSet Manager")
 	for _, application := range runningStatefulsetApps {
 		app := application
 		for _, staefulsetData := range application.DBSchema.Resources.Statefulsets {
@@ -75,6 +76,7 @@ func (ssm *StatefulsetManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 			staefulsetWatchListOptions := metaV1.ListOptions{
 				LabelSelector: labels.SelectorFromSet(staefulsetData.Statefulset.Labels).String(),
 			}
+			app.Log().Logger.WithField("name", sData.GetName()).Debug("begining watching loaded running statefulset")
 			go func(app *RegistryRow, sData *StatefulsetData, listOptions metaV1.ListOptions) {
 				ssm.watchStatefulset(app.ctx, app.cancelFn, app.Log(), sData, listOptions, sData.Statefulset.Namespace, sData.ProgressDeadlineSeconds)
 			}(app, sData, staefulsetWatchListOptions)

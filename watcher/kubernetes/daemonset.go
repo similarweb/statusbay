@@ -64,6 +64,7 @@ func (dsm *DaemonsetManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 	}()
 	// continue running daemonsets from storage state
 	runningDaemonsetsApps := dsm.initialRunningApplies
+	log.WithField("running_apps", len(runningDaemonsetsApps)).Debug("Loaded Running Applications in Daemonset Manager")
 	for _, application := range runningDaemonsetsApps {
 		app := application
 		for _, daemonsetData := range application.DBSchema.Resources.Daemonsets {
@@ -72,6 +73,7 @@ func (dsm *DaemonsetManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 				LabelSelector: labels.SelectorFromSet(daemonsetData.Metadata.Labels).String(),
 			}
 			go func(app *RegistryRow, dsData *DaemonsetData, listOptions metaV1.ListOptions) {
+				app.Log().Logger.WithField("name", dsData.GetName()).Debug("begining watching loaded running daemonset")
 				dsm.watchDaemonset(
 					app.ctx,
 					app.cancelFn,

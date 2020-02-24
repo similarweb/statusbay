@@ -70,11 +70,13 @@ func (dm *DeploymentManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 
 	//Continue running deployments from storage state
 	runningDeploymentApplication := dm.initialRunningApplies
+	log.WithField("running_apps", len(runningDeploymentApplication)).Debug("Loaded Running Applications in Deployment Manager")
 	for _, application := range runningDeploymentApplication {
 		app := application
 		for _, deploymentData := range application.DBSchema.Resources.Deployments {
 			depData := deploymentData
 			deploymentWatchListOptions := metaV1.ListOptions{LabelSelector: labels.SelectorFromSet(deploymentData.Deployment.Labels).String()}
+			app.Log().Logger.WithField("name", depData.GetName()).Debug("begining watching loaded running deployment")
 			go func(app *RegistryRow, depData *DeploymentData, listOptions metaV1.ListOptions) {
 				dm.watchDeployment(app.ctx, app.cancelFn, app.Log(), depData, listOptions, depData.Deployment.Namespace, depData.ProgressDeadlineSeconds)
 			}(app, depData, deploymentWatchListOptions)

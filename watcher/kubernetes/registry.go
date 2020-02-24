@@ -517,7 +517,6 @@ func (wbr *RegistryRow) isFinish(checkFinishDelay time.Duration) {
 				return
 			} else if isDepFinished && isDsFinished && isSsFinished {
 				wbr.Stop(common.ApplySuccessful, common.ApplyStatusDescriptionSuccessful)
-				cancelFn()
 				return
 			}
 		case <-ctx.Done():

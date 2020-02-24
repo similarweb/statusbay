@@ -15,10 +15,20 @@ const SocketIOProvider = ({ children, io }) => {
     path: '/api/socket',
   });
 
+  const metrics = io(`${endpoint}/metrics`, {
+    path: '/api/socket',
+  });
+
+  const alerts = io(`${endpoint}/alerts`, {
+    path: '/api/socket',
+  });
+
   const value = useMemo(() => ({
     deploymentDetails,
     applications,
-  }), [deploymentDetails, applications]);
+    metrics,
+    alerts
+  }), [deploymentDetails, applications, metrics, alerts]);
 
   return (
     <SocketIOContext.Provider value={value}>

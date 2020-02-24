@@ -223,6 +223,9 @@ module.exports = {
                     },
                     "Daemonsets":{
 
+                    },
+                    "Statefulsets": {
+
                     }
                 }
             }

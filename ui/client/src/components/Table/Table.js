@@ -19,6 +19,7 @@ import makeStyles from '@material-ui/core/styles/makeStyles';
 import numeral from 'numeral';
 import ArrowBackIcon from '@material-ui/icons/ArrowBack';
 import Typography from '@material-ui/core/Typography';
+import Tooltip from '@material-ui/core/Tooltip';
 import MultiSelect from './Filters/MultiSelect';
 import TableStateless from './TableStateless';
 import CellStatus from './Cells/CellStatus';
@@ -33,6 +34,7 @@ import SearchField from './Filters/SearchField';
 import NoData from './NoData';
 import { useApplicationsData } from '../../Hooks/ApplicationsHooks';
 import ToggleFilter from './Filters/ToggleFilter';
+import CellDetails from './Cells/CellDetails';
 
 const parseSortBy = (sortby = '|') => sortby.split('|');
 const paramToArray = (param = '') => (param ? param.split(',') : []);
@@ -61,7 +63,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const Table = ({
-  hideNameFilter, onRowClick, filters, title, showHistoryBtn,
+  hideNameFilter, hideDistinctFilter, onRowClick, filters, title, showHistoryBtn,
 }) => {
   const { appSettings, dispatch } = useContext(AppSettingsContext);
   const [tableFilters, setTableFilters, resetTableFilters] = useTableFilters({
@@ -215,9 +217,9 @@ const Table = ({
             {title}
             {' '}
             <Typography variant="body1">
-(
+              (
               {numeral(tableData.totalCount).format('0,0')}
-)
+              )
             </Typography>
           </Typography>
         </>
@@ -229,98 +231,103 @@ const Table = ({
     <div>
       {
         title && (
-        <Box m={3}>
-          {getTitle}
-        </Box>
+          <Box mt={3} mb={3}>
+            {getTitle}
+          </Box>
         )
       }
-      <Box m={2}>
-        <Paper>
-          <TableContainer component={Paper}>
-            <Box m={1} display="flex" flexDirection="column">
-              <Box display="flex" alignItems="center">
-                {
-                  !hideNameFilter && (
-                    <SearchField
-                      label={t('table.filters.name')}
-                      onChange={setTableFilters.bind(null, 'name')}
-                      defaultValue={tableFilters.name}
-                      delay={250}
-                    />
-                  )
-                }
-                <SearchField
-                  label={t('table.filters.deploy.by')}
-                  onChange={setTableFilters.bind(null, 'deployBy')}
-                  defaultValue={tableFilters.deployBy}
-                  delay={250}
-                />
-                <ToggleFilter label="Distinct" checked={tableFilters.distinct} onChange={handleDistinctChange} />
-              </Box>
-              <Box display="flex" alignItems="center">
-                <MultiSelect
-                  name={t('table.filters.cluster')}
-                  onChange={setTableFilters.bind(null, 'cluster')}
-                  selectedValue={tableFilters.cluster}
-                  values={appSettings.filters.clusters}
-                />
-                <MultiSelect
-                  name={t('table.filters.namespace')}
-                  onChange={setTableFilters.bind(null, 'namespace')}
-                  selectedValue={tableFilters.namespace}
-                  values={appSettings.filters.namespaces}
-                />
-                <MultiSelect
-                  name={t('table.filters.status')}
-                  onChange={setTableFilters.bind(null, 'status')}
-                  selectedValue={tableFilters.status}
-                  values={appSettings.filters.statuses}
-                />
-                <DatePickerFilter
-                  label={t('table.filters.from')}
-                  value={tableFilters.from}
-                  onChange={handleDateChange(setTableFilters.bind(null, 'from'))}
-                />
-                <DatePickerFilter
-                  label={t('table.filters.to')}
-                  value={tableFilters.to}
-                  onChange={handleDateChange(setTableFilters.bind(null, 'to'))}
-                />
-                <Button variant="contained" color="secondary" onClick={resetFilters}>Reset</Button>
-              </Box>
+      <Paper>
+        <TableContainer component={Paper}>
+          <Box m={1} display="flex" flexDirection="column">
+            <Box display="flex" alignItems="center">
+              {
+                !hideNameFilter && (
+                  <SearchField
+                    label={t('table.filters.name')}
+                    onChange={setTableFilters.bind(null, 'name')}
+                    defaultValue={tableFilters.name}
+                    delay={250}
+                  />
+                )
+              }
+              <SearchField
+                label={t('table.filters.deploy.by')}
+                onChange={setTableFilters.bind(null, 'deployBy')}
+                defaultValue={tableFilters.deployBy}
+                delay={250}
+              />
+              {!hideDistinctFilter && <ToggleFilter
+                label="Distinct"
+                checked={tableFilters.distinct}
+                onChange={handleDistinctChange}
+              />
+              }
+
             </Box>
-            <TableStateless
-              data={tableData && tableData.rows}
-              config={tableConfig}
-              page={parseInt(tableFilters.page)}
-              loading={loading}
-              sortBy={sortByFiled}
-              sortDirection={sortDirection}
-              onSort={onSort}
-            />
-            {
-              !(loading || !tableData || !tableData.rows.length) && (
-                <TablePagination
-                  rowsPerPageOptions={[20, 50, 100]}
-                  rowsPerPage={tableFilters.rowsPerPage}
-                  onChangeRowsPerPage={handleRowsPerPageChange}
-                  count={tableData && tableData.totalCount}
-                  page={tableFilters.page}
-                  onChangePage={handlePageChange}
-                />
-              )
-            }
-            {
-              showNoData && <Box m={2}><NoData /></Box>
-            }
-          </TableContainer>
-        </Paper>
-      </Box>
+            <Box display="flex" alignItems="center">
+              <MultiSelect
+                name={t('table.filters.cluster')}
+                onChange={setTableFilters.bind(null, 'cluster')}
+                selectedValue={tableFilters.cluster}
+                values={appSettings.filters.clusters}
+              />
+              <MultiSelect
+                name={t('table.filters.namespace')}
+                onChange={setTableFilters.bind(null, 'namespace')}
+                selectedValue={tableFilters.namespace}
+                values={appSettings.filters.namespaces}
+              />
+              <MultiSelect
+                name={t('table.filters.status')}
+                onChange={setTableFilters.bind(null, 'status')}
+                selectedValue={tableFilters.status}
+                values={appSettings.filters.statuses}
+              />
+              <DatePickerFilter
+                label={t('table.filters.from')}
+                value={tableFilters.from}
+                onChange={handleDateChange(setTableFilters.bind(null, 'from'))}
+              />
+              <DatePickerFilter
+                label={t('table.filters.to')}
+                value={tableFilters.to}
+                onChange={handleDateChange(setTableFilters.bind(null, 'to'))}
+              />
+              <Button variant="contained" color="secondary" onClick={resetFilters}>Reset</Button>
+            </Box>
+          </Box>
+          <TableStateless
+            data={tableData && tableData.rows}
+            config={tableConfig}
+            page={parseInt(tableFilters.page)}
+            loading={loading}
+            sortBy={sortByFiled}
+            sortDirection={sortDirection}
+            onSort={onSort}
+          />
+          {
+            !(loading || !tableData || !tableData.rows.length) && (
+              <TablePagination
+                rowsPerPageOptions={[20, 50, 100]}
+                rowsPerPage={tableFilters.rowsPerPage}
+                onChangeRowsPerPage={handleRowsPerPageChange}
+                count={tableData && tableData.totalCount}
+                page={tableFilters.page}
+                onChangePage={handlePageChange}
+              />
+            )
+          }
+          {
+            showNoData && <Box m={2}><NoData /></Box>
+          }
+        </TableContainer>
+      </Paper>
     </div>
   );
 };
 Table.propTypes = {
   hideNameFilter: PropTypes.bool,
+  hideDistinctFilter: PropTypes.bool,
   onRowClick: PropTypes.func,
   filters: PropTypes.object,
   title: PropTypes.string,
@@ -328,6 +335,7 @@ Table.propTypes = {
 };
 Table.defaultProps = {
   hideNameFilter: false,
+  hideDistinctFilter: false,
   onRowClick: () => () => null,
   filters: {},
   title: null,

@@ -36,17 +36,21 @@ type DeploymentManager struct {
 
 	// Max watch time
 	maxDeploymentTime int64
+
+	// Initial Running Applies to load on start
+	initialRunningApplies []*RegistryRow
 }
 
 // NewDeploymentManager create new deployment instance
-func NewDeploymentManager(kubernetesClientset kubernetes.Interface, eventManager *EventsManager, registryManager *RegistryManager, replicaset *ReplicaSetManager, serviceManager *ServiceManager, maxDeploymentTime time.Duration) *DeploymentManager {
+func NewDeploymentManager(kubernetesClientset kubernetes.Interface, eventManager *EventsManager, registryManager *RegistryManager, replicaset *ReplicaSetManager, serviceManager *ServiceManager, runningApplies []*RegistryRow, maxDeploymentTime time.Duration) *DeploymentManager {
 	return &DeploymentManager{
-		client:            kubernetesClientset,
-		eventManager:      eventManager,
-		registryManager:   registryManager,
-		replicaset:        replicaset,
-		serviceManager:    serviceManager,
-		maxDeploymentTime: int64(maxDeploymentTime.Seconds()),
+		client:                kubernetesClientset,
+		eventManager:          eventManager,
+		registryManager:       registryManager,
+		replicaset:            replicaset,
+		serviceManager:        serviceManager,
+		maxDeploymentTime:     int64(maxDeploymentTime.Seconds()),
+		initialRunningApplies: runningApplies,
 	}
 }
 
@@ -65,13 +69,19 @@ func (dm *DeploymentManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 	}()
 
 	//Continue running deployments from storage state
-	runningDeploymentApplication := dm.registryManager.LoadRunningApplies()
+	runningDeploymentApplication := dm.initialRunningApplies
 	for _, application := range runningDeploymentApplication {
+		app := application
 		for _, deploymentData := range application.DBSchema.Resources.Deployments {
+			depData := deploymentData
 			deploymentWatchListOptions := metaV1.ListOptions{LabelSelector: labels.SelectorFromSet(deploymentData.Deployment.Labels).String()}
-			go dm.watchDeployment(application.ctx, application.cancelFn, application.Log(), deploymentData, deploymentWatchListOptions, deploymentData.Deployment.Namespace, deploymentData.ProgressDeadlineSeconds)
+			go func(app *RegistryRow, depData *DeploymentData, listOptions metaV1.ListOptions) {
+				dm.watchDeployment(app.ctx, app.cancelFn, app.Log(), depData, listOptions, depData.Deployment.Namespace, depData.ProgressDeadlineSeconds)
+			}(app, depData, deploymentWatchListOptions)
 		}
 	}
+	// we dont need anymore that list
+	dm.initialRunningApplies = nil
 	dm.watchDeployments(ctx)
 }
 

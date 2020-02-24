@@ -64,7 +64,7 @@ func (dsm *DaemonsetManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 	}()
 	// continue running daemonsets from storage state
 	runningDaemonsetsApps := dsm.initialRunningApplies
-	log.WithField("running_apps", len(runningDaemonsetsApps)).Debug("Loaded Running Applications in Daemonset Manager")
+	log.WithField("running_apps", len(runningDaemonsetsApps)).Debug("loaded running applications in daemonset manager")
 	for _, application := range runningDaemonsetsApps {
 		app := application
 		for _, daemonsetData := range application.DBSchema.Resources.Daemonsets {

@@ -70,7 +70,7 @@ func (dm *DeploymentManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 
 	//Continue running deployments from storage state
 	runningDeploymentApplication := dm.initialRunningApplies
-	log.WithField("running_apps", len(runningDeploymentApplication)).Debug("Loaded Running Applications in Deployment Manager")
+	log.WithField("running_apps", len(runningDeploymentApplication)).Debug("loaded running applications in deployment manager")
 	for _, application := range runningDeploymentApplication {
 		app := application
 		for _, deploymentData := range application.DBSchema.Resources.Deployments {

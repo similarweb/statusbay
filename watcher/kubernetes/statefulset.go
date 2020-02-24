@@ -68,7 +68,7 @@ func (ssm *StatefulsetManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 
 	// Continue watching on running statefulsets from storage state
 	runningStatefulsetApps := ssm.initialRunningApplies
-	log.WithField("running_apps", len(runningStatefulsetApps)).Debug("Loaded Running Applications in StatefulSet Manager")
+	log.WithField("running_apps", len(runningStatefulsetApps)).Debug("loaded running applications in statefulset manager")
 	for _, application := range runningStatefulsetApps {
 		app := application
 		for _, staefulsetData := range application.DBSchema.Resources.Statefulsets {

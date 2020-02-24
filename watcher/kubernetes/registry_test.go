@@ -20,11 +20,10 @@ func NewRegistryMock() (*kuberneteswatcher.RegistryManager, *testutil.MockStorag
 
 	saveInterval, _ := time.ParseDuration("1s")
 	checkFinishDelay := 10 * time.Microsecond
-	collectDataAfterApplyFinish := 10 * time.Microsecond
 
 	storageMock := testutil.NewMockStorage()
 	reporter := kuberneteswatcher.NewReporter([]notifierCommon.Notifier{})
-	registry := kuberneteswatcher.NewRegistryManager(saveInterval, checkFinishDelay, collectDataAfterApplyFinish, storageMock, reporter, "mock-cluster")
+	registry := kuberneteswatcher.NewRegistryManager(time.Duration(2*time.Second), saveInterval, checkFinishDelay, storageMock, reporter, "mock-cluster")
 
 	var wg *sync.WaitGroup
 	ctx := context.Background()

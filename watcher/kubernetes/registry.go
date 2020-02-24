@@ -80,7 +80,7 @@ type RegistryManager struct {
 }
 
 // NewRegistryManager create new schema registry instance
-func NewRegistryManager(saveInterval time.Duration, checkFinishDelay time.Duration, collectDataAfterApplyFinish time.Duration, storage Storage, reporter *ReporterManager, clusterName string) *RegistryManager {
+func NewRegistryManager( saveInterval time.Duration, checkFinishDelay time.Duration, collectDataAfterApplyFinish time.Duration, storage Storage, reporter *ReporterManager, clusterName string) *RegistryManager {
 	if clusterName == "" {
 		log.Panic("cluster name is a mandatory field")
 		os.Exit(1)
@@ -120,11 +120,9 @@ func (dr *RegistryManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 
 }
 
-// LoadRunningApps TODO:: fix me
+// LoadRunningApplies loading running applies from db and deleted them after clearInitialRunningApplies seconds
 func (dr *RegistryManager) LoadRunningApplies() []*RegistryRow {
-	if dr.runningApplies != nil {
-		return dr.runningApplies
-	}
+
 	rows := []*RegistryRow{}
 	apps, _ := dr.storage.GetAppliesByStatus(common.ApplyStatusRunning)
 	log.WithField("count", len(apps)).Info("loading running job from database")
@@ -149,7 +147,6 @@ func (dr *RegistryManager) LoadRunningApplies() []*RegistryRow {
 		rows = append(rows, &row)
 
 	}
-	dr.runningApplies = rows
 	return rows
 }
 

@@ -36,17 +36,21 @@ type DeploymentManager struct {
 
 	// Max watch time
 	maxDeploymentTime int64
+
+	// The apps loaded in running state initiall on startup and deleted afterwards
+	initialRunningApps []*RegistryRow
 }
 
 // NewDeploymentManager create new deployment instance
-func NewDeploymentManager(kubernetesClientset kubernetes.Interface, eventManager *EventsManager, registryManager *RegistryManager, replicaset *ReplicaSetManager, serviceManager *ServiceManager, maxDeploymentTime time.Duration) *DeploymentManager {
+func NewDeploymentManager(kubernetesClientset kubernetes.Interface, eventManager *EventsManager, registryManager *RegistryManager, replicaset *ReplicaSetManager, serviceManager *ServiceManager, initialRunningApps []*RegistryRow, maxDeploymentTime time.Duration) *DeploymentManager {
 	return &DeploymentManager{
-		client:            kubernetesClientset,
-		eventManager:      eventManager,
-		registryManager:   registryManager,
-		replicaset:        replicaset,
-		serviceManager:    serviceManager,
-		maxDeploymentTime: int64(maxDeploymentTime.Seconds()),
+		initialRunningApps: initialRunningApps,
+		client:             kubernetesClientset,
+		eventManager:       eventManager,
+		registryManager:    registryManager,
+		replicaset:         replicaset,
+		serviceManager:     serviceManager,
+		maxDeploymentTime:  int64(maxDeploymentTime.Seconds()),
 	}
 }
 
@@ -65,13 +69,15 @@ func (dm *DeploymentManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 	}()
 
 	//Continue running deployments from storage state
-	runningDeploymentApplication := dm.registryManager.LoadRunningApplies()
+	// https://github.com/golang/go/wiki/CommonMistakes#using-goroutines-on-loop-iterator-variables
+	runningDeploymentApplication := dm.initialRunningApps
 	for _, application := range runningDeploymentApplication {
 		for _, deploymentData := range application.DBSchema.Resources.Deployments {
 			deploymentWatchListOptions := metaV1.ListOptions{LabelSelector: labels.SelectorFromSet(deploymentData.Deployment.Labels).String()}
 			go dm.watchDeployment(application.ctx, application.cancelFn, application.Log(), deploymentData, deploymentWatchListOptions, deploymentData.Deployment.Namespace, deploymentData.ProgressDeadlineSeconds)
 		}
 	}
+	dm.initialRunningApps = nil
 	dm.watchDeployments(ctx)
 }
 

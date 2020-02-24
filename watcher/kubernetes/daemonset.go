@@ -32,17 +32,21 @@ type DaemonsetManager struct {
 	controllerRevManager ControllerRevision
 	// Max watch time
 	maxDeploymentTime int64
+
+	// Initial Running Applies to load on start
+	initialRunningApplies []*RegistryRow
 }
 
 //NewDaemonsetManager  create new instance to manage damonset related things
-func NewDaemonsetManager(kubernetesClientset kubernetes.Interface, eventManager *EventsManager, registryManager *RegistryManager, serviceManager *ServiceManager, controllerRevisionManager ControllerRevision, maxDeploymentTime time.Duration) *DaemonsetManager {
+func NewDaemonsetManager(kubernetesClientset kubernetes.Interface, eventManager *EventsManager, registryManager *RegistryManager, serviceManager *ServiceManager, controllerRevisionManager ControllerRevision, runningApplies []*RegistryRow, maxDeploymentTime time.Duration) *DaemonsetManager {
 	return &DaemonsetManager{
-		client:               kubernetesClientset,
-		eventManager:         eventManager,
-		registryManager:      registryManager,
-		serviceManager:       serviceManager,
-		controllerRevManager: controllerRevisionManager,
-		maxDeploymentTime:    int64(maxDeploymentTime.Seconds()),
+		client:                kubernetesClientset,
+		eventManager:          eventManager,
+		registryManager:       registryManager,
+		serviceManager:        serviceManager,
+		controllerRevManager:  controllerRevisionManager,
+		maxDeploymentTime:     int64(maxDeploymentTime.Seconds()),
+		initialRunningApplies: runningApplies,
 	}
 }
 
@@ -59,23 +63,31 @@ func (dsm *DaemonsetManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 		}
 	}()
 	// continue running daemonsets from storage state
-	runningDaemonsetsApps := dsm.registryManager.LoadRunningApplies()
+	runningDaemonsetsApps := dsm.initialRunningApplies
+	log.WithField("running_apps", len(runningDaemonsetsApps)).Debug("loaded running applications in daemonset manager")
 	for _, application := range runningDaemonsetsApps {
+		app := application
 		for _, daemonsetData := range application.DBSchema.Resources.Daemonsets {
+			dsData := daemonsetData
 			daemonsetWatchListOptions := metaV1.ListOptions{
 				LabelSelector: labels.SelectorFromSet(daemonsetData.Metadata.Labels).String(),
 			}
-			go dsm.watchDaemonset(
-				application.ctx,
-				application.cancelFn,
-				application.Log(),
-				daemonsetData,
-				daemonsetWatchListOptions,
-				daemonsetData.Metadata.Namespace,
-				daemonsetData.ProgressDeadlineSeconds,
-			)
+			go func(app *RegistryRow, dsData *DaemonsetData, listOptions metaV1.ListOptions) {
+				app.Log().Logger.WithField("name", dsData.GetName()).Debug("begining watching loaded running daemonset")
+				dsm.watchDaemonset(
+					app.ctx,
+					app.cancelFn,
+					app.Log(),
+					dsData,
+					listOptions,
+					dsData.Metadata.Namespace,
+					dsData.ProgressDeadlineSeconds,
+				)
+			}(app, dsData, daemonsetWatchListOptions)
 		}
 	}
+	// we don't need that list anymore
+	dsm.initialRunningApplies = nil
 	dsm.watchDaemonsets(ctx)
 
 }

@@ -62,6 +62,7 @@ type RegistryRow struct {
 	cancelFn                         context.CancelFunc
 	collectDataAfterDeploymentFinish time.Duration
 	DBSchema                         DBSchema
+	reloadRestartTime                int64
 }
 
 // RegistryManager defined multiple rows data
@@ -120,7 +121,6 @@ func (dr *RegistryManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 
 // LoadRunningApps TODO:: fix me
 func (dr *RegistryManager) LoadRunningApplies() []*RegistryRow {
-
 	rows := []*RegistryRow{}
 	apps, _ := dr.storage.GetAppliesByStatus(common.ApplyStatusRunning)
 	log.WithField("count", len(apps)).Info("loading running job from database")
@@ -138,15 +138,15 @@ func (dr *RegistryManager) LoadRunningApplies() []*RegistryRow {
 			status:   common.ApplyStatusRunning,
 			DBSchema: appSchema,
 		}
+		// update reload time to calculate progress dead line correctly the deployment
+		row.reloadRestartTime = time.Now().Unix()
 		go row.isFinish(dr.checkFinishDelay)
 		dr.registryData[encodedID] = &row
 
 		rows = append(rows, &row)
 
 	}
-
 	return rows
-
 }
 
 func (dr *RegistryManager) NewApplyEvent(data ApplyEvent) *RegistryRow {
@@ -323,11 +323,35 @@ func (wbr *RegistryRow) GetURI() string {
 
 }
 
+// getCreationDeployTime returns the logical creation deploy time of a deployment.
+// if the watcher was restarted and passed the deadline it will return the watcher restart time as creation instead of the original
+func (wbr *RegistryRow) getCreationDeployTime(progressDeadlineSeconds int64) int64 {
+	creation := wbr.DBSchema.CreationTimestamp
+	originalDeadlineTime := progressDeadlineSeconds + creation
+	if wbr.reloadRestartTime > 0 && wbr.reloadRestartTime > originalDeadlineTime {
+		creation = wbr.reloadRestartTime
+	}
+	wbr.Log().Logger.WithField("creationTimestamp", creation).Debug("returning creation timestamp")
+	return creation
+}
+
+// getDeploymentDiff returns the diff beteen now - creation , i.e the delta
+func (wbr *RegistryRow) getDeploymentDiff(progressDeadlineSeconds int64) float64 {
+	creation := wbr.getCreationDeployTime(progressDeadlineSeconds)
+	diff := time.Now().Sub(time.Unix(creation, 0)).Seconds()
+	return diff
+}
+
+// checks if a deployment is withing the progress Dead line or not
+func (wbr *RegistryRow) isWithinProgressDeadline(progressDeadlineSeconds int64) bool {
+	diff := wbr.getDeploymentDiff(progressDeadlineSeconds)
+	return progressDeadlineSeconds < int64(diff)
+}
+
 // isDeploymentFinish will check for Deployment resource and see if it finished or errord due to timeout.
 func (wbr *RegistryRow) isDeploymentFinish() (bool, error) {
 	lg := wbr.Log()
 	isFinished := false
-	diff := time.Now().Sub(time.Unix(wbr.DBSchema.CreationTimestamp, 0)).Seconds()
 	if len(wbr.DBSchema.Resources.Deployments) == 0 {
 		isFinished = true
 		return isFinished, nil
@@ -343,14 +367,13 @@ func (wbr *RegistryRow) isDeploymentFinish() (bool, error) {
 			}
 			readyReplicasCount = readyReplicasCount + replica.Status.ReadyReplicas
 		}
-		if deployment.ProgressDeadlineSeconds < int64(diff) {
+		if wbr.isWithinProgressDeadline(deployment.ProgressDeadlineSeconds) {
 			lg.WithFields(log.Fields{
 				"progress_deadline_seconds": deployment.ProgressDeadlineSeconds,
-				"deploy_time":               diff,
+				"deploy_time":               wbr.getDeploymentDiff(deployment.ProgressDeadlineSeconds),
 			}).Error("deployment failed due to progress deadline")
 			return isFinished, errors.New("ProgrogressDeadline has passed")
 		}
-
 	}
 	lg.WithFields(log.Fields{
 		"replicaset_count":     countOfRunningReplicas,
@@ -358,6 +381,7 @@ func (wbr *RegistryRow) isDeploymentFinish() (bool, error) {
 		"ready_replicas_count": readyReplicasCount,
 		"count_deployments":    len(wbr.DBSchema.Resources.Deployments),
 	}).Info("deployment status")
+
 	deploymentsNum := len(wbr.DBSchema.Resources.Deployments)
 	if deploymentsNum == countOfRunningReplicas && desiredStateCount == readyReplicasCount || wbr.status == common.ApplyStatusDeleted {
 		lg.WithFields(log.Fields{
@@ -365,7 +389,6 @@ func (wbr *RegistryRow) isDeploymentFinish() (bool, error) {
 			"desired_state_count":  desiredStateCount,
 			"ready_replicas_count": readyReplicasCount,
 		}).Info("deployment has finished successfully")
-
 		// Wating few minutes to collect more event after deployment finished
 		isFinished = true
 		return isFinished, nil
@@ -384,16 +407,15 @@ func (wbr *RegistryRow) isDaemonSetFinish() (bool, error) {
 	totalDesiredPods := int32(0)
 	totalUpdatedPodsOnNodes := int32(0)
 	totalCurrentPods := int32(0)
-	diff := time.Now().Sub(time.Unix(wbr.DBSchema.CreationTimestamp, 0)).Seconds()
 	for _, daemonset := range wbr.DBSchema.Resources.Daemonsets {
 		totalDesiredPods = totalDesiredPods + daemonset.Status.DesiredNumberScheduled
 		totalUpdatedPodsOnNodes = totalUpdatedPodsOnNodes + daemonset.Status.DesiredNumberScheduled
 		totalCurrentPods = totalCurrentPods + daemonset.Status.CurrentNumberScheduled
 
-		if daemonset.ProgressDeadlineSeconds < int64(diff) {
+		if wbr.isWithinProgressDeadline(daemonset.ProgressDeadlineSeconds) {
 			lg.WithFields(log.Fields{
 				"progress_deadline_seconds": daemonset.ProgressDeadlineSeconds,
-				"deploy_time":               diff,
+				"deploy_time":               wbr.getDeploymentDiff(daemonset.ProgressDeadlineSeconds),
 			}).Error("daemonset failed due to progress deadline")
 			return isFinished, errors.New("ProgrogressDeadline has passed")
 		}
@@ -424,7 +446,6 @@ func (wbr *RegistryRow) isDaemonSetFinish() (bool, error) {
 func (wbr *RegistryRow) isStatefulSetFinish() (bool, error) {
 	lg := wbr.Log()
 	isFinished := false
-	diff := time.Now().Sub(time.Unix(wbr.DBSchema.CreationTimestamp, 0)).Seconds()
 	if len(wbr.DBSchema.Resources.Statefulsets) == 0 {
 		isFinished = true
 		return isFinished, nil
@@ -439,10 +460,10 @@ func (wbr *RegistryRow) isStatefulSetFinish() (bool, error) {
 		readyPodsCount = readyPodsCount + statefulset.Status.ReadyReplicas
 		countOfPodsInState = int32(len(statefulset.Pods))
 
-		if statefulset.ProgressDeadlineSeconds < int64(diff) {
+		if wbr.isWithinProgressDeadline(statefulset.ProgressDeadlineSeconds) {
 			lg.WithFields(log.Fields{
 				"progress_deadline_seconds": statefulset.ProgressDeadlineSeconds,
-				"deploy_time":               diff,
+				"deploy_time":               wbr.getDeploymentDiff(statefulset.ProgressDeadlineSeconds),
 			}).Error("statefulset failed due to progress deadline")
 			return isFinished, errors.New("ProgressDeadLine has passed")
 		}
@@ -469,6 +490,8 @@ func (wbr *RegistryRow) isStatefulSetFinish() (bool, error) {
 
 // isFinish will check (by interval number) when the deployment finished by replicaset status
 func (wbr *RegistryRow) isFinish(checkFinishDelay time.Duration) {
+	ctx, cancelFn := context.WithCancel(context.Background())
+	defer cancelFn()
 	lg := wbr.Log()
 	lg.WithFields(log.Fields{
 		"deployment_count":   len(wbr.DBSchema.Resources.Deployments),
@@ -502,8 +525,9 @@ func (wbr *RegistryRow) isFinish(checkFinishDelay time.Duration) {
 				return
 			} else if isDepFinished && isDsFinished && isSsFinished {
 				wbr.Stop(common.ApplySuccessful, common.ApplyStatusDescriptionSuccessful)
+				return
 			}
-		case <-wbr.ctx.Done():
+		case <-ctx.Done():
 			lg.Debug("isFinish function watch was stopped, got ctx done signal")
 			return
 
@@ -707,7 +731,6 @@ func (dr *RegistryManager) save() {
 			} else {
 				dr.storage.UpdateApply(data.applyID, data, data.status)
 			}
-
 			log.WithFields(log.Fields{
 				"name": data.DBSchema.Application,
 			}).Debug("deployment was saved")

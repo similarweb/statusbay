@@ -125,6 +125,7 @@ func (dm *DeploymentManager) watchDeployments(ctx context.Context) {
 						Kind:         "deployment",
 						Hash:         hash,
 						Annotations:  deployment.GetAnnotations(),
+						Labels:       deployment.GetLabels(),
 					}
 
 					applicationRegistry := dm.registryManager.NewApplyEvent(apply)
@@ -277,6 +278,7 @@ func (dm *DeploymentManager) AddNewDeployment(data ApplyEvent, applicationRegist
 			Name:         data.ApplyName,
 			Namespace:    data.Namespace,
 			Annotations:  data.Annotations,
+			Labels:       data.Labels,
 			Metrics:      GetMetricsDataFromAnnotations(data.Annotations),
 			Alerts:       GetAlertsDataFromAnnotations(data.Annotations),
 			DesiredState: desiredState,

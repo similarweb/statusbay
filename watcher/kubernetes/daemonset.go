@@ -121,6 +121,7 @@ func (dsm *DaemonsetManager) watchDaemonsets(ctx context.Context) {
 						Kind:         "daemonset",
 						Hash:         hash,
 						Annotations:  daemonset.GetAnnotations(),
+						Labels:       daemonset.GetLabels(),
 					}
 
 					appRegistry := dsm.registryManager.NewApplyEvent(apply)
@@ -255,6 +256,7 @@ func (dsm *DaemonsetManager) AddNewDaemonset(data ApplyEvent, applicationRegistr
 			Name:         data.ApplyName,
 			Namespace:    data.Namespace,
 			Annotations:  data.Annotations,
+			Labels:       data.Labels,
 			Metrics:      GetMetricsDataFromAnnotations(data.Annotations),
 			Alerts:       GetAlertsDataFromAnnotations(data.Annotations),
 			DesiredState: desiredState,

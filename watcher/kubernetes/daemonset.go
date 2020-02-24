@@ -58,7 +58,7 @@ func (dsm *DaemonsetManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 			}
 		}
 	}()
-	// // continue running daemonsets from storage state
+	// continue running daemonsets from storage state
 	runningDaemonsetsApps := dsm.registryManager.LoadRunningApplies()
 	for _, application := range runningDaemonsetsApps {
 		for _, daemonsetData := range application.DBSchema.Resources.Daemonsets {

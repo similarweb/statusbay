@@ -322,19 +322,27 @@ func (wbr *RegistryRow) GetURI() string {
 	return fmt.Sprintf("deployments/%s/%d", wbr.DBSchema.Application, wbr.DBSchema.CreationTimestamp)
 
 }
-func (wbr *RegistryRow) getCreationDeployTime() int64 {
+
+// getCreationDeployTime returns the logical creation deploy time of a deployment.
+// if the watcher was restarted and passed the deadline it will return the watcher restart time as creation instead of the original
+func (wbr *RegistryRow) getCreationDeployTime(progressDeadlineSeconds int64) int64 {
 	creation := wbr.DBSchema.CreationTimestamp
-	if wbr.reloadRestartTime > 0 {
+	originalDeadlineTime := progressDeadlineSeconds + creation
+	if wbr.reloadRestartTime > 0 && wbr.reloadRestartTime > originalDeadlineTime {
 		creation = wbr.reloadRestartTime
 	}
 	wbr.Log().Logger.WithField("creationTimestamp", creation).Debug("returning creation timestamp")
 	return creation
 }
+
+// getDeploymentDiff returns the diff beteen now - creation , i.e the delta
 func (wbr *RegistryRow) getDeploymentDiff(progressDeadlineSeconds int64) float64 {
-	creation := wbr.getCreationDeployTime()
+	creation := wbr.getCreationDeployTime(progressDeadlineSeconds)
 	diff := time.Now().Sub(time.Unix(creation, 0)).Seconds()
 	return diff
 }
+
+// checks if a deployment is withing the progress Dead line or not
 func (wbr *RegistryRow) isWithinProgressDeadline(progressDeadlineSeconds int64) bool {
 	diff := wbr.getDeploymentDiff(progressDeadlineSeconds)
 	return progressDeadlineSeconds < int64(diff)

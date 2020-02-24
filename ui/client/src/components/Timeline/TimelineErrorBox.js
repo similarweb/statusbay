@@ -9,7 +9,7 @@ const useStyles = makeStyles((theme) => ({
   card: {
     backgroundColor: theme.palette.error.main,
     color: theme.palette.error.contrastText,
-    borderRadius: 0,
+    borderRadius: '5px',
     boxShadow: 'none'
   },
 }));

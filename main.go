@@ -114,7 +114,7 @@ func startKubernetesWatcher(ctx context.Context, configPath, kubeconfig, apiserv
 
 	//Registry manager
 	registryManager := kuberneteswatcher.NewRegistryManager(watcherConfig.Applies.SaveInterval, watcherConfig.Applies.CheckFinishDelay, watcherConfig.Applies.CollectDataAfterApplyFinish, mysql, reporter, watcherConfig.ClusterName)
-
+	runningApplies := registryManager.LoadRunningApplies()
 	//Event manager
 	eventManager := kuberneteswatcher.NewEventsManager(kubernetesClientset)
 
@@ -128,16 +128,16 @@ func startKubernetesWatcher(ctx context.Context, configPath, kubeconfig, apiserv
 	replicasetManager := kuberneteswatcher.NewReplicasetManager(kubernetesClientset, eventManager, podsManager)
 
 	//Deployment manager
-	deploymentManager := kuberneteswatcher.NewDeploymentManager(kubernetesClientset, eventManager, registryManager, replicasetManager, serviceManager, watcherConfig.Applies.MaxApplyTime)
+	deploymentManager := kuberneteswatcher.NewDeploymentManager(kubernetesClientset, eventManager, registryManager, replicasetManager, serviceManager, runningApplies, watcherConfig.Applies.MaxApplyTime)
 
 	// ControllerRevision Manager
 	controllerRevisionManager := kuberneteswatcher.NewControllerRevisionManager(kubernetesClientset, podsManager)
 
 	// Daemonset manager
-	daemonsetManager := kuberneteswatcher.NewDaemonsetManager(kubernetesClientset, eventManager, registryManager, serviceManager, controllerRevisionManager, watcherConfig.Applies.MaxApplyTime)
+	daemonsetManager := kuberneteswatcher.NewDaemonsetManager(kubernetesClientset, eventManager, registryManager, serviceManager, controllerRevisionManager, runningApplies, watcherConfig.Applies.MaxApplyTime)
 
 	//Statefulset manager
-	statefulsetManager := kuberneteswatcher.NewStatefulsetManager(kubernetesClientset, eventManager, registryManager, serviceManager, controllerRevisionManager, watcherConfig.Applies.MaxApplyTime)
+	statefulsetManager := kuberneteswatcher.NewStatefulsetManager(kubernetesClientset, eventManager, registryManager, serviceManager, controllerRevisionManager, runningApplies, watcherConfig.Applies.MaxApplyTime)
 
 	servers := []serverutil.Server{
 		eventManager, podsManager, deploymentManager, daemonsetManager, statefulsetManager, replicasetManager, registryManager, serviceManager, reporter,

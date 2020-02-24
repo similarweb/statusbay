@@ -74,7 +74,6 @@ func (dm *DeploymentManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 	}
 
 	dm.watchDeployments(ctx)
-
 }
 
 // watchDeployments start watch on all Kubernetes deployments
@@ -211,7 +210,6 @@ func (dm *DeploymentManager) watchDeployment(ctx context.Context, cancelFn conte
 					// ResourceVersion: deployment.ResourceVersion,
 				}
 				dm.watchEvents(ctx, *deploymentLog, registryDeployment, eventListOptions, namespace)
-
 				//Starting replicaset watch
 				dm.replicaset.Watch <- WatchReplica{
 					DesiredReplicas: *deployment.Spec.Replicas,

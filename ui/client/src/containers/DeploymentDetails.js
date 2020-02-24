@@ -75,33 +75,33 @@ const DeploymentDetails = () => {
               <Box mt={3} mb={3}>
                 <Typography variant="h3">
                   <IconButton aria-label="back" onClick={onClickBack}>
-                  <ArrowBackIcon fontSize="large" />
-                </IconButton>
+                    <ArrowBackIcon fontSize="large" />
+                  </IconButton>
                   {data.name}
                 </Typography>
                 <Box mt={1} mb={1} className={classes.chips}>
                   <DeploymentStatus />
-                <Chip label={(
-                  <Typography>
+                  <Chip label={(
+                    <Typography>
 Namespace:
-                    {data.namespace}
-                  </Typography>
+                      {data.namespace}
+                    </Typography>
 )}
-                />
-                <Chip label={(
-                  <Typography>
+                  />
+                  <Chip label={(
+                    <Typography>
 Cluster:
-                    {data.cluster}
-                  </Typography>
+                      {data.cluster}
+                    </Typography>
 )}
-                />
-                <Chip label={(
-                  <Typography>
+                  />
+                  <Chip label={(
+                    <Typography>
 Deployment Time:
-                    {moment.unix(data.time).utc().format('DD/MM/YYYY HH:mm:ss')}
-                  </Typography>
+                      {moment.unix(data.time).utc().format('DD/MM/YYYY HH:mm:ss')}
+                    </Typography>
 )}
-                />
+                  />
                 </Box>
               </Box>
               <Kinds selectedTab={parseInt(tab)} onTabChange={handleTabChange} />

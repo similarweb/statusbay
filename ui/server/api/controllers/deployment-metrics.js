@@ -22,7 +22,8 @@ module.exports = {
       }
       catch (e) {
         error(`cannot get metrics for metric=${metric}, provider=${provider}, deploymentTime=${deploymentTime}`);
-        resolve({})
+        error(e);
+        resolve([])
       }
     })
   }

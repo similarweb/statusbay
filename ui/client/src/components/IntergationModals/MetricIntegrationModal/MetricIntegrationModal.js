@@ -11,6 +11,9 @@ const useStyles = makeStyles((theme) => ({
     whiteSpace: 'pre',
     fontFamily: 'monospace',
   },
+  image:{
+    width: "100%",
+  }
 }));
 
 const MetricIntegrationModal = () => {
@@ -28,22 +31,24 @@ const MetricIntegrationModal = () => {
   return (
     <div>
       <Button variant="contained" color="primary" onClick={handleClick} startIcon={<WarningIcon />}>Click To Integration</Button>
-      <Dialog open={isOpen} onClose={handleDialogClose} closeAfterTransition={true} onBackdropClick={handleDialogClose}>
-        <Box p={2}>
-          <Typography variant="h4">Kubernetes:</Typography>
+      <Dialog fullWidth={true} maxWidth="lg" open={isOpen} onClose={handleDialogClose} closeAfterTransition={true} onBackdropClick={handleDialogClose}>
+        <Box p={2}> 
+          <Typography variant="h4">Metric Integration:</Typography>
           <Typography variant="body1">
-            Add
+          StatusBay has the ability to show different metrics for different set of queries. More info at 
             {' '}
-            <Link href="https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/" target="_blank">Annotation</Link>
+            <Link href="https://github.com/similarweb/statusbay/blob/master/docs/integrations.md" target="_blank">StatusBay README</Link>
             {' '}
-to deployment:
+           <br/><br/>
+          Annotation example:
           </Typography>
           <Typography className={classes.code}>apiVersion: apps/v1</Typography>
           <Typography className={classes.code}>kind: Deployment</Typography>
           <Typography className={classes.code}>metadata:</Typography>
           <Typography className={classes.code}>  annotations:</Typography>
-          <Typography className={classes.code}>    statusbay.io/alerts-statuscake-tags: nginx</Typography>
-          <img width={560} src={image} />
+          <Typography className={classes.code}>    statusbay.io/metrics-datadog-2xx": "sum:web.http.2xxֿ{`{*}`}.as_count()</Typography>
+          <br/><br/>
+          <img className={classes.image} src={image} />
         </Box>
       </Dialog>
     </div>

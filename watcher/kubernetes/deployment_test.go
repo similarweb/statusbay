@@ -20,11 +20,11 @@ func createMockDeploymentData(registryManager *kuberneteswatcher.RegistryManager
 
 	maxDeploymentTime, _ := time.ParseDuration(progressDeadlineSeconds)
 	client := fake.NewSimpleClientset()
-
+	runningApplies := registryManager.LoadRunningApplies()
 	eventManager := NewEventsMock(client)
 	replicasetManager := NewReplicasetMock(client)
 	serviceManager := NewServiceManagerMockMock(client)
-	deploymentManager := kuberneteswatcher.NewDeploymentManager(client, eventManager, registryManager, replicasetManager, serviceManager, maxDeploymentTime)
+	deploymentManager := kuberneteswatcher.NewDeploymentManager(client, eventManager, registryManager, replicasetManager, serviceManager, runningApplies, maxDeploymentTime)
 
 	return deploymentManager.AddNewDeployment(applyEvent, registryRow, 3)
 
@@ -94,9 +94,10 @@ func NewDeploymentManagerMock(client *fake.Clientset) (*kuberneteswatcher.Deploy
 
 	eventManager := NewEventsMock(client)
 	registryManager, storage := NewRegistryMock()
+	runningApplies := registryManager.LoadRunningApplies()
 	replicasetManager := NewReplicasetMock(client)
 	serviceManager := NewServiceManagerMockMock(client)
-	deploymentManager := kuberneteswatcher.NewDeploymentManager(client, eventManager, registryManager, replicasetManager, serviceManager, maxDeploymentTime)
+	deploymentManager := kuberneteswatcher.NewDeploymentManager(client, eventManager, registryManager, replicasetManager, serviceManager, runningApplies, maxDeploymentTime)
 
 	var wg *sync.WaitGroup
 	ctx := context.Background()

@@ -34,17 +34,21 @@ type StatefulsetManager struct {
 
 	// Max time we want to watch a statefulset deployment
 	maxDeploymentTime int64
+
+	// Initial Running Applies to load on start
+	initialRunningApplies []*RegistryRow
 }
 
 // NewStatefulsetManager creates a new instance to manage statefulset related resources
-func NewStatefulsetManager(k8sClient kubernetes.Interface, eventManager *EventsManager, registryManager *RegistryManager, serviceManager *ServiceManager, controllerRevisionManager ControllerRevision, maxDeploymentTime time.Duration) *StatefulsetManager {
+func NewStatefulsetManager(k8sClient kubernetes.Interface, eventManager *EventsManager, registryManager *RegistryManager, serviceManager *ServiceManager, controllerRevisionManager ControllerRevision, runningApplies []*RegistryRow, maxDeploymentTime time.Duration) *StatefulsetManager {
 	return &StatefulsetManager{
-		client:               k8sClient,
-		eventManager:         eventManager,
-		registryManager:      registryManager,
-		serviceManager:       serviceManager,
-		controllerRevManager: controllerRevisionManager,
-		maxDeploymentTime:    int64(maxDeploymentTime.Seconds()),
+		client:                k8sClient,
+		eventManager:          eventManager,
+		registryManager:       registryManager,
+		serviceManager:        serviceManager,
+		controllerRevManager:  controllerRevisionManager,
+		maxDeploymentTime:     int64(maxDeploymentTime.Seconds()),
+		initialRunningApplies: runningApplies,
 	}
 }
 
@@ -63,16 +67,23 @@ func (ssm *StatefulsetManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 	}()
 
 	// Continue watching on running statefulsets from storage state
-	runningStatefulsetApps := ssm.registryManager.LoadRunningApplies()
+	runningStatefulsetApps := ssm.initialRunningApplies
+	log.WithField("running_apps", len(runningStatefulsetApps)).Debug("loaded running applications in statefulset manager")
 	for _, application := range runningStatefulsetApps {
+		app := application
 		for _, staefulsetData := range application.DBSchema.Resources.Statefulsets {
+			sData := staefulsetData
 			staefulsetWatchListOptions := metaV1.ListOptions{
 				LabelSelector: labels.SelectorFromSet(staefulsetData.Statefulset.Labels).String(),
 			}
-			go ssm.watchStatefulset(application.ctx, application.cancelFn, application.Log(), staefulsetData,
-				staefulsetWatchListOptions, staefulsetData.Statefulset.Namespace, staefulsetData.ProgressDeadlineSeconds)
+			app.Log().Logger.WithField("name", sData.GetName()).Debug("begining watching loaded running statefulset")
+			go func(app *RegistryRow, sData *StatefulsetData, listOptions metaV1.ListOptions) {
+				ssm.watchStatefulset(app.ctx, app.cancelFn, app.Log(), sData, listOptions, sData.Statefulset.Namespace, sData.ProgressDeadlineSeconds)
+			}(app, sData, staefulsetWatchListOptions)
 		}
 	}
+	// we dont need that anymore
+	ssm.initialRunningApplies = nil
 	ssm.watchStatefulsets(ctx)
 
 }

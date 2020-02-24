@@ -36,17 +36,21 @@ type DeploymentManager struct {
 
 	// Max watch time
 	maxDeploymentTime int64
+
+	// Initial Running Applies to load on start
+	initialRunningApplies []*RegistryRow
 }
 
 // NewDeploymentManager create new deployment instance
-func NewDeploymentManager(kubernetesClientset kubernetes.Interface, eventManager *EventsManager, registryManager *RegistryManager, replicaset *ReplicaSetManager, serviceManager *ServiceManager, maxDeploymentTime time.Duration) *DeploymentManager {
+func NewDeploymentManager(kubernetesClientset kubernetes.Interface, eventManager *EventsManager, registryManager *RegistryManager, replicaset *ReplicaSetManager, serviceManager *ServiceManager, runningApplies []*RegistryRow, maxDeploymentTime time.Duration) *DeploymentManager {
 	return &DeploymentManager{
-		client:            kubernetesClientset,
-		eventManager:      eventManager,
-		registryManager:   registryManager,
-		replicaset:        replicaset,
-		serviceManager:    serviceManager,
-		maxDeploymentTime: int64(maxDeploymentTime.Seconds()),
+		client:                kubernetesClientset,
+		eventManager:          eventManager,
+		registryManager:       registryManager,
+		replicaset:            replicaset,
+		serviceManager:        serviceManager,
+		maxDeploymentTime:     int64(maxDeploymentTime.Seconds()),
+		initialRunningApplies: runningApplies,
 	}
 }
 
@@ -65,16 +69,22 @@ func (dm *DeploymentManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 	}()
 
 	//Continue running deployments from storage state
-	runningDeploymentApplication := dm.registryManager.LoadRunningApplies()
+	runningDeploymentApplication := dm.initialRunningApplies
+	log.WithField("running_apps", len(runningDeploymentApplication)).Debug("loaded running applications in deployment manager")
 	for _, application := range runningDeploymentApplication {
+		app := application
 		for _, deploymentData := range application.DBSchema.Resources.Deployments {
+			depData := deploymentData
 			deploymentWatchListOptions := metaV1.ListOptions{LabelSelector: labels.SelectorFromSet(deploymentData.Deployment.Labels).String()}
-			go dm.watchDeployment(application.ctx, application.cancelFn, application.Log(), deploymentData, deploymentWatchListOptions, deploymentData.Deployment.Namespace, deploymentData.ProgressDeadlineSeconds)
+			app.Log().Logger.WithField("name", depData.GetName()).Debug("begining watching loaded running deployment")
+			go func(app *RegistryRow, depData *DeploymentData, listOptions metaV1.ListOptions) {
+				dm.watchDeployment(app.ctx, app.cancelFn, app.Log(), depData, listOptions, depData.Deployment.Namespace, depData.ProgressDeadlineSeconds)
+			}(app, depData, deploymentWatchListOptions)
 		}
 	}
-
+	// we dont need anymore that list
+	dm.initialRunningApplies = nil
 	dm.watchDeployments(ctx)
-
 }
 
 // watchDeployments start watch on all Kubernetes deployments
@@ -211,7 +221,6 @@ func (dm *DeploymentManager) watchDeployment(ctx context.Context, cancelFn conte
 					// ResourceVersion: deployment.ResourceVersion,
 				}
 				dm.watchEvents(ctx, *deploymentLog, registryDeployment, eventListOptions, namespace)
-
 				//Starting replicaset watch
 				dm.replicaset.Watch <- WatchReplica{
 					DesiredReplicas: *deployment.Spec.Replicas,

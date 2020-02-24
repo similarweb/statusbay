@@ -59,7 +59,7 @@ func (v *Version) interval(ctx context.Context) {
 func (v *Version) printResults(n *notifier.Response, err error) {
 
 	if err != nil {
-		log.WithError(err).Error(fmt.Sprintf("failed to get Statusbat latest version"))
+		log.WithError(err).Debug(fmt.Sprintf("failed to get StatusBay latest version"))
 		return
 	}
 	v.response = n

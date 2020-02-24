@@ -11,7 +11,7 @@ module.exports = {
   async getSingleMetric(metric, provider, deploymentTime, minutesBefore = 30, minutesAfter = 30) {
     const params = {
       provider,
-      query: `${metric}.as_count()`,
+      query: `${metric}`,
       from: (deploymentTime) - (minutesBefore * 60),
       to: (deploymentTime) + (minutesAfter * 60),
     };

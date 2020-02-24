@@ -15,7 +15,7 @@ const Metrics = ({ kindIndex }) => {
   }
   const { metrics } = data.kinds[kindIndex];
   let content;
-  if (metrics === []) {
+  if (metrics.length === 0) {
     content = (
       <Grid item xs={12}>
         <Widget>

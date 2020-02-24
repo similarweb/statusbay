@@ -90,6 +90,9 @@ const transformers = {
     })
   },
   metrics: (rawData) => {
+    if (!rawData.MetaData.Metrics) {
+      return []
+    }
     return rawData.MetaData.Metrics.map(({ Name, Query, Provider }) => {
         return {
           name: Name,
@@ -100,6 +103,9 @@ const transformers = {
     )
   },
   alerts: (rawData) => {
+    if (!rawData.MetaData.Alerts) {
+      return []
+    }
     return rawData.MetaData.Alerts.map(({ Tags, Provider }) => {
         return {
           tags: Tags,

@@ -6,7 +6,8 @@ import DeploymentDetailsSection from '../components/DeploymentDetailsSection';
 import { useDeploymentDetailsContext } from '../context/DeploymentDetailsContext';
 import MetricChartContainer from './MetricChartContainer';
 import Widget from '../components/Widget/Widget';
-import MetricIntegrationModal from '../components/MetricIntegrationModal';
+import MetricIntegrationModal
+  from '../components/IntergationModals/MetricIntegrationModal/MetricIntegrationModal';
 
 const Metrics = ({ kindIndex }) => {
   const { data } = useDeploymentDetailsContext();

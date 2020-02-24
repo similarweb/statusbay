@@ -1,14 +1,23 @@
 import Grid from '@material-ui/core/Grid';
 import React from 'react';
-import MetricChart from '../components/MetricChart/MetricChart';
+import Skeleton from '@material-ui/lab/Skeleton';
 import { useMetricsData } from '../Hooks/MetricsHooks';
+import LineChart from '../components/Charts/Line/LineChart';
+import Widget from '../components/Widget/Widget';
+import PropTypes from 'prop-types';
 
 const MetricChartContainer = ({
   name, provider, query, deploymentTime,
 }) => {
-  const { data } = useMetricsData(provider, query, deploymentTime);
-  if (!data) {
-    return null;
+  const { data, loading } = useMetricsData(provider, query, deploymentTime);
+  if (loading) {
+    return (
+      <Grid key={name} item xs={12} xl={6}>
+        <Widget title={name}>
+          <Skeleton variant="rect" width="auto" height={118} />
+        </Widget>
+      </Grid>
+    );
   }
   const series = data.map((item) => ({
     name: item.metric,
@@ -16,13 +25,11 @@ const MetricChartContainer = ({
   }));
   return (
     <Grid key={name} item xs={12} xl={6}>
-      <MetricChart metric={name} series={series} deploymentTime={deploymentTime * 1000} />
+      <Widget title={name}>
+        <LineChart series={series} deploymentTime={deploymentTime * 1000} />
+      </Widget>
     </Grid>
   );
-};
-
-MetricChartContainer.propTypes = {
-
 };
 
 export default React.memo(MetricChartContainer, (prevProps, nextProps) => {

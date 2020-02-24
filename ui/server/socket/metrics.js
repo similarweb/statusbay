@@ -27,7 +27,7 @@ const init = (io) => {
       emitOnce(socket, {metric, provider, deploymentTime});
       intervalId = setInterval(async () => {
         emitOnce(socket, {metric, provider, deploymentTime});
-      }, 2000)
+      }, 5000)
     });
     socket.on('disconnect', () => {
       clearInterval(intervalId);

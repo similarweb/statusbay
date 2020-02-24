@@ -35,8 +35,8 @@ func createReplicasetMock(client *fake.Clientset, name string, specSelector *met
 func NewReplicasetMock(client *fake.Clientset) *kuberneteswatcher.ReplicaSetManager {
 
 	eventManager := kuberneteswatcher.NewEventsManager(client)
-
-	podManager := kuberneteswatcher.NewPodsManager(client, eventManager)
+	pvcManager := NewPvcManagerMock(client)
+	podManager := kuberneteswatcher.NewPodsManager(client, eventManager, pvcManager)
 	replicasetManager := kuberneteswatcher.NewReplicasetManager(client, eventManager, podManager)
 
 	var wg *sync.WaitGroup

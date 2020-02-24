@@ -321,15 +321,15 @@ func TestDeploymentData(t *testing.T) {
 		data.NewPod(pod)
 
 		eventTime := time.Now().Unix()
-		data.UpdatePodEvents("pod1", kuberneteswatcher.EventMessages{
+		data.UpdatePodEvents("pod1", "pvc1", kuberneteswatcher.EventMessages{
 			Message: "Message",
 			Time:    eventTime,
 		})
-		data.UpdatePodEvents("pod1", kuberneteswatcher.EventMessages{
+		data.UpdatePodEvents("pod1", "pvc1", kuberneteswatcher.EventMessages{
 			Message: "Message",
 			Time:    eventTime,
 		})
-		data.UpdatePodEvents("pod1", kuberneteswatcher.EventMessages{
+		data.UpdatePodEvents("pod1", "pvc1", kuberneteswatcher.EventMessages{
 			Message: "Message2",
 			Time:    eventTime,
 		})
@@ -337,7 +337,6 @@ func TestDeploymentData(t *testing.T) {
 		if len(*data.Pods["pod1"].Events) != 2 {
 			t.Fatalf("unexpected pod event count, got %d expected %d", len(*data.Pods["pod1"].Events), 2)
 		}
-
 	})
 
 }

@@ -67,7 +67,8 @@ func NewDaemonSetManagerMock(client *fake.Clientset) (*kuberneteswatcher.Daemons
 	eventManager := NewEventsMock(client)
 	registryManager, storage := NewRegistryMock()
 	serviceManager := NewServiceManagerMockMock(client)
-	podManager := kuberneteswatcher.NewPodsManager(client, eventManager)
+	pvcManager := NewPvcManagerMock(client)
+	podManager := kuberneteswatcher.NewPodsManager(client, eventManager, pvcManager)
 	controllerRevisionManager := NewControllerRevisionManagerMock(client, podManager)
 	daemonsetManager := kuberneteswatcher.NewDaemonsetManager(client, eventManager, registryManager, serviceManager, controllerRevisionManager, maxDeploymentTime)
 

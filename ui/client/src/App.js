@@ -9,7 +9,6 @@ import {
   Route,
 } from 'react-router-dom';
 import makeStyles from '@material-ui/core/styles/makeStyles';
-import LinearProgress from '@material-ui/core/LinearProgress';
 import Box from '@material-ui/core/Box';
 import Topbar from './components/Layout/Topbar';
 import Applications from './containers/Applications';

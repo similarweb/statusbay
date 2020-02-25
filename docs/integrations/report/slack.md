@@ -2,7 +2,7 @@
 This integration makes the following assumptions: 
 
 * You have an active account in Slack
-* You have a dedicated User and Token for StatusBay to use Slack's API.
+* You have a dedicated Bot and Token for StatusBay to use Slack's API.
   
 StatusBay introduces the ability to send Slack notifications for a specific Deployment,Daemonset & Statefulset operations (Create/Update/Delete) on Kubernetes. 
 
@@ -23,7 +23,10 @@ In order to enable this provider please proceed with the next steps:
 | Slack | Notifications | `statusbay.io/report-deploy-by: foo@similarweb.com` |
 
 * Make sure you add these annotations to one of the following kinds: Deployment,Daemonset & Statefulset.
-* The `report-slack-channels` annotation supports comma separated list of Slack channels which we want to be notified.
+* The `report-slack-channels` annotation supports comma separated list of Slack channels which we want to be notified. 
+
+    :heavy_exclamation_mark: Please make sure that you invite the new StatusBay slack bot to all the relevant channels you have added in your annotation, The bot will not be able to send slack messages to channels where is not present.
+
 * The `report-deploy-by` annotation addresses the user which will be sent with a slack notification for a deployment which has started/finished.
 
 ## The result

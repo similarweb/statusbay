@@ -1,0 +1,36 @@
+# Prometheus
+This integration makes the following assumptions: 
+
+* You have an active installation of Prometheus in your Kubernetes Cluster.
+  
+StatusBay introduces the ability to show Prometheus graphs for a specific service running on Kubernetes. 
+
+On operator of a service in Kubernetes will have ability to see Datadog graph in StatusBay's UI based on Prometheus query.
+
+
+## How to enable this provider?
+
+In order to enable this provider please proceed with the next steps:
+
+* Configure Prometheus provider via StatusBay [API configuration file](../../../examples/configuration/api.yaml#L19), you will find all the available configuration options in the example file.
+* Add the [Available annotations](#available-annotations) for this provider
+
+## Available annotations
+| Name | Type | Associated Annotations | 
+| ---- | ---- | ---------------------- | 
+| Prometheus | Metrics | `statusbay.io/metrics-prometheus-<Metric-Name>: prometheus-query` |
+
+
+
+
+* Make sure you add these annotations to one of the following kinds: Deployment,Daemonset & Statefulset.
+* The aforementioned annotation will need following: 
+  * `<Metric-Name>` - Will be the name displayed  the name of the graph
+  * `prometheus-query` - Prometheus query to get the graph
+  
+## The result
+![Multiple Clusters](../../../ui/client/src/components/IntergationModals/MetricIntegrationModal/metrics.png)
+
+* In the example above here are the comparison for the following
+  * `<Metric-Name>` -> `2xx vs 4xx`
+  * `prometheus-query` -> `sw.haproxy.backend.response.2xx{*}.as_count(), sw.haproxy.backend.response.4xx{*}.as_count()`

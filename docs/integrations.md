@@ -1,10 +1,12 @@
 ## Integrations
+This section will describe all the available integrations which StatusBay has to Offer.
+In general StatusBay has 3 kinds of Integrations categories which are currently available for the following providers:
 
-### Supported Integrations
-| Name | Type | Associated Annotations | 
-| ---- | ---- | ---------------------- | 
-| Datadog | Metrics | `statusbay.io/metrics-datadog-*: query` |
-| Prometheus | Metrics | `statusbay.io/metrics-prometheus-*: query` |
-| StatusCake | Endpoints Alerts | `statusbay.io/alerts-statuscake: tag1,tag2` |
-| Pingdom | Endpoints Alerts | `statusbay.io/alerts-pingdom: tag1,tag2` |
-| Slack | Notifications | `statusbay.io/report-slack-channels: #channel1,#channel2` |
+* *Metrics*
+  *  [DataDog](/docs/integrations/metrics/datadog.md)
+  *  [Prometheus](/docs/integrations/metrics/prometheus.md)
+* *Alerts*
+  * [StatusCake](/docs/integrations/alerts/statuscake.md)
+  * [Pingdom](/docs/integrations/alerts/pingdom.md)
+* *Report*
+  * [Slack](/docs/integrations/report/slack.md)

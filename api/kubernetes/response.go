@@ -1,6 +1,8 @@
 package kubernetes
 
-import "time"
+import (
+	"time"
+)
 
 // START Kubernetes deployment response
 
@@ -53,6 +55,13 @@ type ResponseMetricsQuery struct {
 	SubTitle string `json:"SubTitle"`
 }
 
+type ResponseReplicaSetCondition struct {
+	Type               string    `json:"Type"`
+	Status             string    `json:"Status"`
+	LastTransitionTime time.Time `json:"LastTransitionTime"`
+	Reason             string    `json:"Reason"`
+	Message            string    `json:"Message"`
+}
 type ResponseDeploymentStatus struct {
 	ObservedGeneration  int64 `json:"ObservedGeneration"`
 	Replicas            int32 `json:"Replicas"`
@@ -60,6 +69,7 @@ type ResponseDeploymentStatus struct {
 	ReadyReplicas       int32 `json:"ReadyReplicas"`
 	AvailableReplicas   int32 `json:"AvailableReplicas"`
 	UnavailableReplicas int32 `json:"UnavailableReplicas"`
+	Conditions          []ResponseReplicaSetCondition
 }
 
 type DeploymentDataResponse struct {

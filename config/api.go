@@ -46,12 +46,22 @@ type Statuscake struct {
 	APIKey   string `yaml:"api_key"`
 }
 
+// KubernetesMarksEvents is the struct representing the events StatusBay marks
+type KubernetesMarksEvents struct {
+	Pod         []EventMarksConfig `yaml:"pod"`
+	Replicaset  []EventMarksConfig `yaml:"replicaset"`
+	Deployment  []EventMarksConfig `yaml:"deployment"`
+	Demonset    []EventMarksConfig `yaml:"demonset"`
+	Statefulset []EventMarksConfig `yaml:"statefulset"`
+}
+
 // API is holds all application configuration
 type API struct {
-	Log             LogConfig          `yaml:"log"`
-	MySQL           *state.MySQLConfig `yaml:"mysql"`
-	MetricsProvider *MetricsProvider   `yaml:"metrics"`
-	AlertProvider   *AlertProvider     `yaml:"alerts"`
+	Log             LogConfig             `yaml:"log"`
+	MySQL           *state.MySQLConfig    `yaml:"mysql"`
+	MetricsProvider *MetricsProvider      `yaml:"metrics"`
+	AlertProvider   *AlertProvider        `yaml:"alerts"`
+	Events          KubernetesMarksEvents `yaml:"events"`
 
 	Telemetry MetricsConfig `yaml:"telemetry"`
 }

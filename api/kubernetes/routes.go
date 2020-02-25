@@ -20,17 +20,11 @@ type RouterKubernetesManager struct {
 }
 
 //NewKubernetesRoutes sets up the Kubernetes router to handle API endpoints
-func NewKubernetesRoutes(storage Storage, router *mux.Router, eventPath string) *RouterKubernetesManager {
-
-	eventMarksConfig, err := config.LoadKubernetesMarksConfig(eventPath)
-	if err != nil {
-		log.WithError(err).WithField("path", eventPath).Error("could not load events configuration file")
-	}
-
+func NewKubernetesRoutes(storage Storage, router *mux.Router, eventsConfig config.KubernetesMarksEvents) *RouterKubernetesManager {
 	kubernetesRoutes := &RouterKubernetesManager{
 		storage:          storage,
 		router:           router,
-		eventMarksConfig: eventMarksConfig,
+		eventMarksConfig: eventsConfig,
 	}
 	kubernetesRoutes.bindEndpoints()
 	return kubernetesRoutes

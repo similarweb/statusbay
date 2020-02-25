@@ -54,7 +54,7 @@ func main() {
 
 	switch mode {
 	case ModeAPI:
-		runner = startAPIServer(ctx, configPath, "./events.yaml")
+		runner = startAPIServer(ctx, configPath)
 	case KubernetesWatcher:
 		runner = startKubernetesWatcher(ctx, configPath, kubeconfig, apiserverHost)
 	default:
@@ -148,7 +148,7 @@ func startKubernetesWatcher(ctx context.Context, configPath, kubeconfig, apiserv
 	return serverutil.RunAll(ctx, servers)
 }
 
-func startAPIServer(ctx context.Context, configPath, eventConfigPath string) *serverutil.Runner {
+func startAPIServer(ctx context.Context, configPath string) *serverutil.Runner {
 
 	version := version.NewVersion(ctx, "webserver", 12*time.Hour)
 
@@ -178,7 +178,7 @@ func startAPIServer(ctx context.Context, configPath, eventConfigPath string) *se
 	alertsProviders := alerts.Load(apiConfig.AlertProvider)
 
 	//Start the server
-	server := api.NewServer(kubernetesStorage, "8080", eventConfigPath, metricsProviders, alertsProviders, version)
+	server := api.NewServer(kubernetesStorage, "8080", apiConfig.Events, metricsProviders, alertsProviders, version)
 
 	servers := []serverutil.Server{
 		server,

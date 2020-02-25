@@ -14,7 +14,7 @@ module.exports = {
     };
     return new Promise(async (resolve, reject) => {
       try {
-        const response = await axios.get(`${config.metricsApiUrl}${urlPath}?${querystring.stringify(params)}`);
+        const response = await axios.get(`${config.apiUrl}${urlPath}?${querystring.stringify(params)}`);
         const {data} = response;
         resolve(data)
       }

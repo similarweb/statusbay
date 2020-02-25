@@ -131,6 +131,7 @@ MultiSelect.propTypes = {
 
 MultiSelect.defaultProps = {
   selectedValue: [],
+  values: [],
 };
 
 export default MultiSelect;

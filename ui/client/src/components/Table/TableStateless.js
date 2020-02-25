@@ -12,7 +12,7 @@ import makeStyles from '@material-ui/core/styles/makeStyles';
 const renderRows = (config, data, page) => data.map((row, rowIndex) => {
   const RowComponent = config.row.render(row, rowIndex);
   // eslint-disable-next-line max-len
-  const rowCells = config.cells.map((cellConfig) => <TableCell>{cellConfig.cell(row, ((page) * data.length) + rowIndex)}</TableCell>);
+  const rowCells = config.cells.map((cellConfig) => <TableCell key={`cell-${row.name}`}>{cellConfig.cell(row, ((page) * data.length) + rowIndex)}</TableCell>);
   return (
     <RowComponent>
       {rowCells}
@@ -21,7 +21,7 @@ const renderRows = (config, data, page) => data.map((row, rowIndex) => {
 });
 
 const renderLoadingState = (config) => [...Array(10).keys()].map((index) => (
-  <TableRow>
+  <TableRow key={`row-${index}`}>
     {
         config.cells.map((cell, cellIndex, cells) => {
           const isLast = cellIndex === cells.length - 1;

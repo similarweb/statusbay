@@ -7,12 +7,12 @@ const init = (io) => {
   const emitOnce = async (socket, id) => {
     info('sending deploymentDetails data...');
     try {
-      const { data } = await detailsController.getAll(id);
+      const { data } = await detailsController.getAll(id);      
       const tranformedData = convertDeploymentDetailsData(data);
       socket.emit('data', { data: tranformedData });
     }
     catch (e) {
-      error(`error getting deployments details for ${id}`);
+      error(`error getting deployments details for ${id} error ${e}`);
     }
   };
   deploymentDetails.on('connection', (socket) => {

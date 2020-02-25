@@ -53,6 +53,9 @@ const transformers = {
     }
   },
   deploymentEvents: (rawData) => {
+    if (!rawData.Events) {
+      return []
+    }
     return rawData.Events.map(event => {
       return {
         title: event.Message,
@@ -63,6 +66,9 @@ const transformers = {
     })
   },
   daemonSetEvents: (rawData) => {
+    if (!rawData.Events) {
+      return []
+    }
     return rawData.Events.map(event => {
       return {
         title: event.Message,
@@ -73,6 +79,9 @@ const transformers = {
     })
   },
   podEvents: (rawData) => {
+    if (!rawData.Events) {
+      return []
+    }
     return Object.entries(rawData.Pods).map(([name, pod]) => {
       return {
         name,

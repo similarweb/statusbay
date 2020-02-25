@@ -46,7 +46,8 @@ type ResponseEventMessages struct {
 }
 
 type ResponseReplicaset struct {
-	Events []ResponseEventMessages `json:"Events"`
+	Events []ResponseEventMessages  `json:"Events"`
+	Status ResponseDeploymentStatus `json:"Status"`
 }
 
 type ResponseMetricsQuery struct {
@@ -55,7 +56,7 @@ type ResponseMetricsQuery struct {
 	SubTitle string `json:"SubTitle"`
 }
 
-type ResponseReplicaSetCondition struct {
+type ResponseCondition struct {
 	Type               string    `json:"Type"`
 	Status             string    `json:"Status"`
 	LastTransitionTime time.Time `json:"LastTransitionTime"`
@@ -69,7 +70,7 @@ type ResponseDeploymentStatus struct {
 	ReadyReplicas       int32 `json:"ReadyReplicas"`
 	AvailableReplicas   int32 `json:"AvailableReplicas"`
 	UnavailableReplicas int32 `json:"UnavailableReplicas"`
-	Conditions          []ResponseReplicaSetCondition
+	Conditions          []ResponseCondition
 }
 
 type DeploymentDataResponse struct {

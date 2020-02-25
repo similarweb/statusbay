@@ -22,5 +22,7 @@ RUN go install -v ./...
 FROM alpine:3.8
 COPY --from=go-builder /go/bin/statusbay /bin/statusbay
 
+RUN mkdir -p /etc/statusbay/
+COPY events.yaml /etc/statusbay/
 EXPOSE 8080
 ENTRYPOINT ["/bin/statusbay"]

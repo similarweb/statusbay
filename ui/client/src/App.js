@@ -6,7 +6,7 @@ import CssBaseline from '@material-ui/core/CssBaseline';
 import {
   BrowserRouter as Router,
   Switch as RouterSwitch,
-  Route,
+  Route, Redirect,
 } from 'react-router-dom';
 import makeStyles from '@material-ui/core/styles/makeStyles';
 import Box from '@material-ui/core/Box';
@@ -99,6 +99,9 @@ function App() {
                     <RouterSwitch>
                       <Route exact path="/">
                         <Applications />
+                      </Route>
+                      <Route exact path="/applications">
+                        <Redirect to="/" />
                       </Route>
                       <Route exact path="/applications/:appName">
                         <ApplicationDeployments />

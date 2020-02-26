@@ -76,26 +76,26 @@ func (pm *PvcManager) loadPvcFirstInit(key string) bool {
 func (pm *PvcManager) watch(watchPvcData WatchPvcData) {
 	go func() {
 
-		watchPvcData.LogEntry.Info("Started Pvc Watcher")
+		watchPvcData.LogEntry.Info("started pvc watcher")
 		watchPvcData.LogEntry.WithField("name", watchPvcData.RegistryData.GetName())
-		watchPvcData.LogEntry.WithField("list_options", watchPvcData.ListOptions).Debug("Started watching Pvcs with the following list options")
+		watchPvcData.LogEntry.WithField("list_options", watchPvcData.ListOptions).Debug("started watching pvcs with the following list options")
 
 		watcher, err := pm.client.CoreV1().PersistentVolumeClaims(watchPvcData.Namespace).Watch(watchPvcData.ListOptions)
 		if err != nil {
-			watchPvcData.LogEntry.WithError(err).WithField("list_options", watchPvcData.ListOptions.String()).Error("An error occurred while trying to start the Pvc watcher")
+			watchPvcData.LogEntry.WithError(err).WithField("list_options", watchPvcData.ListOptions.String()).Error("an error occurred while trying to start the pvc watcher")
 			return
 		}
 		for {
 			select {
 			case event, watch := <-watcher.ResultChan():
 				if !watch {
-					watchPvcData.LogEntry.WithField("object", event.Object).Warn("Pvc watcher was stopped. Channel was closed")
+					watchPvcData.LogEntry.WithField("object", event.Object).Warn("pvc watcher was stopped. channel was closed")
 					return
 				}
 
 				pvc, ok := event.Object.(*coreV1.PersistentVolumeClaim)
 				if !ok {
-					watchPvcData.LogEntry.Warn("Failed to parse Pvc watch data")
+					watchPvcData.LogEntry.Warn("failed to parse pvc watch data")
 					continue
 				}
 
@@ -106,7 +106,7 @@ func (pm *PvcManager) watch(watchPvcData WatchPvcData) {
 
 				//If it is the first time that we got the pvc, we are starting a watch on pvc events & send the pvc to the registry
 				if found := pm.loadPvcFirstInit(pvc.Name); !found {
-					lg.Debug("New pvc was found")
+					lg.Debug("new pvc was found")
 					pm.storePvcFirstInit(pvc.Name, true)
 
 					eventListOptions := metaV1.ListOptions{FieldSelector: labels.SelectorFromSet(map[string]string{
@@ -117,7 +117,7 @@ func (pm *PvcManager) watch(watchPvcData WatchPvcData) {
 				}
 
 			case <-watchPvcData.Ctx.Done():
-				watchPvcData.LogEntry.Info("Pvc watcher was stopped. Got ctx done signal")
+				watchPvcData.LogEntry.Info("pvc watcher was stopped. Got ctx done signal")
 				watcher.Stop()
 				return
 			}
@@ -126,9 +126,10 @@ func (pm *PvcManager) watch(watchPvcData WatchPvcData) {
 
 }
 
+// watchEvents will watch all the pvc events tracked from the pvc watcher
 func (pm *PvcManager) watchEvents(ctx context.Context, lg log.Entry, registryData RegistryData, listOptions metaV1.ListOptions, namespace, podName, pvcName string) {
 
-	lg.Info("Started watching on Pvc events")
+	lg.Info("started watching on pvc events")
 
 	watchPvcData := WatchEvents{
 		ListOptions: listOptions,
@@ -145,7 +146,7 @@ func (pm *PvcManager) watchEvents(ctx context.Context, lg log.Entry, registryDat
 			case event := <-eventChan:
 				registryData.UpdatePodEvents(podName, pvcName, event)
 			case <-ctx.Done():
-				lg.Info("Stopped watching on Pvc events")
+				lg.Info("stopped watching on pvc events")
 				return
 			}
 

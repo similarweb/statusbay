@@ -30,4 +30,5 @@ In order to enable this provider please proceed with the next steps:
 * The `report-deploy-by` annotation addresses the user which will be sent with a slack notification for a deployment which has started/finished.
 
 ## The result
-TBD
+![Slack](../../images/slack_notification.png)
+

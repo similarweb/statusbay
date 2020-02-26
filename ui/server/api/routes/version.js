@@ -5,18 +5,7 @@ const {error} = require('../../logger');
 
 router.get('/', async (req, res) => {
   try{
-    // const versionData = await version.getAll();
-    const versionData = {
-      "LatestVersion": "1.0.0",
-      "LatestReleaseDate": 12345,
-      "Outdated": true,
-      "Notifications": [
-        {
-          "date": 1234,
-          "message": "Link to the version...."
-        }
-      ]
-    }
+    const {data: versionData} = await version.getAll();
     res.status(200).send(versionData);
   }catch (e) {
     error(`cannot get version ${JSON.stringify(e)}`);

@@ -13,7 +13,8 @@ const useStyles = makeStyles((theme) => ({
     display: 'flex',
     alignItems: 'center',
     '& svg': {
-      marginRight: 12
+      marginRight: 12,
+      color: theme.palette.success.main
     }
   },
 }));
@@ -21,7 +22,6 @@ const useStyles = makeStyles((theme) => ({
 const AlertsChartContainer = ({
   provider, tags, deploymentTime,
 }) => {
-  const theme = useTheme();
   const classes = useStyles();
   const { data, loading } = useAlertsData(provider, tags, deploymentTime);
   // loading state
@@ -36,7 +36,7 @@ const AlertsChartContainer = ({
           className={classes.noAlerts}
           variant="h5"
         >
-          <ThumbUpOutlinedIcon fontSize="medium" style={{ color: theme.palette.success.main }} />
+          <ThumbUpOutlinedIcon fontSize="medium" />
 Alerts not found
         </Typography>
       </Box>

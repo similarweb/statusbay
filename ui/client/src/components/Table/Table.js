@@ -46,7 +46,7 @@ const paramToNumber = (value) => {
 };
 
 const useStyles = makeStyles((theme) => ({
-  subTitle:{
+  subTitle: {
     display: 'inline-block',
   },
   row: {
@@ -62,7 +62,7 @@ const useStyles = makeStyles((theme) => ({
     opacity: 0,
     display: 'flex',
     flexDirection: 'row-reverse',
-  }
+  },
 }));
 
 const Table = ({
@@ -190,55 +190,52 @@ const Table = ({
       {
         id: 'details',
         name: '',
-        cell: (row) => <>
-          <div className={classes.actions}>
-            {row.status !== 'deleted' && (
+        cell: (row) => (
+          <>
+            <div className={classes.actions}>
+              {row.status !== 'deleted' && (
               <Link to={`/application/${row.id}`}>
                 <Box display="flex" alignItems="center" ml={1}>
                   <Button variant="contained" color="primary">Details</Button>
                 </Box>
               </Link>
-            )}
-            {showHistoryBtn && (
+              )}
+              {showHistoryBtn && (
               <Link to={`/applications/${row.name}`}>
                 <Box display="flex" alignItems="center" ml={1}>
                   <Button variant="contained" color="primary">History</Button>
                 </Box>
               </Link>
-            )}
-          </div>
-        </>,
+              )}
+            </div>
+          </>
+        ),
         sortable: false,
       },
     ],
   }), [classes]);
   const showNoData = !loading && (!tableData || tableData.rows.length === 0);
-  const getTitle = useMemo(() => {
-    if (tableData && tableData.totalCount > 0) {
-      return (
-        <>
-          <Typography variant="h3" component="div">
-            {title}
-            {' '}
-            <Typography className={classes.subTitle}  variant="body1">
-              (
-              {numeral(tableData.totalCount).format('0,0')}
-              )
-            </Typography>
+  const titleComponent = useMemo(() => (
+    title && <Box mt={3} mb={3}>
+      <Typography variant="h3" component="div">
+        {title}
+        {' '}
+        {
+          tableData && tableData.totalCount > 0 && (
+          <Typography className={classes.subTitle} variant="body1">
+            (
+            {numeral(tableData.totalCount).format('0,0')}
+            )
           </Typography>
-        </>
-      );
-    }
-    return title;
-  }, [title, tableData]);
+          )
+        }
+      </Typography>
+    </Box>
+  ), [title, tableData]);
   return (
     <div>
       {
-        title && (
-          <Box mt={3} mb={3}>
-            {getTitle}
-          </Box>
-        )
+        titleComponent
       }
       <Paper>
         <TableContainer component={Paper}>
@@ -260,12 +257,13 @@ const Table = ({
                 defaultValue={tableFilters.deployBy}
                 delay={250}
               />
-              {!hideDistinctFilter && <ToggleFilter
+              {!hideDistinctFilter && (
+              <ToggleFilter
                 label="Distinct"
                 checked={tableFilters.distinct}
                 onChange={handleDistinctChange}
               />
-              }
+              )}
 
             </Box>
             <Box display="flex" alignItems="center">

@@ -73,22 +73,22 @@ type Replicaset struct {
 
 // DeploymentData struct TODO
 type DeploymentData struct {
-	Deployment              MetaData                 `json:"MetaData"`
-	Status                  appsV1.DeploymentStatus  `json:"Status"`
-	Events                  []EventMessages          `json:"Events"`
-	Replicaset              map[string]Replicaset    `json:"Replicaset"`
-	Pods                    map[string]DeploymenPod  `json:"Pods"`
-	Services                map[string]*ServicesData `json:"Services"`
+	Deployment              MetaData                `json:"MetaData"`
+	Status                  appsV1.DeploymentStatus `json:"Status"`
+	Events                  []EventMessages         `json:"Events"`
+	Replicaset              map[string]Replicaset   `json:"Replicaset"`
+	Pods                    map[string]DeploymenPod `json:"Pods"`
+	Services                map[string]ServicesData `json:"Services"`
 	ProgressDeadlineSeconds int64
 }
 
 // DaemonsetData
 type DaemonsetData struct {
-	Metadata                MetaData                 `json:"MetaData"`
-	Status                  appsV1.DaemonSetStatus   `json:"Status"`
-	Events                  []EventMessages          `json:"Events"`
-	Pods                    map[string]DeploymenPod  `json:"Pods"`
-	Services                map[string]*ServicesData `json:"Services"`
+	Metadata                MetaData                `json:"MetaData"`
+	Status                  appsV1.DaemonSetStatus  `json:"Status"`
+	Events                  []EventMessages         `json:"Events"`
+	Pods                    map[string]DeploymenPod `json:"Pods"`
+	Services                map[string]ServicesData `json:"Services"`
 	ProgressDeadlineSeconds int64
 }
 
@@ -98,18 +98,13 @@ type StatefulsetData struct {
 	Status                  appsV1.StatefulSetStatus `json:"Status"`
 	Events                  []EventMessages          `json:"Events"`
 	Pods                    map[string]DeploymenPod  `json:"Pods"`
-	Services                map[string]*ServicesData `json:"Services"`
+	Services                map[string]ServicesData  `json:"Services"`
 	ProgressDeadlineSeconds int64
 }
 
 // ServicesData holds the data of services
 type ServicesData struct {
-	service map[string]Service
-}
-
-// Service holds a single service data
-type Service struct {
-	Events []EventMessages `json:"Events"`
+	Events *[]EventMessages `json:"Events"`
 }
 
 //Metrics describe the metrics data integration

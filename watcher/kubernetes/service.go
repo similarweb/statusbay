@@ -7,21 +7,24 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
 )
 
 // ServiceManager defined service manager struct
 type ServiceManager struct {
-	client kubernetes.Interface
-	Watch  chan WatchData
+	eventManager *EventsManager
+	client       kubernetes.Interface
+	Watch        chan WatchData
 
 	dashboardURL string
 }
 
 // NewServiceManager create new service instance
-func NewServiceManager(kubernetesClientset kubernetes.Interface) *ServiceManager {
+func NewServiceManager(kubernetesClientset kubernetes.Interface, eventManager *EventsManager) *ServiceManager {
 	return &ServiceManager{
-		client: kubernetesClientset,
+		client:       kubernetesClientset,
+		eventManager: eventManager,
 
 		Watch: make(chan WatchData),
 	}
@@ -61,10 +64,16 @@ func (sm *ServiceManager) watch(watchData WatchData) {
 		}
 
 		watchData.LogEntry.WithField("service_count", len(services.Items)).Info("found related services")
-		if len(services.Items) == 0 {
-			watchData.RegistryData.GetName()
-			watchEvents(watchData.Ctx, watchData.LogEntry)
-			return
+
+		for _, svc := range services.Items {
+
+			eventListOptions := metaV1.ListOptions{FieldSelector: labels.SelectorFromSet(map[string]string{
+				"involvedObject.name": svc.GetName(),
+				"involvedObject.kind": "Service",
+			}).String(),
+			}
+			watchData.RegistryData.NewService(&svc)
+			sm.watchEvents(watchData.Ctx, watchData.LogEntry, watchData.RegistryData, eventListOptions, svc.GetName(), watchData.Namespace)
 		}
 
 	}()
@@ -72,7 +81,7 @@ func (sm *ServiceManager) watch(watchData WatchData) {
 }
 
 // watchEvents will start watch on deployment event messages changes
-func (dm *DeploymentManager) watchEvents(ctx context.Context, lg log.Entry, registryDeployment *DeploymentData, listOptions metaV1.ListOptions, namespace string) {
+func (sm *ServiceManager) watchEvents(ctx context.Context, lg log.Entry, registryDeployment RegistryData, listOptions metaV1.ListOptions, serviceName, namespace string) {
 	lg.Info("initializing events watcher")
 
 	watchData := WatchEvents{
@@ -82,13 +91,13 @@ func (dm *DeploymentManager) watchEvents(ctx context.Context, lg log.Entry, regi
 		LogEntry:    lg,
 	}
 
-	eventChan := dm.eventManager.Watch(watchData)
+	eventChan := sm.eventManager.Watch(watchData)
 	go func() {
 
 		for {
 			select {
 			case event := <-eventChan:
-				registryDeployment.UpdateDeploymentEvents(event)
+				registryDeployment.UpdateServiceEvents(serviceName, event)
 			case <-ctx.Done():
 				lg.Info("stopping events watcher")
 				return

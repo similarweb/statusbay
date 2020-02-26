@@ -571,7 +571,7 @@ func (dd *DeploymentData) InitReplicaset(name string) {
 // UpdateReplicasetEvents will append event to replicaset
 func (dd *DeploymentData) UpdateReplicasetEvents(name string, event EventMessages) error {
 	if _, found := dd.Replicaset[name]; !found {
-		return errors.New("Replicaset not found")
+		return errors.New("replicaset not found")
 	}
 	*dd.Replicaset[name].Events = append(*dd.Replicaset[name].Events, event)
 
@@ -581,7 +581,7 @@ func (dd *DeploymentData) UpdateReplicasetEvents(name string, event EventMessage
 // UpdateReplicasetStatus will update replicaset status
 func (dd *DeploymentData) UpdateReplicasetStatus(name string, status appsV1.ReplicaSetStatus) error {
 	if _, found := dd.Replicaset[name]; !found {
-		return errors.New("Replicaset not found")
+		return errors.New("replicaset not found")
 	}
 	*dd.Replicaset[name].Status = status
 	return nil
@@ -590,7 +590,7 @@ func (dd *DeploymentData) UpdateReplicasetStatus(name string, status appsV1.Repl
 func NewPodToPods(pods map[string]DeploymenPod, pod *v1.Pod) error {
 	if _, found := pods[pod.GetName()]; found {
 
-		return errors.New("Pod already exists in pod list")
+		return errors.New("pod already exists in pod list")
 	}
 	phase := string(pod.Status.Phase)
 	pods[pod.GetName()] = DeploymenPod{
@@ -626,6 +626,32 @@ func UpdatePodStatus(pods map[string]DeploymenPod, pod *v1.Pod, status string) e
 	return nil
 }
 
+func newService(services map[string]ServicesData, service *v1.Service) error {
+	if _, found := services[service.GetName()]; found {
+
+		return errors.New("service already exists in services list")
+	}
+	services[service.GetName()] = ServicesData{
+		Events: &[]EventMessages{},
+	}
+	return nil
+}
+
+func updateServiceEvents(services map[string]ServicesData, name string, event EventMessages) error {
+	if _, found := services[name]; !found {
+		log.WithField("service", name).Warn("service does not exist in services list")
+		return errors.New("service does not exist in services list")
+	}
+	// Validate that we not inset duplicated events
+	for _, saveEvent := range *services[name].Events {
+		if saveEvent.Message == event.Message && saveEvent.Time == event.Time {
+			return nil
+		}
+	}
+	*services[name].Events = append(*services[name].Events, event)
+	return nil
+}
+
 // ################# START DeploymentData #################
 
 // GetName returns the deployment name
@@ -646,6 +672,16 @@ func (dd *DeploymentData) UpdatePod(pod *v1.Pod, status string) error {
 // UpdatePodEvents will set pod events
 func (dd *DeploymentData) UpdatePodEvents(podName string, event EventMessages) error {
 	return UpdatePodEvents(dd.Pods, podName, event)
+}
+
+// NewService will set new service to deployment row
+func (dd *DeploymentData) NewService(service *v1.Service) error {
+	return newService(dd.Services, service)
+}
+
+// UpdateServiceEvents will set pod events
+func (dd *DeploymentData) UpdateServiceEvents(name string, event EventMessages) error {
+	return updateServiceEvents(dd.Services, name, event)
 }
 
 // ################# END DeploymentData #################
@@ -677,9 +713,19 @@ func (dsd *DaemonsetData) UpdateDaemonsetEvents(event EventMessages) {
 	dsd.Events = append(dsd.Events, event)
 }
 
-// UpdateApplyStatus will uppdate a daemonsets status
+// UpdateApplyStatus will update a daemonsets status
 func (dsd *DaemonsetData) UpdateApplyStatus(status appsV1.DaemonSetStatus) {
 	dsd.Status = status
+}
+
+// NewService will set new service to deployment row
+func (dsd *DaemonsetData) NewService(service *v1.Service) error {
+	return newService(dsd.Services, service)
+}
+
+// UpdateServiceEvents will set pod events
+func (dsd *DaemonsetData) UpdateServiceEvents(name string, event EventMessages) error {
+	return updateServiceEvents(dsd.Services, name, event)
 }
 
 // ################# END DaemonsetData #################
@@ -714,6 +760,16 @@ func (ssd *StatefulsetData) UpdateStatefulsetEvents(event EventMessages) {
 // UpdateApplyStatus will update a statefulset status
 func (ssd *StatefulsetData) UpdateApplyStatus(status appsV1.StatefulSetStatus) {
 	ssd.Status = status
+}
+
+// NewService will set new service to deployment row
+func (ssd *StatefulsetData) NewService(service *v1.Service) error {
+	return newService(ssd.Services, service)
+}
+
+// UpdateServiceEvents will set pod events
+func (ssd *StatefulsetData) UpdateServiceEvents(name string, event EventMessages) error {
+	return updateServiceEvents(ssd.Services, name, event)
 }
 
 // ################# END StatefulsetData #################

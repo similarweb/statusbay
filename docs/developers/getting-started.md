@@ -46,7 +46,7 @@ This command will run the API server.
 Please refer to [configuration example](/examples/configuration/api.yaml) file to see additional configurations..
 
 ```
-$ go run main.go -config ./examples/configuration/api.yaml -mode api
+$ go run main.go -config ./examples/configuration/api.yaml -mode api -events ./examples/configuration/events.yaml
 ```
 
 # Deployment example via Helm

@@ -6,6 +6,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
+	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -59,12 +60,39 @@ func (sm *ServiceManager) watch(watchData WatchData) {
 			return
 		}
 
+		watchData.LogEntry.WithField("service_count", len(services.Items)).Info("found related services")
 		if len(services.Items) == 0 {
+			watchData.RegistryData.GetName()
+			watchEvents(watchData.Ctx, watchData.LogEntry)
 			return
 		}
 
-		// todo:: add service name to the DB
-
 	}()
 
+}
+
+// watchEvents will start watch on deployment event messages changes
+func (dm *DeploymentManager) watchEvents(ctx context.Context, lg log.Entry, registryDeployment *DeploymentData, listOptions metaV1.ListOptions, namespace string) {
+	lg.Info("initializing events watcher")
+
+	watchData := WatchEvents{
+		ListOptions: listOptions,
+		Namespace:   namespace,
+		Ctx:         ctx,
+		LogEntry:    lg,
+	}
+
+	eventChan := dm.eventManager.Watch(watchData)
+	go func() {
+
+		for {
+			select {
+			case event := <-eventChan:
+				registryDeployment.UpdateDeploymentEvents(event)
+			case <-ctx.Done():
+				lg.Info("stopping events watcher")
+				return
+			}
+		}
+	}()
 }

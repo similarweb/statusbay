@@ -600,11 +600,6 @@ func NewPodToPods(pods map[string]DeploymenPod, pod *v1.Pod) error {
 	return nil
 }
 
-// NewPod will set new pod to deployment row
-func (dd *DeploymentData) NewPod(pod *v1.Pod) error {
-	return NewPodToPods(dd.Pods, pod)
-}
-
 // UpdatePodEvents will add event to pod events list
 func UpdatePodEvents(pods map[string]DeploymenPod, podName string, event EventMessages) error {
 	if _, found := pods[podName]; !found {
@@ -621,17 +616,6 @@ func UpdatePodEvents(pods map[string]DeploymenPod, podName string, event EventMe
 	return nil
 }
 
-// UpdatePodEvents will set pod events
-func (dd *DeploymentData) UpdatePodEvents(podName string, event EventMessages) error {
-	return UpdatePodEvents(dd.Pods, podName, event)
-
-}
-
-// Get the deployment name
-func (dd *DeploymentData) GetName() string {
-	return dd.Deployment.Name
-}
-
 // UpdatePodStatus will change pod status
 func UpdatePodStatus(pods map[string]DeploymenPod, pod *v1.Pod, status string) error {
 	if _, found := pods[pod.GetName()]; !found {
@@ -642,30 +626,35 @@ func UpdatePodStatus(pods map[string]DeploymenPod, pod *v1.Pod, status string) e
 	return nil
 }
 
+// ################# START DeploymentData #################
+
+// GetName returns the deployment name
+func (dd *DeploymentData) GetName() string {
+	return dd.Deployment.Name
+}
+
+// NewPod will set new pod to deployment row
+func (dd *DeploymentData) NewPod(pod *v1.Pod) error {
+	return NewPodToPods(dd.Pods, pod)
+}
+
 // UpdatePod will set pod events to deployment
 func (dd *DeploymentData) UpdatePod(pod *v1.Pod, status string) error {
 	return UpdatePodStatus(dd.Pods, pod, status)
-
-}
-
-// UpdateApplyStatus will uppdate a daemonsets status
-func (dsd *DaemonsetData) UpdateApplyStatus(status appsV1.DaemonSetStatus) {
-	dsd.Status = status
-}
-
-// UpdateDaemonsetEvents will add event to a daemonset
-func (dsd *DaemonsetData) UpdateDaemonsetEvents(event EventMessages) {
-	dsd.Events = append(dsd.Events, event)
 }
 
 // UpdatePodEvents will set pod events
-func (dsd *DaemonsetData) UpdatePodEvents(podName string, event EventMessages) error {
-	return UpdatePodEvents(dsd.Pods, podName, event)
+func (dd *DeploymentData) UpdatePodEvents(podName string, event EventMessages) error {
+	return UpdatePodEvents(dd.Pods, podName, event)
 }
 
-// UpdatePod will set pod events to daemonset
-func (dsd *DaemonsetData) UpdatePod(pod *v1.Pod, status string) error {
-	return UpdatePodStatus(dsd.Pods, pod, status)
+// ################# END DeploymentData #################
+
+// ################# Start DaemonsetData #################
+
+// GetName will get the daemonset name
+func (dsd *DaemonsetData) GetName() string {
+	return dsd.Metadata.Name
 }
 
 // attach a new pod to the daemonset row
@@ -673,25 +662,29 @@ func (dsd *DaemonsetData) NewPod(pod *v1.Pod) error {
 	return NewPodToPods(dsd.Pods, pod)
 }
 
-// GetName will get the daemonset name
-func (dsd *DaemonsetData) GetName() string {
-	return dsd.Metadata.Name
-}
-
-// UpdateStatefulsetEvents will append events to StatefulsetEvents list
-func (ssd *StatefulsetData) UpdateStatefulsetEvents(event EventMessages) {
-	ssd.Events = append(ssd.Events, event)
-}
-
-// UpdatePod will set pod events to statefulset
-func (ssd *StatefulsetData) UpdatePod(pod *v1.Pod, status string) error {
-	return UpdatePodStatus(ssd.Pods, pod, status)
+// UpdatePod will set pod events to daemonset
+func (dsd *DaemonsetData) UpdatePod(pod *v1.Pod, status string) error {
+	return UpdatePodStatus(dsd.Pods, pod, status)
 }
 
 // UpdatePodEvents will set pod events
-func (ssd *StatefulsetData) UpdatePodEvents(podName string, event EventMessages) error {
-	return UpdatePodEvents(ssd.Pods, podName, event)
+func (dsd *DaemonsetData) UpdatePodEvents(podName string, event EventMessages) error {
+	return UpdatePodEvents(dsd.Pods, podName, event)
 }
+
+// UpdateDaemonsetEvents will add event to a daemonset
+func (dsd *DaemonsetData) UpdateDaemonsetEvents(event EventMessages) {
+	dsd.Events = append(dsd.Events, event)
+}
+
+// UpdateApplyStatus will uppdate a daemonsets status
+func (dsd *DaemonsetData) UpdateApplyStatus(status appsV1.DaemonSetStatus) {
+	dsd.Status = status
+}
+
+// ################# END DaemonsetData #################
+
+// ################# START StatefulsetData #################
 
 // GetName get the Statefulset name
 func (ssd *StatefulsetData) GetName() string {
@@ -703,10 +696,27 @@ func (ssd *StatefulsetData) NewPod(pod *v1.Pod) error {
 	return NewPodToPods(ssd.Pods, pod)
 }
 
+// UpdatePodEvents will set pod events
+func (ssd *StatefulsetData) UpdatePodEvents(podName string, event EventMessages) error {
+	return UpdatePodEvents(ssd.Pods, podName, event)
+}
+
+// UpdatePod will set pod events to statefulset
+func (ssd *StatefulsetData) UpdatePod(pod *v1.Pod, status string) error {
+	return UpdatePodStatus(ssd.Pods, pod, status)
+}
+
+// UpdateStatefulsetEvents will append events to StatefulsetEvents list
+func (ssd *StatefulsetData) UpdateStatefulsetEvents(event EventMessages) {
+	ssd.Events = append(ssd.Events, event)
+}
+
 // UpdateApplyStatus will update a statefulset status
 func (ssd *StatefulsetData) UpdateApplyStatus(status appsV1.StatefulSetStatus) {
 	ssd.Status = status
 }
+
+// ################# END StatefulsetData #################
 
 // save will save all the row list to the storage
 func (dr *RegistryManager) save() {

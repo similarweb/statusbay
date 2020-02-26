@@ -27,6 +27,7 @@ import {
 } from '../context/DeploymentDetailsContext';
 import Loader from '../components/Loader/Loader';
 import ReplicaSetEvents from '../DataComponents/ReplicaSetEvents';
+import NoData from '../components/Table/NoData';
 
 const useStyles = makeStyles((theme) => ({
   chips: {
@@ -60,18 +61,24 @@ const DeploymentDetails = () => {
   return (
     <DeploymentDetailsContextProvider id={`${deploymentId}`}>
       {
-        ({ data, loading }) => (loading
-          ? (
-            <Box
-              m={2}
-              flexGrow={1}
-              justifyContent="space-around"
-              display="flex"
-              flexDirection="column"
-            >
-              <Loader />
-            </Box>
-          ) : (
+        ({ data, loading, error }) => {
+          if (error) {
+            return <NoData message="Deployment not found" />;
+          }
+          if (loading) {
+            return (
+              <Box
+                m={2}
+                flexGrow={1}
+                justifyContent="space-around"
+                display="flex"
+                flexDirection="column"
+              >
+                <Loader />
+              </Box>
+            );
+          }
+          return (
             <PageContent>
               <Box mt={3} mb={3}>
                 <Typography variant="h3">
@@ -117,9 +124,8 @@ const DeploymentDetails = () => {
                 <Alerts kindIndex={parseInt(tab)} />
               </Box>
             </PageContent>
-
-          ))
-
+          );
+        }
       }
     </DeploymentDetailsContextProvider>
   );

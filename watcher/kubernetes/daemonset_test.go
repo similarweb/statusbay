@@ -32,19 +32,13 @@ func createDaemonSetMock(client *fake.Clientset, name string, labels map[string]
 		Spec: appsV1.DaemonSetSpec{
 			Template: v1.PodTemplateSpec{
 				ObjectMeta: metaV1.ObjectMeta{
-					Name: name,
-					Labels: map[string]string{
-						"app":  "application",
-						"name": name,
-					},
+					Name:   name,
+					Labels: labels,
 				},
 				Spec: v1.PodSpec{},
 			},
 			Selector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"app":  "application",
-					"name": name,
-				},
+				MatchLabels: labels,
 			},
 		},
 		ObjectMeta: metaV1.ObjectMeta{
@@ -91,21 +85,17 @@ func TestDaemonsetWatch(t *testing.T) {
 	}
 	namespace := "pe"
 
-	svc := &v1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "service-1",
-			Labels: map[string]string{
-				"app":  "application",
-				"name": "test-daemonset",
-			},
-			Namespace: namespace,
-		},
-	}
-	client.CoreV1().Services(namespace).Create(svc)
-
 	// Create daemonset object
 	daemonsetObj := createDaemonSetMock(client, "test-daemonset", labels)
 	time.Sleep(time.Second)
+
+	svc := &v1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "service-1",
+			Labels:    labels,
+			Namespace: namespace,
+		},
+	}
 
 	// Update the number of replica
 	updateDaemonsetMock(client, namespace, daemonsetObj)
@@ -116,6 +106,8 @@ func TestDaemonsetWatch(t *testing.T) {
 		namespace,
 		labels)
 	time.Sleep(time.Second)
+
+	client.CoreV1().Services(namespace).Create(svc)
 
 	pod.ObjectMeta.Labels[appsV1.ControllerRevisionHashLabelKey] = controllerRevisionHash
 

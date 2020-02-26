@@ -26,6 +26,7 @@ import {
   DeploymentDetailsContextProvider,
 } from '../context/DeploymentDetailsContext';
 import Loader from '../components/Loader/Loader';
+import ReplicaSetEvents from '../DataComponents/ReplicaSetEvents';
 
 const useStyles = makeStyles((theme) => ({
   chips: {
@@ -49,7 +50,7 @@ const DeploymentDetails = () => {
     });
   };
   const onClickBack = () => {
-    if(history.length <= 2){
+    if (history.length <= 2) {
       history.push('/');
     } else {
       history.goBack();
@@ -83,24 +84,24 @@ const DeploymentDetails = () => {
                   <DeploymentStatus />
                   <Chip label={(
                     <Typography>
-Namespace:
+                      Namespace:
                       {data.namespace}
                     </Typography>
-)}
+                  )}
                   />
                   <Chip label={(
                     <Typography>
-Cluster:
+                      Cluster:
                       {data.cluster}
                     </Typography>
-)}
+                  )}
                   />
                   <Chip label={(
                     <Typography>
-Deployment Time:
+                      Deployment Time:
                       {moment.unix(data.time).utc().format('DD/MM/YYYY HH:mm:ss')}
                     </Typography>
-)}
+                  )}
                   />
                 </Box>
               </Box>
@@ -111,6 +112,7 @@ Deployment Time:
               <Box mt={3} mb={3}>
                 <PodEvents kindIndex={parseInt(tab)} />
                 <DeploymentEvents kindIndex={parseInt(tab)} />
+                <ReplicaSetEvents kindIndex={parseInt(tab)} />
                 <Metrics kindIndex={parseInt(tab)} />
                 <Alerts kindIndex={parseInt(tab)} />
               </Box>

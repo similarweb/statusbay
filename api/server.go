@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"statusbay/config"
 	"sync"
 	"time"
 
@@ -27,25 +28,25 @@ type Server struct {
 	router     *mux.Router
 	httpserver *http.Server
 
-	kubernetesStorage        kubernetes.Storage
-	kubernetesMarkEventsPath string
-	metricClientProviders    map[string]metrics.MetricManagerDescriber
-	alertClientProviders     map[string]alerts.AlertsManagerDescriber
-	version                  version.VersionDescriptor
+	kubernetesStorage     kubernetes.Storage
+	kubernetesMarkEvents  config.KubernetesMarksEvents
+	metricClientProviders map[string]metrics.MetricManagerDescriber
+	alertClientProviders  map[string]alerts.AlertsManagerDescriber
+	version               version.VersionDescriptor
 }
 
 // NewServer returns a new Server
-func NewServer(kubernetesStorage kubernetes.Storage, port string, kubernetesMarkEventsPath string, metricClientProviders map[string]metrics.MetricManagerDescriber, alertClientProviders map[string]alerts.AlertsManagerDescriber, version version.VersionDescriptor) *Server {
+func NewServer(kubernetesStorage kubernetes.Storage, port string, kubernetesMarkEvents config.KubernetesMarksEvents, metricClientProviders map[string]metrics.MetricManagerDescriber, alertClientProviders map[string]alerts.AlertsManagerDescriber, version version.VersionDescriptor) *Server {
 
 	router := mux.NewRouter()
 	corsObj := handlers.AllowedOrigins([]string{"*"})
 	return &Server{
-		router:                   router,
-		kubernetesStorage:        kubernetesStorage,
-		kubernetesMarkEventsPath: kubernetesMarkEventsPath,
-		metricClientProviders:    metricClientProviders,
-		alertClientProviders:     alertClientProviders,
-		version:                  version,
+		router:                router,
+		kubernetesStorage:     kubernetesStorage,
+		kubernetesMarkEvents:  kubernetesMarkEvents,
+		metricClientProviders: metricClientProviders,
+		alertClientProviders:  alertClientProviders,
+		version:               version,
 		httpserver: &http.Server{
 			Handler: handlers.CORS(corsObj)(router),
 			Addr:    fmt.Sprintf("0.0.0.0:%s", port),
@@ -77,7 +78,7 @@ func (server *Server) Serve(ctx context.Context, wg *sync.WaitGroup) {
 func (server *Server) BindEndpoints() {
 
 	// KUBERNETES ROUTES
-	kubernetes.NewKubernetesRoutes(server.kubernetesStorage, server.router, server.kubernetesMarkEventsPath)
+	kubernetes.NewKubernetesRoutes(server.kubernetesStorage, server.router, server.kubernetesMarkEvents)
 
 	// Genetic routes
 	server.router.HandleFunc("/api/v1/health", server.HealthCheckHandler).Methods("GET")

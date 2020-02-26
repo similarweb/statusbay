@@ -227,6 +227,14 @@ func (ssm *StatefulsetManager) watchStatefulset(ctx context.Context, cancelFn co
 					Ctx:          ctx,
 					LogEntry:     *statefulsetLog,
 				}
+
+				ssm.serviceManager.Watch <- WatchData{
+					ListOptions:  metaV1.ListOptions{TimeoutSeconds: &maxWatchTime, LabelSelector: labels.SelectorFromSet(statefulset.Spec.Selector.MatchLabels).String()},
+					RegistryData: registryStatefulset,
+					Namespace:    statefulset.Namespace,
+					Ctx:          ctx,
+					LogEntry:     *statefulsetLog,
+				}
 			}
 			registryStatefulset.UpdateApplyStatus(statefulset.Status)
 		case <-ctx.Done():
@@ -277,6 +285,7 @@ func (ssm *StatefulsetManager) AddNewStatefulset(data ApplyEvent, applicationReg
 			DesiredState: desiredState,
 		},
 		Pods:                    make(map[string]DeploymenPod, 0),
+		Services:                make(map[string]ServicesData, 0),
 		ProgressDeadlineSeconds: GetProgressDeadlineApply(data.Annotations, ssm.maxDeploymentTime),
 	}
 	applicationRegistry.DBSchema.Resources.Statefulsets[data.ResourceName] = dd

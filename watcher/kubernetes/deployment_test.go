@@ -13,6 +13,7 @@ import (
 	appsV1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 )
 
@@ -116,7 +117,7 @@ func TestDeploymentsWatch(t *testing.T) {
 	labels := map[string]string{
 		"app.kubernetes.io/name": "custom-application-name",
 	}
-
+	namespace := "pe"
 	deploymentObj := createDeploymentMock(client, "test-deployment", labels)
 
 	time.Sleep(time.Second)
@@ -138,14 +139,25 @@ func TestDeploymentsWatch(t *testing.T) {
 		},
 	}
 
-	createServiceMock(client, "service")
-	client.AppsV1().ReplicaSets("pe").Create(replicaset)
+	svc := &v1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "service-1",
+			Labels: map[string]string{
+				"app": "application",
+			},
+			Namespace: namespace,
+		},
+	}
+
+	createServiceMock(client, "service", namespace)
+	client.AppsV1().ReplicaSets(namespace).Create(replicaset)
+	client.CoreV1().Services(namespace).Create(svc)
 	time.Sleep(time.Second)
 	replicaset.Status.Replicas = 2
-	client.AppsV1().ReplicaSets("pe").Update(replicaset)
+	client.AppsV1().ReplicaSets(namespace).Update(replicaset)
 
 	event1 := &v1.Event{Message: "message", ObjectMeta: metaV1.ObjectMeta{Name: "a", CreationTimestamp: metaV1.Time{Time: time.Now()}}}
-	client.CoreV1().Events("pe").Create(event1)
+	client.CoreV1().Events(namespace).Create(event1)
 
 	time.Sleep(time.Second)
 
@@ -167,8 +179,8 @@ func TestDeploymentsWatch(t *testing.T) {
 		if application.Schema.Application != "custom-application-name" {
 			t.Fatalf("unexpected application name, got %s expected %s", application.Schema.Application, "custom-application-name")
 		}
-		if application.Schema.Namespace != "pe" {
-			t.Fatalf("unexpected application namespace, got %s expected %s", application.Schema.Namespace, "pe")
+		if application.Schema.Namespace != namespace {
+			t.Fatalf("unexpected application namespace, got %s expected %s", application.Schema.Namespace, namespace)
 		}
 		if application.Schema.DeploymentDescription != common.ApplyStatusDescriptionRunning {
 			t.Fatalf("unexpected status description, got %s expected %s", application.Schema.Namespace, common.ApplyStatusDescriptionRunning)
@@ -179,6 +191,12 @@ func TestDeploymentsWatch(t *testing.T) {
 	t.Run("replicaset", func(t *testing.T) {
 		if len(deployment.Replicaset) != 1 {
 			t.Fatalf("unexpected replicaset count, got %d expected %d", len(deployment.Replicaset), 1)
+		}
+	})
+
+	t.Run("service", func(t *testing.T) {
+		if len(deployment.Services) != 1 {
+			t.Fatalf("unexpected service count, got %d expected %d", len(deployment.Services), 1)
 		}
 	})
 

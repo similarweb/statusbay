@@ -294,6 +294,7 @@ func (dm *DeploymentManager) AddNewDeployment(data ApplyEvent, applicationRegist
 		},
 		Pods:                    make(map[string]DeploymenPod, 0),
 		Replicaset:              make(map[string]Replicaset, 0),
+		Services:                make(map[string]ServicesData, 0),
 		ProgressDeadlineSeconds: GetProgressDeadlineApply(data.Annotations, dm.maxDeploymentTime),
 	}
 	applicationRegistry.DBSchema.Resources.Deployments[data.ResourceName] = dd

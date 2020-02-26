@@ -6,6 +6,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
+	v1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
@@ -54,26 +55,43 @@ func (sm *ServiceManager) watch(watchData WatchData) {
 	go func() {
 
 		watchData.LogEntry.Info("start watching service")
-
 		watchData.LogEntry.WithField("list_option", watchData.ListOptions).Debug("start watch on service with list options")
 
-		services, err := sm.client.CoreV1().Services(watchData.Namespace).List(watchData.ListOptions)
+		watcher, err := sm.client.CoreV1().Services(watchData.Namespace).Watch(watchData.ListOptions)
+
 		if err != nil {
-			watchData.LogEntry.WithError(err).WithField("list_option", watchData.ListOptions.String()).Error("error when trying to start watch on services")
+			watchData.LogEntry.WithError(err).Error("could not start watch on service")
 			return
 		}
+		firstInit := map[string]bool{}
 
-		watchData.LogEntry.WithField("service_count", len(services.Items)).Info("found related services")
+		for {
+			select {
+			case event, watch := <-watcher.ResultChan():
+				if !watch {
+					watchData.LogEntry.Warn("service watcher was stopped, channel was closed")
+					return
+				}
+				svc, isOk := event.Object.(*v1.Service)
+				if !isOk {
+					watchData.LogEntry.WithField("object", event.Object).Warn("failed to parse service watcher data")
+					continue
+				}
+				if _, found := firstInit[svc.GetName()]; !found {
+					eventListOptions := metaV1.ListOptions{FieldSelector: labels.SelectorFromSet(map[string]string{
+						"involvedObject.name": svc.GetName(),
+						"involvedObject.kind": "Service",
+					}).String(),
+					}
+					watchData.RegistryData.NewService(svc)
+					sm.watchEvents(watchData.Ctx, watchData.LogEntry, watchData.RegistryData, eventListOptions, svc.GetName(), watchData.Namespace)
+				}
 
-		for _, svc := range services.Items {
-
-			eventListOptions := metaV1.ListOptions{FieldSelector: labels.SelectorFromSet(map[string]string{
-				"involvedObject.name": svc.GetName(),
-				"involvedObject.kind": "Service",
-			}).String(),
+			case <-watchData.Ctx.Done():
+				watchData.LogEntry.Debug("service watcher was stopped, got ctx done signal")
+				watcher.Stop()
+				return
 			}
-			watchData.RegistryData.NewService(&svc)
-			sm.watchEvents(watchData.Ctx, watchData.LogEntry, watchData.RegistryData, eventListOptions, svc.GetName(), watchData.Namespace)
 		}
 
 	}()

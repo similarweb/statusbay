@@ -89,18 +89,31 @@ func TestDaemonsetWatch(t *testing.T) {
 	labels := map[string]string{
 		"app": "application",
 	}
+	namespace := "pe"
+
+	svc := &v1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "service-1",
+			Labels: map[string]string{
+				"app":  "application",
+				"name": "test-daemonset",
+			},
+			Namespace: namespace,
+		},
+	}
+	client.CoreV1().Services(namespace).Create(svc)
 
 	// Create daemonset object
 	daemonsetObj := createDaemonSetMock(client, "test-daemonset", labels)
 	time.Sleep(time.Second)
 
 	// Update the number of replica
-	updateDaemonsetMock(client, "pe", daemonsetObj)
+	updateDaemonsetMock(client, namespace, daemonsetObj)
 
 	pod := createPod(client,
 		v1.PodRunning,
 		daemonsetObj.GetName(),
-		"pe",
+		namespace,
 		labels)
 	time.Sleep(time.Second)
 
@@ -122,14 +135,15 @@ func TestDaemonsetWatch(t *testing.T) {
 		deamonsetLabels)
 
 	revision.Revision = daemonsetObj.ObjectMeta.Generation
-	client.AppsV1().ControllerRevisions("pe").Create(revision)
+	client.AppsV1().ControllerRevisions(namespace).Create(revision)
+
 	time.Sleep(time.Second)
 	// create matchin pods to the revision hash
 
 	NotValidControllerRevisionHashlabelKey := controllerRevisionManager.Error
 	// verify daemonset deployed
 	application := storage.MockWriteDeployment["1"]
-	_ = application.Schema.Resources.Daemonsets["test-daemonset"]
+	daemonsetData := application.Schema.Resources.Daemonsets["test-daemonset"]
 
 	t.Run("controller_revision_valid_hash_label_key", func(t *testing.T) {
 
@@ -145,11 +159,17 @@ func TestDaemonsetWatch(t *testing.T) {
 		if application.Schema.Application != "custom-application-name" {
 			t.Fatalf("unexpected application name, got %s expected %s", application.Schema.Application, "custom-application-name")
 		}
-		if application.Schema.Namespace != "pe" {
-			t.Fatalf("unexpected application namespace, got %s expected %s", application.Schema.Namespace, "pe")
+		if application.Schema.Namespace != namespace {
+			t.Fatalf("unexpected application namespace, got %s expected %s", application.Schema.Namespace, namespace)
 		}
 		if application.Schema.DeploymentDescription != common.ApplyStatusDescriptionRunning {
 			t.Fatalf("unexpected status description, got %s expected %s", application.Schema.Namespace, common.ApplyStatusDescriptionRunning)
+		}
+	})
+
+	t.Run("service", func(t *testing.T) {
+		if len(daemonsetData.Services) != 1 {
+			t.Fatalf("unexpected service count, got %d expected %d", len(daemonsetData.Services), 1)
 		}
 	})
 }

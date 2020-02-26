@@ -62,9 +62,6 @@ func TestServiceWatch(t *testing.T) {
 
 	serviceManager.Serve(ctx, wg)
 
-	createServiceMock(client, "service-1", namespace)
-	createServiceMock(client, "service-2", namespace)
-
 	serviceManager.Watch <- kuberneteswatcher.WatchData{
 		ListOptions:  metav1.ListOptions{},
 		RegistryData: registryDeploymentData,
@@ -73,7 +70,10 @@ func TestServiceWatch(t *testing.T) {
 		LogEntry:     *lg,
 	}
 
-	time.Sleep(time.Second * 1)
+	time.Sleep(time.Second)
+	createServiceMock(client, "service-1", namespace)
+	createServiceMock(client, "service-2", namespace)
+	time.Sleep(time.Second)
 
 	event1 := &v1.Event{Message: "message", InvolvedObject: v1.ObjectReference{Kind: "Service", Name: "service-1"}, ObjectMeta: metav1.ObjectMeta{CreationTimestamp: metav1.Time{Time: time.Now()}}}
 	client.CoreV1().Events(namespace).Create(event1)

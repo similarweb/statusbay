@@ -18,7 +18,7 @@ const MetricChartContainer = ({
   } else if (data.length === 0) {
     content = (
       <Box display="flex" justifyContent="space-around">
-        <Typography variant="h4" color="error">
+        <Typography variant="h5" color="error">
 Metric
         query is invalid
         </Typography>

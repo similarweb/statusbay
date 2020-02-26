@@ -13,6 +13,7 @@ const createDeploymentData = ([name, rawData]) => {
     podEvents: transformers.podEvents(rawData),
     metrics: transformers.metrics(rawData),
     alerts: transformers.alerts(rawData),
+    replicaSet: transformers.replicaSet(rawData),
   }
 }
 const createDaemonSetData = ([name, rawData]) => {
@@ -122,6 +123,22 @@ const transformers = {
         }
       }
     )
+  },
+  replicaSet: (rawData) => {
+    return Object.entries(rawData.Replicaset).map(([name, value]) => {
+      const events = value.Events || [];
+      return {
+        name,
+        logs: events.map(event => {
+          return {
+            title: event.Message,
+            time: event.Time,
+            content: event.MarkDescriptions && event.MarkDescriptions.length > 0 && event.MarkDescriptions[0],
+            error: event.MarkDescriptions ? event.MarkDescriptions.length > 0 : false,
+          }
+        })
+      }
+    })
   }
 }
 

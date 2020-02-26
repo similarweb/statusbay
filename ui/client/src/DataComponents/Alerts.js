@@ -16,6 +16,7 @@ const Alerts = ({ kindIndex }) => {
   }
   const { alerts } = data.kinds[kindIndex];
   let content;
+  // if no alerts configured
   if (alerts.length === 0) {
     content = (
       <Grid item xs={12}>

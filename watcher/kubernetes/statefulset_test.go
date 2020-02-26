@@ -62,8 +62,8 @@ func NewStatefulSetManagerMock(client *fake.Clientset) (*kuberneteswatcher.State
 	pvcManager := NewPvcManagerMock(client)
 	podManager := kuberneteswatcher.NewPodsManager(client, eventManager, pvcManager)
 	controllerRevisionManager := NewControllerRevisionManagerMock(client, podManager)
-
-	statefulsetManager := kuberneteswatcher.NewStatefulsetManager(client, eventManager, registryManager, serviceManager, controllerRevisionManager, maxDeploymentTime)
+	runningApplies := registryManager.LoadRunningApplies()
+	statefulsetManager := kuberneteswatcher.NewStatefulsetManager(client, eventManager, registryManager, serviceManager, controllerRevisionManager, runningApplies, maxDeploymentTime)
 
 	var wg *sync.WaitGroup
 	ctx := context.Background()

@@ -11,6 +11,7 @@ import (
 	"statusbay/api/httpresponse"
 	"statusbay/api/metrics"
 	"statusbay/api/testutil"
+	"statusbay/config"
 	"sync"
 	"testing"
 )
@@ -21,9 +22,10 @@ type testServer struct {
 
 func MockServer(t *testing.T, storageMockFile string, metrics map[string]metrics.MetricManagerDescriber, alertsClient map[string]alerts.AlertsManagerDescriber) testServer {
 
+	version := testutil.NewMockVersion()
 	storage := testutil.NewMockStorage()
 	return testServer{
-		api: api.NewServer(storage, "8080", "./testutil/events.yaml", metrics, alertsClient),
+		api: api.NewServer(storage, "8080", config.KubernetesMarksEvents{}, metrics, alertsClient, version),
 	}
 }
 

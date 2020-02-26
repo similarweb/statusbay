@@ -8,16 +8,14 @@ const Applications = () => {
   const onRowClick = (row) => (event) => {
     // redirect to application deployments page
     history.push({
-      pathname: `/applications/${row.name}`,
+      pathname: `/application/${row.id}`,
     });
   };
   const filters = useMemo(() => {return {
     distinct: false
   }}, []);
   return (
-    <PageContent>
-      <Table onRowClick={onRowClick} filters={filters} title="Applications" />
-    </PageContent>
+    <Table onRowClick={onRowClick} filters={filters} title="Applications" showHistoryBtn={true} />
   );
 };
 

@@ -4,8 +4,11 @@ import { green } from '@material-ui/core/colors';
 export default (type) => createMuiTheme({
   palette: {
     type,
+    primary: {
+      main: '#3546B3',
+    },
     secondary: {
-      main: green[500],
+      main: '#FF7600',
       contrastText: '#ffffff',
     },
   },
@@ -45,8 +48,8 @@ export default (type) => createMuiTheme({
   overrides: {
     MuiTableCell: {
       head: {
-        textTransform: 'uppercase'
-      }
+        textTransform: 'uppercase',
+      },
     },
     MuiTableRow: {
       hover: {

@@ -23,18 +23,24 @@ const renderRows = (config, data, page) => data.map((row, rowIndex) => {
 const renderLoadingState = (config) => [...Array(10).keys()].map((index) => (
   <TableRow>
     {
-        config.cells.map((cell) => (
-          <TableCell>
-            <Skeleton variant="rect" width={150} height={27} />
-          </TableCell>
-        ))
+        config.cells.map((cell, cellIndex, cells) => {
+          const isLast = cellIndex === cells.length - 1;
+          if (!isLast) {
+            return (
+              <TableCell key={cell.id}>
+                <Skeleton variant="rect" width="auto" height={27} />
+              </TableCell>
+            );
+          }
+          return null;
+        })
       }
   </TableRow>
 ));
 
 const TableStateless = (props) => {
   const {
-    config, data, page, tableSize, loading, sortBy, sortDirection, onSort, stickyHeader
+    config, data, page, tableSize, loading, sortBy, sortDirection, onSort, stickyHeader,
   } = props;
   const onSortClick = (id) => () => {
     if (sortBy === id) {
@@ -102,7 +108,7 @@ TableStateless.defaultProps = {
   sortBy: null,
   sortDirection: 'desc',
   onSort: () => null,
-  stickyHeader: false
+  stickyHeader: false,
 };
 
 export default React.memo(TableStateless);

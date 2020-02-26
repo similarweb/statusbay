@@ -109,7 +109,7 @@ const MultiSelect = ({
         <MenuItem disabled value="">
           {name}
         </MenuItem>
-        {values.map((value) => (
+        {values != undefined && values.map((value) => (
           <MenuItem value={value} key={value} classes={{ gutters: classes.menuItem }}>
             <Box display="flex" alignItems="center">
               <Checkbox checked={selectedValue.indexOf(value) > -1} size="small" classes={{ root: classes.checkbox }} disableRipple />
@@ -131,6 +131,7 @@ MultiSelect.propTypes = {
 
 MultiSelect.defaultProps = {
   selectedValue: [],
+  values: [],
 };
 
 export default MultiSelect;

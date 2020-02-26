@@ -17,13 +17,12 @@ const ApplicationDeployments = () => {
     });
   };
   const filters = useMemo(() => ({
-    distinct: true,
+    distinct: false,
     name: appName,
   }), []);
-  const title = `Application: ${appName}`;
   return (
     <PageContent>
-      <Table hideNameFilter={true} filters={filters} onRowClick={onRowClick} title={title} />
+      <Table hideNameFilter={true} filters={filters} onRowClick={onRowClick} title={appName} hideDistinctFilter={true} />
     </PageContent>
   );
 };

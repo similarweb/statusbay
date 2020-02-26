@@ -46,7 +46,7 @@ const MetricIntegrationModal = () => {
           <Typography className={classes.code}>kind: Deployment</Typography>
           <Typography className={classes.code}>metadata:</Typography>
           <Typography className={classes.code}>  annotations:</Typography>
-          <Typography className={classes.code}>    statusbay.io/metrics-datadog-2xx": "sum:web.http.2xxֿ{`{*}`}.as_count()</Typography>
+          <Typography className={classes.code}>    statusbay.io/metrics-datadog-2xx: "sum:web.http.2xxֿ{`{*}`}.as_count()"</Typography>
           <br/><br/>
           <img className={classes.image} src={image} />
         </Box>

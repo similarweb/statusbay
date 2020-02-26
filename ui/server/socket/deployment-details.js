@@ -4,19 +4,23 @@ const { convertDeploymentDetailsData } = require('../services/data-transformers/
 
 const init = (io) => {
   const deploymentDetails = io.of('/deployment-details');
-  const emitOnce = async (socket, id) => {
-    info('sending deploymentDetails data...');
-    try {
-      const { data } = await detailsController.getAll(id);      
-      const tranformedData = convertDeploymentDetailsData(data);
-      socket.emit('data', { data: tranformedData });
-    }
-    catch (e) {
-      error(`error getting deployments details for ${id} error ${e}`);
-    }
-  };
   deploymentDetails.on('connection', (socket) => {
     let intervalId;
+    const emitOnce = async (socket, id) => {
+      info('sending deploymentDetails data...');
+      try {
+        const { data } = await detailsController.getAll(id);
+        const tranformedData = convertDeploymentDetailsData(data);
+        socket.emit('data', { data: tranformedData });
+      }
+      catch (e) {
+        error(`error getting deployments details for ${id} error ${e}`);
+        if (e.response && e.response.status === 404) {
+          socket.emit('not-found', { error: {code: 404, url: e.request.path}});
+          clearInterval(intervalId);
+        }
+      }
+    };
     info('User connected to deploymentDetails NS');
     socket.on('init', async (id) => {
       info(`deploymentDetails init: ${id}`);

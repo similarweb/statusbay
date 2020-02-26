@@ -9,6 +9,7 @@ export const DeploymentDetailsContextProvider = ({ id, children }) => {
   const { deploymentDetails } = useContext(SocketIOContext);
   const [data, setData] = useState();
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   useEffect(() => {
     deploymentDetails.emit('init', id);
     deploymentDetails.on('data', ({ data: newData }) => {
@@ -17,13 +18,16 @@ export const DeploymentDetailsContextProvider = ({ id, children }) => {
         setLoading(false);
       }
     });
+    deploymentDetails.on('not-found', ({ error }) => {
+      setError(error);
+    });
     return () => {
       deploymentDetails.emit('close');
     };
   }, [id, loading]);
   return (
-    <DeploymentDetailsContext.Provider value={{data, loading}}>
-      {children({loading, data})}
+    <DeploymentDetailsContext.Provider value={{data, loading, error}}>
+      {children({loading, data, error})}
     </DeploymentDetailsContext.Provider>
   );
 };

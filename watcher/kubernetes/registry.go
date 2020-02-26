@@ -626,6 +626,7 @@ func UpdatePodStatus(pods map[string]DeploymenPod, pod *v1.Pod, status string) e
 	return nil
 }
 
+// newService creates new service object
 func newService(services map[string]ServicesData, service *v1.Service) error {
 	if _, found := services[service.GetName()]; found {
 
@@ -637,6 +638,7 @@ func newService(services map[string]ServicesData, service *v1.Service) error {
 	return nil
 }
 
+// updateServiceEvents add service event
 func updateServiceEvents(services map[string]ServicesData, name string, event EventMessages) error {
 	if _, found := services[name]; !found {
 		log.WithField("service", name).Warn("service does not exist in services list")
@@ -679,7 +681,7 @@ func (dd *DeploymentData) NewService(service *v1.Service) error {
 	return newService(dd.Services, service)
 }
 
-// UpdateServiceEvents will set pod events
+// UpdateServiceEvents will set event to service
 func (dd *DeploymentData) UpdateServiceEvents(name string, event EventMessages) error {
 	return updateServiceEvents(dd.Services, name, event)
 }
@@ -723,7 +725,7 @@ func (dsd *DaemonsetData) NewService(service *v1.Service) error {
 	return newService(dsd.Services, service)
 }
 
-// UpdateServiceEvents will set pod events
+// UpdateServiceEvents will set event to daemonset
 func (dsd *DaemonsetData) UpdateServiceEvents(name string, event EventMessages) error {
 	return updateServiceEvents(dsd.Services, name, event)
 }
@@ -767,7 +769,7 @@ func (ssd *StatefulsetData) NewService(service *v1.Service) error {
 	return newService(ssd.Services, service)
 }
 
-// UpdateServiceEvents will set pod events
+// UpdateServiceEvents will set event to statefulset
 func (ssd *StatefulsetData) UpdateServiceEvents(name string, event EventMessages) error {
 	return updateServiceEvents(ssd.Services, name, event)
 }

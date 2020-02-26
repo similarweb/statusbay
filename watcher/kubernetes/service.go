@@ -49,7 +49,7 @@ func (sm *ServiceManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 
 }
 
-// watch will start watch on pods changes
+// watch will start watch on service changes
 func (sm *ServiceManager) watch(watchData WatchData) {
 
 	go func() {

@@ -39,7 +39,7 @@ helm delete foo
 | `deployment.annotations` | the statusbay annotations to set | `list of annotations` |
 | `statefulset.count` | number of statefulsets to simulate | `0` |
 | `statefulset.replicas` | number of replicas in each statefulset | `1` |
-| `deployment.createService: false` | Create service resource | false |
+| `statefulset.createService: false` | Create service resource | false |
 | `statefulset.name` | prefix of the statefulset name | `statefulset` |
 | `statefulset.image.repository` | container image repository | `nginx` |
 | `statefulset.image.tag` | container image tag | `latest` |

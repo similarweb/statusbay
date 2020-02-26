@@ -5,7 +5,7 @@ import { useDeploymentDetailsContext } from '../context/DeploymentDetailsContext
 
 const PodEvents = ({ kindIndex }) => {
   const {data} = useDeploymentDetailsContext();
-  if (!data) {
+  if (!data || (Array.isArray(data.kinds[kindIndex].podEvents) && data.kinds[kindIndex].podEvents.length === 0)) {
     return null;
   }
   return (

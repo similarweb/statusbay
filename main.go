@@ -29,6 +29,9 @@ const (
 	// DefaultConfigPath is the default configuration file path
 	DefaultConfigPath = "/etc/statusbay/config.yaml"
 
+	// DefaultEventsPath is the default events configuration file path
+	DefaultEventsPath = "/etc/statusbay/events.yaml"
+
 	//ModeAPI will upload a server for client Website UI
 	ModeAPI = "api"
 
@@ -38,10 +41,11 @@ const (
 
 func main() {
 
-	var configPath, mode string
+	var configPath, eventsPath, mode string
 	// parsing flags
 	flag.StringVar(&mode, "mode", "", fmt.Sprintf("Server mode to start. Must be either \"%s\" or \"%s\".", ModeAPI, KubernetesWatcher))
 	flag.StringVar(&configPath, "config", DefaultConfigPath, "Path to configuration file")
+	flag.StringVar(&eventsPath, "events", DefaultEventsPath, "Path to events configuration file")
 
 	// Only for kubernetes
 	var kubeconfig, apiserverHost string
@@ -54,7 +58,7 @@ func main() {
 
 	switch mode {
 	case ModeAPI:
-		runner = startAPIServer(ctx, configPath, "./events.yaml")
+		runner = startAPIServer(ctx, configPath, eventsPath)
 	case KubernetesWatcher:
 		runner = startKubernetesWatcher(ctx, configPath, kubeconfig, apiserverHost)
 	default:
@@ -148,13 +152,19 @@ func startKubernetesWatcher(ctx context.Context, configPath, kubeconfig, apiserv
 	return serverutil.RunAll(ctx, servers)
 }
 
-func startAPIServer(ctx context.Context, configPath, eventConfigPath string) *serverutil.Runner {
+func startAPIServer(ctx context.Context, configPath string, eventsPath string) *serverutil.Runner {
 
 	version := version.NewVersion(ctx, "webserver", 12*time.Hour)
 
 	apiConfig, err := config.LoadConfigAPI(configPath)
 	if err != nil {
 		log.WithError(err).Panic("could not load API configuration file")
+		os.Exit(1)
+	}
+
+	eventsConfig, err := config.LoadEvents(eventsPath)
+	if err != nil {
+		log.WithError(err).Panic("could not load events configuration file")
 		os.Exit(1)
 	}
 
@@ -178,7 +188,7 @@ func startAPIServer(ctx context.Context, configPath, eventConfigPath string) *se
 	alertsProviders := alerts.Load(apiConfig.AlertProvider)
 
 	//Start the server
-	server := api.NewServer(kubernetesStorage, "8080", eventConfigPath, metricsProviders, alertsProviders, version)
+	server := api.NewServer(kubernetesStorage, "8080", eventsConfig, metricsProviders, alertsProviders, version)
 
 	servers := []serverutil.Server{
 		server,

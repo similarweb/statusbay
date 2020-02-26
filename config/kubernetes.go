@@ -68,14 +68,6 @@ func (k *Kubernetes) BuildNotifiers() (registeredNotifiers []notifierCommon.Noti
 	return
 }
 
-type KubernetesMarksEvents struct {
-	Pod         []EventMarksConfig `yaml:"pod"`
-	Replicaset  []EventMarksConfig `yaml:"replicaset"`
-	Deployment  []EventMarksConfig `yaml:"deployment"`
-	Demonset    []EventMarksConfig `yaml:"demonset"`
-	Statefulset []EventMarksConfig `yaml:"statefulset"`
-}
-
 // LoadKubernetesConfig will load all yaml configuration file to struct
 func LoadKubernetesConfig(path string) (config Kubernetes, err error) {
 	var (
@@ -90,18 +82,4 @@ func LoadKubernetesConfig(path string) (config Kubernetes, err error) {
 	}
 
 	return
-}
-
-func LoadKubernetesMarksConfig(location string) (KubernetesMarksEvents, error) {
-	config := KubernetesMarksEvents{}
-	data, err := ioutil.ReadFile(location)
-	if err != nil {
-		return config, err
-	}
-	err = yaml.Unmarshal(data, &config)
-	if err != nil {
-		return config, err
-	}
-
-	return config, nil
 }

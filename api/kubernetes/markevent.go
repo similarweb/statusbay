@@ -5,7 +5,7 @@ import (
 	"statusbay/config"
 )
 
-// MarkApplicationDeploymentEvents returns list of markes events from given configuration (See file /events.yaml)
+// MarkApplicationDeploymentEvents returns list of markes events from configuration
 // This is a ugly/bad and fast implementation, we must refactor this code. I have open a github issue for that https://github.com/similarweb/statusbay/issues/72
 func MarkApplicationDeploymentEvents(appDeployment *ResponseDeploymentData, eventMarksConfig config.KubernetesMarksEvents) {
 

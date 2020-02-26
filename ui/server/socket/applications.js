@@ -1,11 +1,13 @@
 const applicationsController = require('../api/controllers/applications');
 const { info, error } = require('../logger');
+const hash = require('object-hash');
 
 const init = (io) => {
   const emitOnce = async (socket, filters) => {
     try {
       const {data} = await applicationsController.getAll(filters);
-      socket.emit('data', { data, filters });
+      const hashValue = hash(data);
+      socket.emit('data', { data, filters, hashValue });
     } catch (e) {
       error(`error getting applications`, {filters, error: e});
     }

@@ -63,6 +63,4 @@ CellStatus.propTypes = {
   status: PropTypes.oneOf(deploymentStatuses).isRequired,
 };
 
-CellStatus.whyDidYouRender = true;
-
 export default CellStatus;

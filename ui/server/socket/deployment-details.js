@@ -1,27 +1,29 @@
 const detailsController = require('../api/controllers/deployment-details');
 const { info, error } = require('../logger');
 const { convertDeploymentDetailsData } = require('../services/data-transformers/deploymet-details');
+const hash = require('object-hash');
 
 const init = (io) => {
   const deploymentDetails = io.of('/deployment-details');
   deploymentDetails.on('connection', (socket) => {
     let intervalId;
+    info('User connected to deploymentDetails NS');
     const emitOnce = async (socket, id) => {
       info('sending deploymentDetails data...');
       try {
         const { data } = await detailsController.getAll(id);
         const tranformedData = convertDeploymentDetailsData(data);
-        socket.emit('data', { data: tranformedData });
+        const hashValue = hash(tranformedData);
+        socket.emit('data', { data: tranformedData, hashValue });
       }
       catch (e) {
         error(`error getting deployments details for ${id} error ${e}`);
         if (e.response && e.response.status === 404) {
-          socket.emit('not-found', { error: {code: 404, url: e.request.path}});
+          socket.emit('not-found', { error: { code: 404, url: e.request.path } });
           clearInterval(intervalId);
         }
       }
     };
-    info('User connected to deploymentDetails NS');
     socket.on('init', async (id) => {
       info(`deploymentDetails init: ${id}`);
       emitOnce(socket, id);

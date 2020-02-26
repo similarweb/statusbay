@@ -23,15 +23,15 @@ type MockRegistryData struct {
 // All functions under the RegistryData interface
 func (mrd *MockRegistryData) UpdatePodEvents(podName string, pvcName string, event kuberneteswatcher.EventMessages) error {
 	mrd.callCount++
-	return errors.New("Dummy Error")
+	return nil
 }
 
 func (mrd *MockRegistryData) UpdatePod(pod *v1.Pod, status string) error {
-	return errors.New("Dummy Error")
+	return errors.New("Implement me")
 }
 
 func (mrd *MockRegistryData) NewPod(pod *v1.Pod) error {
-	return errors.New("Dummy Error")
+	return errors.New("Implement me")
 }
 
 func (mrd *MockRegistryData) GetName() string {
@@ -68,7 +68,7 @@ func NewPvcManagerMock(client *fake.Clientset) *kuberneteswatcher.PvcManager {
 func TestPvcWatch(t *testing.T) {
 	client := fake.NewSimpleClientset()
 	pvcManager := NewPvcManagerMock(client)
-	namespace, pvcName := "test-ns", "pvc"
+	namespace, pvcName := "namespace", "pvc"
 	lg := log.WithField("test", "TestPvcWatch")
 	ctx := context.Background()
 
@@ -83,19 +83,22 @@ func TestPvcWatch(t *testing.T) {
 		LogEntry:     *lg,
 	}
 
+	time.Sleep(2 * time.Second)
 	createPvcMock(client, namespace, "www", pvcName)
-	time.Sleep(5 * time.Second)
+	time.Sleep(2 * time.Second)
 
 	event1 := &v1.Event{Message: "message number 1", ObjectMeta: metaV1.ObjectMeta{Name: "www", CreationTimestamp: metaV1.Time{Time: time.Now()}}}
-	event2 := &v1.Event{Message: "message number 2", ObjectMeta: metaV1.ObjectMeta{Name: "www", CreationTimestamp: metaV1.Time{Time: time.Now()}}}
-	event3 := &v1.Event{Message: "message number 3", ObjectMeta: metaV1.ObjectMeta{Name: "www", CreationTimestamp: metaV1.Time{Time: time.Now()}}}
+	event2 := &v1.Event{Message: "message number 2", ObjectMeta: metaV1.ObjectMeta{Name: "www2", CreationTimestamp: metaV1.Time{Time: time.Now()}}}
+	event3 := &v1.Event{Message: "message number 3", ObjectMeta: metaV1.ObjectMeta{Name: "www3", CreationTimestamp: metaV1.Time{Time: time.Now()}}}
 	client.CoreV1().Events(namespace).Create(event1)
 	client.CoreV1().Events(namespace).Create(event2)
 	client.CoreV1().Events(namespace).Create(event3)
 	time.Sleep(time.Second)
-	// t.Run("pvc_events_count", func(t *testing.T) {
-	// 	if MockRegistryData.callCount != 3 {
-	// 		t.Fatalf("Unexpected number of pvc Events running, got %d expected %d", MockRegistryData.callCount, 3)
-	// 	}
-	// })
+
+	expectedEvents := 3
+	t.Run("pvc_events_count", func(t *testing.T) {
+		if MockRegistryData.callCount != expectedEvents {
+			t.Fatalf("Unexpected number of pvc events running, got %d expected %d", MockRegistryData.callCount, expectedEvents)
+		}
+	})
 }

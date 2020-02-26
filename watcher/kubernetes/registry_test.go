@@ -321,15 +321,15 @@ func TestDeploymentData(t *testing.T) {
 		data.NewPod(pod)
 
 		eventTime := time.Now().Unix()
-		data.UpdatePodEvents("pod1", "pvc1", kuberneteswatcher.EventMessages{
+		data.UpdatePodEvents("pod1", "", kuberneteswatcher.EventMessages{
 			Message: "Message",
 			Time:    eventTime,
 		})
-		data.UpdatePodEvents("pod1", "pvc1", kuberneteswatcher.EventMessages{
+		data.UpdatePodEvents("pod1", "", kuberneteswatcher.EventMessages{
 			Message: "Message",
 			Time:    eventTime,
 		})
-		data.UpdatePodEvents("pod1", "pvc1", kuberneteswatcher.EventMessages{
+		data.UpdatePodEvents("pod1", "", kuberneteswatcher.EventMessages{
 			Message: "Message2",
 			Time:    eventTime,
 		})

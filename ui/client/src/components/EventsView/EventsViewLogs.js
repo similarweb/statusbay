@@ -7,6 +7,7 @@ import Table from '@material-ui/core/Table';
 import PropTypes from 'prop-types';
 import makeStyles from '@material-ui/core/styles/makeStyles';
 import Timeline from '../Timeline/Timeline';
+import NoData from '../Table/NoData';
 
 const useStyles = makeStyles(() => ({
   cell: {
@@ -17,6 +18,7 @@ const useStyles = makeStyles(() => ({
 
 const EventsViewLogs = ({ logs }) => {
   const classes = useStyles();
+  const tableContent = logs && false ? <Timeline items={logs} maxHeight={400} /> : <NoData imageWidth={120} message="No events available" />;
   return (
     <Table size="small">
       <TableHead>
@@ -27,7 +29,9 @@ const EventsViewLogs = ({ logs }) => {
       <TableBody>
         <TableRow>
           <TableCell classes={{ root: classes.cell }}>
-            <Timeline items={logs} maxHeight={400} />
+            {
+              tableContent
+            }
           </TableCell>
         </TableRow>
       </TableBody>

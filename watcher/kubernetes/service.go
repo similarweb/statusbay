@@ -78,6 +78,7 @@ func (sm *ServiceManager) watch(watchData WatchData) {
 					continue
 				}
 				if _, found := firstInit[svc.GetName()]; !found {
+					firstInit[svc.GetName()] = true
 					eventListOptions := metaV1.ListOptions{FieldSelector: labels.SelectorFromSet(map[string]string{
 						"involvedObject.name": svc.GetName(),
 						"involvedObject.kind": "Service",
@@ -98,9 +99,10 @@ func (sm *ServiceManager) watch(watchData WatchData) {
 
 }
 
-// watchEvents will start watch on deployment event messages changes
+// watchEvents will start watch on service event messages changes
 func (sm *ServiceManager) watchEvents(ctx context.Context, lg log.Entry, registryDeployment RegistryData, listOptions metaV1.ListOptions, serviceName, namespace string) {
-	lg.Info("initializing events watcher")
+
+	lg.Info("initializing the event watcher on service events")
 
 	watchData := WatchEvents{
 		ListOptions: listOptions,
@@ -117,7 +119,7 @@ func (sm *ServiceManager) watchEvents(ctx context.Context, lg log.Entry, registr
 			case event := <-eventChan:
 				registryDeployment.UpdateServiceEvents(serviceName, event)
 			case <-ctx.Done():
-				lg.Info("stopping events watcher")
+				lg.Info("stop watching on daemonset events")
 				return
 			}
 		}

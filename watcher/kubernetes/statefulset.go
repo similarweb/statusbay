@@ -228,13 +228,6 @@ func (ssm *StatefulsetManager) watchStatefulset(ctx context.Context, cancelFn co
 					LogEntry:     *statefulsetLog,
 				}
 
-				ssm.serviceManager.Watch <- WatchData{
-					ListOptions:  metaV1.ListOptions{TimeoutSeconds: &maxWatchTime, LabelSelector: labels.SelectorFromSet(statefulset.Spec.Selector.MatchLabels).String()},
-					RegistryData: registryStatefulset,
-					Namespace:    statefulset.Namespace,
-					Ctx:          ctx,
-					LogEntry:     *statefulsetLog,
-				}
 			}
 			registryStatefulset.UpdateApplyStatus(statefulset.Status)
 		case <-ctx.Done():

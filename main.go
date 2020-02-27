@@ -125,8 +125,11 @@ func startKubernetesWatcher(ctx context.Context, configPath, kubeconfig, apiserv
 	//Service manager
 	serviceManager := kuberneteswatcher.NewServiceManager(kubernetesClientset, eventManager)
 
+	//Pvc manager
+	pvcManager := kuberneteswatcher.NewPvcManager(kubernetesClientset, eventManager)
+
 	//Pods manager
-	podsManager := kuberneteswatcher.NewPodsManager(kubernetesClientset, eventManager)
+	podsManager := kuberneteswatcher.NewPodsManager(kubernetesClientset, eventManager, pvcManager)
 
 	//Replicaset manager
 	replicasetManager := kuberneteswatcher.NewReplicasetManager(kubernetesClientset, eventManager, podsManager)
@@ -144,11 +147,10 @@ func startKubernetesWatcher(ctx context.Context, configPath, kubeconfig, apiserv
 	statefulsetManager := kuberneteswatcher.NewStatefulsetManager(kubernetesClientset, eventManager, registryManager, serviceManager, controllerRevisionManager, runningApplies, watcherConfig.Applies.MaxApplyTime)
 
 	servers := []serverutil.Server{
-		eventManager, podsManager, deploymentManager, daemonsetManager, statefulsetManager, replicasetManager, registryManager, serviceManager, reporter,
+		eventManager, podsManager, pvcManager, deploymentManager, daemonsetManager, statefulsetManager, replicasetManager, registryManager, serviceManager, reporter,
 	}
 
 	// Run a list of backround process for the server
-
 	return serverutil.RunAll(ctx, servers)
 }
 

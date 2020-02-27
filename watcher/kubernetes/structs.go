@@ -12,8 +12,8 @@ import (
 )
 
 type RegistryData interface {
+	UpdatePodEvents(podName string, pvcName string, event EventMessages) error
 	NewPod(pod *v1.Pod) error
-	UpdatePodEvents(podName string, event EventMessages) error
 	UpdatePod(pod *v1.Pod, status string) error
 	NewService(pod *v1.Service) error
 	UpdateServiceEvents(name string, event EventMessages) error
@@ -52,9 +52,10 @@ type MetaData struct {
 
 // DeploymenPod struct  TODO ::
 type DeploymenPod struct {
-	Phase             *string          `json:"Phase"`
-	CreationTimestamp time.Time        `json:"CreationTimestamp"`
-	Events            *[]EventMessages `json:"Events"`
+	Phase             *string                    `json:"Phase"`
+	CreationTimestamp time.Time                  `json:"CreationTimestamp"`
+	Events            *[]EventMessages           `json:"Events"`
+	Pvcs              map[string][]EventMessages `json:"Pvcs"`
 }
 
 // EventMessages struct  TODO ::

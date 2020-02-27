@@ -59,12 +59,12 @@ func (v *Version) interval(ctx context.Context) {
 func (v *Version) printResults(n *notifier.Response, err error) {
 
 	if err != nil {
-		log.WithError(err).Debug(fmt.Sprintf("failed to get StatusBay latest version"))
+		log.WithError(err).Info(fmt.Sprintf("failed to get StatusBay latest version"))
 		return
 	}
 	v.response = n
 	if n.Outdated {
-		log.Error(fmt.Sprintf("newer Statusbay version available. latest version %s, current version %s", n.LatestVersion, v.params.Version))
+		log.Error(fmt.Sprintf("newer Statusbay version available. latest version %s, current version %s, link download %s", n.CurrentVersion, v.params.Version, n.CurrentDownloadURL))
 	}
 
 	for _, notification := range n.Notifications {

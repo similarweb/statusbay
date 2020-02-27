@@ -17,6 +17,7 @@ helm delete foo
 | Parameter | Description | Default |
 | --------- | ----------- | ------- |
 | `daemonset.count` | number of daemonset deployments | `1` |
+| `daemonset.createService: false` | Create service resource | false |
 | `daemonset.name` | prefix of the daemonset name | `statusbay-daemonset` |
 | `daemonset.image.repository` | container image repository | `nginx` |
 | `daemonset.image.tag` | container image tag | `latest` |
@@ -27,6 +28,7 @@ helm delete foo
 | `daemonset.annotations` | the statusbay annotations to set | `list of annotations` |
 | `deployment.count` | number of deployments to simulate | `1` |
 | `deployment.replicas` | number of replicas in each deployment | `3` |
+| `deployment.createService: false` | Create service resource | false |
 | `deployment.name` | prefix of the deployment name | `statusbay-deployment` |
 | `deployment.image.repository` | container image repository | `nginx` |
 | `deployment.image.tag` | container image tag | `latest` |
@@ -37,6 +39,7 @@ helm delete foo
 | `deployment.annotations` | the statusbay annotations to set | `list of annotations` |
 | `statefulset.count` | number of statefulsets to simulate | `0` |
 | `statefulset.replicas` | number of replicas in each statefulset | `1` |
+| `statefulset.createService: false` | Create service resource | false |
 | `statefulset.name` | prefix of the statefulset name | `statefulset` |
 | `statefulset.image.repository` | container image repository | `nginx` |
 | `statefulset.image.tag` | container image tag | `latest` |

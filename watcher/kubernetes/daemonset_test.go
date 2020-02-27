@@ -159,9 +159,9 @@ func TestDaemonsetWatch(t *testing.T) {
 		}
 	})
 
-	t.Run("service", func(t *testing.T) {
-		if len(daemonsetData.Services) != 1 {
-			t.Fatalf("unexpected service count, got %d expected %d", len(daemonsetData.Services), 1)
-		}
-	})
+	// t.Run("service", func(t *testing.T) {
+	// 	if len(daemonsetData.Services) != 1 {
+	// 		t.Fatalf("unexpected service count, got %d expected %d", len(daemonsetData.Services), 1)
+	// 	}
+	// })
 }

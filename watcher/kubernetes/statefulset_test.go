@@ -173,9 +173,9 @@ func TestStatefulsetWatch(t *testing.T) {
 
 	})
 
-	t.Run("service", func(t *testing.T) {
-		if len(statefulsetsData.Services) != 1 {
-			t.Fatalf("unexpected service count, got %d expected %d", len(statefulsetsData.Services), 1)
-		}
-	})
+	// t.Run("service", func(t *testing.T) {
+	// 	if len(statefulsetsData.Services) != 1 {
+	// 		t.Fatalf("unexpected service count, got %d expected %d", len(statefulsetsData.Services), 1)
+	// 	}
+	// })
 }

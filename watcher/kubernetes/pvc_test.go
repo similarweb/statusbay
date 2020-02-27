@@ -34,6 +34,14 @@ func (mrd *MockRegistryData) NewPod(pod *v1.Pod) error {
 	return errors.New("Implement me")
 }
 
+func (mrd *MockRegistryData) NewService(pod *v1.Service) error {
+	return errors.New("Implement me")
+}
+
+func (mrd *MockRegistryData) UpdateServiceEvents(name string, event kuberneteswatcher.EventMessages) error {
+	return errors.New("Implement me")
+}
+
 func (mrd *MockRegistryData) GetName() string {
 	return "www"
 }

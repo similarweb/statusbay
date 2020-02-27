@@ -135,7 +135,7 @@ func TestDaemonsetWatch(t *testing.T) {
 	NotValidControllerRevisionHashlabelKey := controllerRevisionManager.Error
 	// verify daemonset deployed
 	application := storage.MockWriteDeployment["1"]
-	_ := application.Schema.Resources.Daemonsets["test-daemonset"]
+	_ = application.Schema.Resources.Daemonsets["test-daemonset"]
 
 	t.Run("controller_revision_valid_hash_label_key", func(t *testing.T) {
 

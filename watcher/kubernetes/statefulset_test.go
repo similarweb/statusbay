@@ -130,7 +130,7 @@ func TestStatefulsetWatch(t *testing.T) {
 
 	NotValidControllerRevisionHashlabelKey := controllerRevisionManager.Error
 	application := Mockstorage.MockWriteDeployment["1"]
-	_ := application.Schema.Resources.Statefulsets["application"]
+	_ = application.Schema.Resources.Statefulsets["application"]
 
 	var expectedProgressDeadLine int64 = 10
 

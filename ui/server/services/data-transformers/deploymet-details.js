@@ -88,7 +88,7 @@ const transformers = {
         name,
         status: pod.Phase.toLowerCase(),
         time: pod.CreationTimestamp,
-        logs: pod.Events.map(event => {
+        logs: (pod.Events || []).map(event => {
           return {
             title: event.Message,
             time: event.Time,

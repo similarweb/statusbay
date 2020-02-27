@@ -100,7 +100,6 @@ func (pm *PvcManager) watch(watchPvcData WatchPvcData) {
 
 				lg := watchPvcData.LogEntry.WithFields(log.Fields{
 					"pvc": pvc.Name,
-					"pod": watchPvcData.Pod,
 				})
 
 				//If it is the first time that we got the pvc, we are starting a watch on pvc events & send the pvc to the registry

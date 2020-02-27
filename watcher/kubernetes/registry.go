@@ -719,6 +719,7 @@ func (dsd *DaemonsetData) UpdatePod(pod *v1.Pod, status string) error {
 // UpdatePodEvents will set pod events
 func (dsd *DaemonsetData) UpdatePodEvents(podName string, pvcName string, event EventMessages) error {
 	return UpdatePodEvents(dsd.Pods, podName, pvcName, event)
+}
 
 // UpdateDaemonsetEvents will add event to a daemonset
 func (dsd *DaemonsetData) UpdateDaemonsetEvents(event EventMessages) {
@@ -757,6 +758,7 @@ func (ssd *StatefulsetData) NewPod(pod *v1.Pod) error {
 // UpdatePodEvents will set pod events
 func (ssd *StatefulsetData) UpdatePodEvents(podName string, pvcName string, event EventMessages) error {
 	return UpdatePodEvents(ssd.Pods, podName, pvcName, event)
+}
 
 // UpdatePod will set pod events to statefulset
 func (ssd *StatefulsetData) UpdatePod(pod *v1.Pod, status string) error {

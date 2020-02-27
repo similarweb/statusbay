@@ -7,14 +7,25 @@ import Typography from '@material-ui/core/Typography';
 import { useMetricsData } from '../Hooks/MetricsHooks';
 import LineChart from '../components/Charts/Line/LineChart';
 import Widget from '../components/Widget/Widget';
+import Alert from '@material-ui/lab/Alert';
+import AlertTitle from '@material-ui/lab/AlertTitle';
 
 const MetricChartContainer = ({
   name, provider, query, deploymentTime,
 }) => {
-  const { data, loading } = useMetricsData(provider, query, deploymentTime);
+  const { data, loading, error } = useMetricsData(provider, query, deploymentTime);
   let content;
   if (loading) {
     content = <Skeleton variant="rect" width="auto" height={118} />;
+  } else if (error) {
+    content = (
+      <Box display="flex" justifyContent="space-around">
+        <Alert severity="error">
+          <AlertTitle>Metric query error:</AlertTitle>
+          <code>{JSON.stringify(error, undefined, 4)}</code>
+        </Alert>
+      </Box>
+    );
   } else if (data.length === 0) {
     content = (
       <Box display="flex" justifyContent="space-around">

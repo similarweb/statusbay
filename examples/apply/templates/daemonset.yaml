@@ -31,4 +31,24 @@ spec:
 {{- toYaml $root.Values.daemonset.readinessProbe | nindent 10 }}
         resources:
 {{- toYaml $root.Values.daemonset.resources | nindent 10 }}
+
+{{- if $root.Values.daemonset.createService  }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $name }}-service
+  labels:
+    component: {{ $name }}
+  annotations:
+{{ toYaml $root.Values.daemonset.annotations | indent 4}}
+spec:
+  selector:
+    component: {{ $name }}
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 80
+    name: "http"
+{{- end }}
 {{- end }}

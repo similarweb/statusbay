@@ -125,6 +125,7 @@ func (pm *PodsManager) watch(watchData WatchData) {
 						// There are some cases where pvc is nil , when Kubernetes creates it's own certificates on the pods
 						// It mounts another volume for system use which does not have PersistentVolumeClaim
 						if pvc != nil {
+							podLog.WithFields(log.Fields{"pvc": pvc.ClaimName}).Debug("pods watcher found a new pvc")
 							PvcEventListOptions := metaV1.ListOptions{FieldSelector: labels.SelectorFromSet(map[string]string{
 								"metadata.name": pvc.ClaimName}).String()}
 

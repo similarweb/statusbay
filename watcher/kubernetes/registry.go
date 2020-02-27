@@ -587,7 +587,7 @@ func (dd *DeploymentData) UpdateReplicasetStatus(name string, status appsV1.Repl
 	return nil
 }
 
-// NewPodToPods
+// NewPodToPods adds a new deploymenpod to pods map if it does not exist.
 func NewPodToPods(pods map[string]DeploymenPod, pod *v1.Pod) error {
 	if _, found := pods[pod.GetName()]; found {
 

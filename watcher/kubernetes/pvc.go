@@ -57,7 +57,7 @@ func (pm *PvcManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 	}()
 }
 
-// storePodFirstInit will set if some pvc appears for the first time true == first time
+// storePvcFirstInit will set a new pvc if it appears for the first time
 func (pm *PvcManager) storePvcFirstInit(key string, val bool) {
 	pm.mutex.Lock()
 	pm.pvcsFirstInit[key] = val
@@ -77,8 +77,7 @@ func (pm *PvcManager) watch(watchPvcData WatchPvcData) {
 	go func() {
 
 		watchPvcData.LogEntry.Info("started pvc watcher")
-		watchPvcData.LogEntry.WithField("name", watchPvcData.RegistryData.GetName())
-		watchPvcData.LogEntry.WithField("list_options", watchPvcData.ListOptions).Debug("started watching pvcs with the following list options")
+		watchPvcData.LogEntry.WithField("list_options", watchPvcData.ListOptions).Debug("started pvc watcher with the following list options")
 
 		watcher, err := pm.client.CoreV1().PersistentVolumeClaims(watchPvcData.Namespace).Watch(watchPvcData.ListOptions)
 		if err != nil {
@@ -113,7 +112,7 @@ func (pm *PvcManager) watch(watchPvcData WatchPvcData) {
 						"involvedObject.name": pvc.GetName(),
 						"involvedObject.kind": "PersistentVolumeClaim"}).String()}
 
-					go pm.watchEvents(watchPvcData.Ctx, *lg, watchPvcData.RegistryData, eventListOptions, pvc.Namespace, watchPvcData.Pod, pvc.GetName())
+					pm.watchEvents(watchPvcData.Ctx, *lg, watchPvcData.RegistryData, eventListOptions, pvc.Namespace, watchPvcData.Pod, pvc.GetName())
 				}
 
 			case <-watchPvcData.Ctx.Done():

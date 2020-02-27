@@ -119,7 +119,7 @@ func (sm *ServiceManager) watchEvents(ctx context.Context, lg log.Entry, registr
 			case event := <-eventChan:
 				registryDeployment.UpdateServiceEvents(serviceName, event)
 			case <-ctx.Done():
-				lg.Info("stop watching on daemonset events")
+				lg.Info("stop watching on service events")
 				return
 			}
 		}

@@ -121,7 +121,7 @@ func TestStatefulsetWatch(t *testing.T) {
 
 	// We need both Resource Generation and revision.Revision in order to compare them in ControllerRevision
 	revision.Revision = statefulsetObj.ObjectMeta.Generation
-	time.Sleep(time.Second * 2)
+	time.Sleep(time.Second * 3)
 
 	client.CoreV1().Services(namespace).Create(svc)
 

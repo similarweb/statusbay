@@ -1,6 +1,7 @@
 ---
 daemonset:
   count: 1
+  createService: false
   name: statusbay-daemonset
   image:
     repository: nginx
@@ -36,6 +37,7 @@ deployment:
   count: 1
   replicas: 3
   name: statusbay-deployment
+  createService: false
   image:
     repository: nginx
     tag: latest
@@ -69,6 +71,7 @@ deployment:
 statefulset:
   count: 0
   replicas: 1
+  createService: false
   name: statefulset
   image:
     repository: nginx

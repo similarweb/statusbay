@@ -86,6 +86,14 @@ func TestStatefulsetWatch(t *testing.T) {
 	statefulsetObj := createStatefulSetMock(client, name, namespace, labels)
 	time.Sleep(time.Second)
 
+	svc := &v1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "service-1",
+			Labels:    labels,
+			Namespace: namespace,
+		},
+	}
+
 	// Update the number of replica
 	updateStatefulsetMock(client, namespace, statefulsetObj)
 
@@ -113,14 +121,16 @@ func TestStatefulsetWatch(t *testing.T) {
 
 	// We need both Resource Generation and revision.Revision in order to compare them in ControllerRevision
 	revision.Revision = statefulsetObj.ObjectMeta.Generation
-	time.Sleep(time.Second)
+	time.Sleep(time.Second * 3)
+
+	client.CoreV1().Services(namespace).Create(svc)
 
 	event1 := &v1.Event{Message: "message for statefulset", ObjectMeta: metaV1.ObjectMeta{Name: "a", CreationTimestamp: metaV1.Time{Time: time.Now()}}}
 	client.CoreV1().Events(namespace).Create(event1)
 
 	NotValidControllerRevisionHashlabelKey := controllerRevisionManager.Error
 	application := Mockstorage.MockWriteDeployment["1"]
-	_ = application.Schema.Resources.Statefulsets["test-statefulset"]
+	statefulsetsData := application.Schema.Resources.Statefulsets["application"]
 
 	var expectedProgressDeadLine int64 = 10
 
@@ -161,5 +171,11 @@ func TestStatefulsetWatch(t *testing.T) {
 			t.Fatalf("unexpected amount of Lables values for statefulset annotations field , got %d expected %d", len(application.Schema.Resources.Statefulsets["application"].Statefulset.Annotations), 4)
 		}
 
+	})
+
+	t.Run("service", func(t *testing.T) {
+		if len(statefulsetsData.Services) != 1 {
+			t.Fatalf("unexpected service count, got %d expected %d", len(statefulsetsData.Services), 1)
+		}
 	})
 }

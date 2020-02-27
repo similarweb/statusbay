@@ -227,6 +227,7 @@ func (ssm *StatefulsetManager) watchStatefulset(ctx context.Context, cancelFn co
 					Ctx:          ctx,
 					LogEntry:     *statefulsetLog,
 				}
+
 			}
 			registryStatefulset.UpdateApplyStatus(statefulset.Status)
 		case <-ctx.Done():
@@ -277,6 +278,7 @@ func (ssm *StatefulsetManager) AddNewStatefulset(data ApplyEvent, applicationReg
 			DesiredState: desiredState,
 		},
 		Pods:                    make(map[string]DeploymenPod, 0),
+		Services:                make(map[string]ServicesData, 0),
 		ProgressDeadlineSeconds: GetProgressDeadlineApply(data.Annotations, ssm.maxDeploymentTime),
 	}
 	applicationRegistry.DBSchema.Resources.Statefulsets[data.ResourceName] = dd

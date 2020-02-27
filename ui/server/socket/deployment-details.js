@@ -15,6 +15,14 @@ const init = (io) => {
         const tranformedData = convertDeploymentDetailsData(data);
         const hashValue = hash(tranformedData);
         socket.emit('data', { data: tranformedData, hashValue });
+        // stop interval if status isn't running since the data won't change anymore
+        // TODO: consider closing the socket
+        if (tranformedData && tranformedData.status !== 'running') {
+          if (intervalId) {
+            info(`stop getting deployment details, status is ${tranformedData.status}`);
+            clearInterval(intervalId);
+          }
+        }
       }
       catch (e) {
         error(`error getting deployments details for ${id} error ${e}`);

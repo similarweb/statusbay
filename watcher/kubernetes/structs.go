@@ -13,8 +13,10 @@ import (
 
 type RegistryData interface {
 	UpdatePodEvents(podName string, pvcName string, event EventMessages) error
-	UpdatePod(pod *v1.Pod, status string) error
 	NewPod(pod *v1.Pod) error
+	UpdatePod(pod *v1.Pod, status string) error
+	NewService(pod *v1.Service) error
+	UpdateServiceEvents(name string, event EventMessages) error
 	GetName() string
 }
 
@@ -77,6 +79,7 @@ type DeploymentData struct {
 	Events                  []EventMessages         `json:"Events"`
 	Replicaset              map[string]Replicaset   `json:"Replicaset"`
 	Pods                    map[string]DeploymenPod `json:"Pods"`
+	Services                map[string]ServicesData `json:"Services"`
 	ProgressDeadlineSeconds int64
 }
 
@@ -86,6 +89,7 @@ type DaemonsetData struct {
 	Status                  appsV1.DaemonSetStatus  `json:"Status"`
 	Events                  []EventMessages         `json:"Events"`
 	Pods                    map[string]DeploymenPod `json:"Pods"`
+	Services                map[string]ServicesData `json:"Services"`
 	ProgressDeadlineSeconds int64
 }
 
@@ -95,7 +99,13 @@ type StatefulsetData struct {
 	Status                  appsV1.StatefulSetStatus `json:"Status"`
 	Events                  []EventMessages          `json:"Events"`
 	Pods                    map[string]DeploymenPod  `json:"Pods"`
+	Services                map[string]ServicesData  `json:"Services"`
 	ProgressDeadlineSeconds int64
+}
+
+// ServicesData holds the data of services
+type ServicesData struct {
+	Events *[]EventMessages `json:"Events"`
 }
 
 //Metrics describe the metrics data integration

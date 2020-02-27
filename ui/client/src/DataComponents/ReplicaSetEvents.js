@@ -11,11 +11,14 @@ const ReplicaSetEvents = ({ kindIndex }) => {
   if (!data) {
     return null;
   }
+  
   const replicaSets = data.kinds[kindIndex].replicaSet || [];
   return (
     <>
       {
         replicaSets.map((set) => (
+          <>
+          {set.logs.length > 0 && 
           <DeploymentDetailsSection title={set.name}>
             <Grid container>
               <Grid item xs={12}>
@@ -25,6 +28,8 @@ const ReplicaSetEvents = ({ kindIndex }) => {
               </Grid>
             </Grid>
           </DeploymentDetailsSection>
+          }
+          </>
         ))
       }
 

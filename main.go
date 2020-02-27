@@ -123,7 +123,7 @@ func startKubernetesWatcher(ctx context.Context, configPath, kubeconfig, apiserv
 	eventManager := kuberneteswatcher.NewEventsManager(kubernetesClientset)
 
 	//Service manager
-	serviceManager := kuberneteswatcher.NewServiceManager(kubernetesClientset)
+	serviceManager := kuberneteswatcher.NewServiceManager(kubernetesClientset, eventManager)
 
 	//Pvc manager
 	pvcManager := kuberneteswatcher.NewPvcManager(kubernetesClientset, eventManager)

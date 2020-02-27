@@ -32,6 +32,7 @@ spec:
         resources:
 {{- toYaml $root.Values.daemonset.resources | nindent 10 }}
 
+{{- if $root.Values.daemonset.createService  }}
 ---
 apiVersion: v1
 kind: Service
@@ -44,9 +45,10 @@ metadata:
 spec:
   selector:
     component: {{ $name }}
-  type: LoadBalancer
+  type: ClusterIP
   ports:
   - port: 80
     targetPort: 80
     name: "http"
+{{- end }}
 {{- end }}

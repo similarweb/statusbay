@@ -48,7 +48,7 @@ spec:
           memory: {{ $root.Values.statefulset.resources.requests.memory | quote }}
           storage: {{ $root.Values.statefulset.persistence.persistentVolumeClaim.size | quote }}
 
-
+{{- if $root.Values.statefulset.createService  }}
 ---
 apiVersion: v1
 kind: Service
@@ -61,10 +61,10 @@ metadata:
 spec:
   selector:
     component: {{ $name }}
-  type: LoadBalancer
+  type: ClusterIP
   ports:
   - port: 80
     targetPort: 80
     name: "http"
-
+{{- end -}}
 {{- end }}

@@ -150,11 +150,10 @@ func TestDeploymentsWatch(t *testing.T) {
 
 	createServiceMock(client, "service", namespace)
 	client.AppsV1().ReplicaSets(namespace).Create(replicaset)
-	client.CoreV1().Services(namespace).Create(svc)
 	time.Sleep(time.Second)
 	replicaset.Status.Replicas = 2
 	client.AppsV1().ReplicaSets(namespace).Update(replicaset)
-
+	client.CoreV1().Services(namespace).Create(svc)
 	event1 := &v1.Event{Message: "message", ObjectMeta: metaV1.ObjectMeta{Name: "a", CreationTimestamp: metaV1.Time{Time: time.Now()}}}
 	client.CoreV1().Events(namespace).Create(event1)
 

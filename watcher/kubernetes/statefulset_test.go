@@ -106,6 +106,8 @@ func TestStatefulsetWatch(t *testing.T) {
 		labels)
 	time.Sleep(time.Second)
 
+	client.CoreV1().Services(namespace).Create(svc)
+
 	// Add the expected pod label for Statefulset ControllerRevision
 	pod.ObjectMeta.Labels[appsV1.ControllerRevisionHashLabelKey] = fmt.Sprintf("%s-%s",
 		statefulsetObj.ObjectMeta.Name, controllerRevisionHash)
@@ -122,8 +124,6 @@ func TestStatefulsetWatch(t *testing.T) {
 	// We need both Resource Generation and revision.Revision in order to compare them in ControllerRevision
 	revision.Revision = statefulsetObj.ObjectMeta.Generation
 	time.Sleep(time.Second * 3)
-
-	client.CoreV1().Services(namespace).Create(svc)
 
 	event1 := &v1.Event{Message: "message for statefulset", ObjectMeta: metaV1.ObjectMeta{Name: "a", CreationTimestamp: metaV1.Time{Time: time.Now()}}}
 	client.CoreV1().Events(namespace).Create(event1)

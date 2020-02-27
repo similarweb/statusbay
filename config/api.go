@@ -53,6 +53,7 @@ type KubernetesMarksEvents struct {
 	Deployment  []EventMarksConfig `yaml:"deployment"`
 	Demonset    []EventMarksConfig `yaml:"demonset"`
 	Statefulset []EventMarksConfig `yaml:"statefulset"`
+	Service     []EventMarksConfig `yaml:"service"`
 }
 
 // API is holds all application configuration

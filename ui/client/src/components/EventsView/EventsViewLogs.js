@@ -18,7 +18,7 @@ const useStyles = makeStyles(() => ({
 
 const EventsViewLogs = ({ logs }) => {
   const classes = useStyles();
-  const tableContent = logs ? <Timeline items={logs} maxHeight={400} /> : <NoData imageWidth={120} message="No events available" />;
+  const tableContent = logs.length > 0 ? <Timeline items={logs} maxHeight={400} /> : <NoData imageWidth={120} message="No events available" />;
   return (
     <Table size="small">
       <TableHead>

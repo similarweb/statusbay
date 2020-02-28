@@ -1,6 +1,6 @@
 import {
   useCallback,
-  useContext, useEffect, useState,
+  useContext, useEffect, useRef, useState,
 } from 'react';
 import { SocketIOContext } from '../context/SocketIOContext';
 import { transformTableData } from '../Services/API/TableApi';
@@ -32,14 +32,21 @@ export const useApplicationsData = (filters) => {
   const { applications } = useContext(SocketIOContext);
   const [data, setData] = useState();
   const [loading, setLoading] = useState(true);
-  const onNewData = useCallback(({ data: newData }) => {
-    setData(transformTableData(newData.Records, newData.Count));
+  const prevHashValue = useRef('');
+  const socket = useRef(null);
+  const onNewData = useCallback(({ data: newData, hashValue }) => {
+    // check if data changed
+    if (hashValue !== prevHashValue.current) {
+      prevHashValue.current = hashValue;
+      setData(transformTableData(newData.Records, newData.Count));
+    }
     setLoading(false);
   }, []);
   useEffect(() => {
-    applications.on('data', onNewData);
+    socket.current = applications.on('data', onNewData);
     return () => {
       applications.emit('close');
+      socket.current.removeAllListeners('data');
     };
   }, []);
   useEffect(() => {

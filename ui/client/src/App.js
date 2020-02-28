@@ -6,7 +6,7 @@ import CssBaseline from '@material-ui/core/CssBaseline';
 import {
   BrowserRouter as Router,
   Switch as RouterSwitch,
-  Route,
+  Route, Redirect,
 } from 'react-router-dom';
 import makeStyles from '@material-ui/core/styles/makeStyles';
 import Box from '@material-ui/core/Box';
@@ -79,7 +79,7 @@ function App() {
   const classes = useStyles();
   return (
     <ThemeProvider theme={theme}>
-      <CssBaseline />
+      <CssBaseline/>
       <Router>
         <div
           className={classes.root}
@@ -91,23 +91,28 @@ function App() {
             onChangeThemeType={onChangeThemeType}
           />
           <main className={classes.main}>
-            <div className={classes.toolbar} />
+            <div className={classes.toolbar}/>
             <Grid container spacing={0} justify="center">
               <Grid item xl={10} lg={11} xs={12}>
                 {
-                  loadSettings ? <Box m={2} flexGrow={1} justifyContent="space-around" display="flex" flexDirection="column"><Loader /></Box> : (
-                    <RouterSwitch>
-                      <Route exact path="/">
-                        <Applications />
-                      </Route>
-                      <Route exact path="/applications/:appName">
-                        <ApplicationDeployments />
-                      </Route>
-                      <Route path="/application/:deploymentId">
-                        <DeploymentDetails />
-                      </Route>
-                    </RouterSwitch>
-                  )
+                  loadSettings ?
+                    <Box m={2} flexGrow={1} justifyContent="space-around" display="flex"
+                         flexDirection="column"><Loader/></Box> : (
+                      <RouterSwitch>
+                        <Route exact path="/">
+                          <Applications/>
+                        </Route>
+                        <Route exact path="/applications">
+                          <Redirect to="/"/>
+                        </Route>
+                        <Route exact path="/applications/:appName">
+                          <ApplicationDeployments/>
+                        </Route>
+                        <Route path="/application/:deploymentId">
+                          <DeploymentDetails/>
+                        </Route>
+                      </RouterSwitch>
+                    )
                 }
               </Grid>
             </Grid>

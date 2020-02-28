@@ -274,6 +274,7 @@ func (dsm *DaemonsetManager) AddNewDaemonset(data ApplyEvent, applicationRegistr
 			DesiredState: desiredState,
 		},
 		Pods:                    make(map[string]DeploymenPod, 0),
+		Services:                make(map[string]ServicesData, 0),
 		ProgressDeadlineSeconds: GetProgressDeadlineApply(data.Annotations, dsm.maxDeploymentTime),
 	}
 	applicationRegistry.DBSchema.Resources.Daemonsets[data.ResourceName] = dd

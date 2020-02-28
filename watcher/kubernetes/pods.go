@@ -18,16 +18,18 @@ import (
 type PodsManager struct {
 	client        kubernetes.Interface
 	eventManager  *EventsManager
+	pvcManager    *PvcManager
 	Watch         chan WatchData
 	podsFirstInit map[string]bool
 	mutex         *sync.RWMutex
 }
 
 // NewPodsManager create new pods instance
-func NewPodsManager(kubernetesClientset kubernetes.Interface, eventManager *EventsManager) *PodsManager {
+func NewPodsManager(kubernetesClientset kubernetes.Interface, eventManager *EventsManager, pvcManager *PvcManager) *PodsManager {
 	return &PodsManager{
 		client:        kubernetesClientset,
 		eventManager:  eventManager,
+		pvcManager:    pvcManager,
 		podsFirstInit: map[string]bool{},
 		mutex:         &sync.RWMutex{},
 		Watch:         make(chan WatchData),
@@ -118,6 +120,25 @@ func (pm *PodsManager) watch(watchData WatchData) {
 					}
 					go pm.watchEvents(watchData.Ctx, *podLog, watchData.RegistryData, eventListOptions, pod.Namespace, pod.GetName())
 
+					for _, volume := range pod.Spec.Volumes {
+						pvc := volume.VolumeSource.PersistentVolumeClaim
+						// There are some cases where pvc is nil , when Kubernetes creates it's own certificates on the pods
+						// It mounts another volume for system use which does not have PersistentVolumeClaim
+						if pvc != nil {
+							podLog.WithFields(log.Fields{"pvc": pvc.ClaimName}).Debug("pods watcher found a new pvc")
+							PvcEventListOptions := metaV1.ListOptions{FieldSelector: labels.SelectorFromSet(map[string]string{
+								"metadata.name": pvc.ClaimName}).String()}
+
+							pm.pvcManager.Watch <- WatchPvcData{
+								LogEntry:     *podLog,
+								ListOptions:  PvcEventListOptions,
+								RegistryData: watchData.RegistryData,
+								Namespace:    pod.Namespace,
+								Pod:          pod.Name,
+								Ctx:          watchData.Ctx,
+							}
+						}
+					}
 				}
 
 				status := string(pod.Status.Phase)
@@ -144,7 +165,7 @@ func (pm *PodsManager) watch(watchData WatchData) {
 							Message: message,
 							Time:    time.Now().UnixNano(),
 						}
-						watchData.RegistryData.UpdatePodEvents(pod.GetName(), eventMessage)
+						watchData.RegistryData.UpdatePodEvents(pod.GetName(), "", eventMessage)
 						status = container.State.Waiting.Reason
 					}
 
@@ -161,7 +182,7 @@ func (pm *PodsManager) watch(watchData WatchData) {
 							Time:                container.State.Terminated.StartedAt.UnixNano(),
 							ReportingController: container.State.Terminated.ContainerID,
 						}
-						watchData.RegistryData.UpdatePodEvents(pod.GetName(), eventMessage)
+						watchData.RegistryData.UpdatePodEvents(pod.GetName(), "", eventMessage)
 						status = container.State.Terminated.Reason
 					}
 				}
@@ -199,7 +220,7 @@ func (pm *PodsManager) watchEvents(ctx context.Context, lg log.Entry, registryDa
 		for {
 			select {
 			case event := <-eventChan:
-				registryData.UpdatePodEvents(podName, event)
+				registryData.UpdatePodEvents(podName, "", event)
 			case <-ctx.Done():
 				lg.Info("stop watching pod events")
 				return

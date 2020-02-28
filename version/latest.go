@@ -64,7 +64,7 @@ func (v *Version) printResults(n *notifier.Response, err error) {
 	}
 	v.response = n
 	if n.Outdated {
-		log.Error(fmt.Sprintf("newer Statusbay version available. latest version %s, current version %s", n.LatestVersion, v.params.Version))
+		log.Error(fmt.Sprintf("newer Statusbay version available. latest version %s, current version %s, link download %s", n.CurrentVersion, v.params.Version, n.CurrentDownloadURL))
 	}
 
 	for _, notification := range n.Notifications {

@@ -249,6 +249,14 @@ github.com/rogpeppe/fastuuid v1.1.0/go.mod h1:jVj6XXZzXRy/MSR5jhDC/2q6DgLz+nrA6L
 github.com/sergi/go-diff v1.0.0/go.mod h1:0CfEIISq7TuYL3j771MWULgwwjU+GofnZX9QAmXWZgo=
 github.com/similarweb/client-notifier v0.0.0-20200222134422-3352d61dbffc h1:OKckcvgIOCw7hWMc347NTZ2omry5fhrKUcLCxzHs9Ko=
 github.com/similarweb/client-notifier v0.0.0-20200222134422-3352d61dbffc/go.mod h1:bQ06kbS0djjHVn4TraMJ6ZnHusfaaM6a/rj+ULnEdBw=
+github.com/similarweb/client-notifier v0.0.0-20200224135902-28ab52058f87 h1:MkaPLysuLqH0otljveJ7KjkwQtPAH2BbGpq8/OBivkc=
+github.com/similarweb/client-notifier v0.0.0-20200224135902-28ab52058f87/go.mod h1:bQ06kbS0djjHVn4TraMJ6ZnHusfaaM6a/rj+ULnEdBw=
+github.com/similarweb/client-notifier v0.1.0 h1:cc5r21MRDWFgxCGlVVikv8b3t65v1fRURuDV4ZlJ99g=
+github.com/similarweb/client-notifier v0.1.0/go.mod h1:bQ06kbS0djjHVn4TraMJ6ZnHusfaaM6a/rj+ULnEdBw=
+github.com/similarweb/client-notifier v0.1.1 h1:ceKp612ChVbxnrBBD/zzu1RIibzHM++rmvMh7CcYm4g=
+github.com/similarweb/client-notifier v0.1.1/go.mod h1:bQ06kbS0djjHVn4TraMJ6ZnHusfaaM6a/rj+ULnEdBw=
+github.com/similarweb/client-notifier v0.1.2 h1:WKlsM05DFz6r28e8yLFdg/F3RuOe0M7w1OVK/Mw4UgE=
+github.com/similarweb/client-notifier v0.1.2/go.mod h1:bQ06kbS0djjHVn4TraMJ6ZnHusfaaM6a/rj+ULnEdBw=
 github.com/sirupsen/logrus v1.2.0/go.mod h1:LxeOpSwHxABJmUn/MG1IvRgCAasNZTLOkJPxbbu5VWo=
 github.com/sirupsen/logrus v1.4.2 h1:SPIRibHv4MatM3XXNO2BJeFLZwZ2LvZgfQ5+UNI2im4=
 github.com/sirupsen/logrus v1.4.2/go.mod h1:tLMulIdttU9McNUspp0xgXVQah82FyeX6MwdIuYE2rE=

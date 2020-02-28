@@ -23,19 +23,10 @@ func MarkApplicationDeploymentEvents(appDeployment *ResponseDeploymentData, even
 			}
 		}
 
-		for _, pod := range deployment.Pods {
-			for i, event := range pod.Events {
-				eventDescription := eventmark.MarkEvent(event.Message, eventMarksConfig.Pod)
-				pod.Events[i].MarkDescriptions = eventDescription
-			}
-		}
+		pod(deployment.Pods, eventMarksConfig)
 
-		for _, services := range deployment.Service {
-			for i, svc := range services.Events {
-				eventDescription := eventmark.MarkEvent(svc.Message, eventMarksConfig.Service)
-				services.Events[i].MarkDescriptions = eventDescription
-			}
-		}
+		service(deployment.Service, eventMarksConfig)
+
 	}
 
 	for _, daemonset := range appDeployment.Resources.Daemonsets {
@@ -45,19 +36,9 @@ func MarkApplicationDeploymentEvents(appDeployment *ResponseDeploymentData, even
 			daemonset.Events[i].MarkDescriptions = eventDescription
 		}
 
-		for _, pod := range daemonset.Pods {
-			for i, event := range pod.Events {
-				eventDescription := eventmark.MarkEvent(event.Message, eventMarksConfig.Pod)
-				pod.Events[i].MarkDescriptions = eventDescription
-			}
-		}
+		pod(daemonset.Pods, eventMarksConfig)
 
-		for _, services := range daemonset.Service {
-			for i, svc := range services.Events {
-				eventDescription := eventmark.MarkEvent(svc.Message, eventMarksConfig.Service)
-				services.Events[i].MarkDescriptions = eventDescription
-			}
-		}
+		service(daemonset.Service, eventMarksConfig)
 
 	}
 
@@ -68,18 +49,37 @@ func MarkApplicationDeploymentEvents(appDeployment *ResponseDeploymentData, even
 			statefulset.Events[i].MarkDescriptions = eventDescription
 		}
 
-		for _, pod := range statefulset.Pods {
-			for i, event := range pod.Events {
-				eventDescription := eventmark.MarkEvent(event.Message, eventMarksConfig.Pod)
-				pod.Events[i].MarkDescriptions = eventDescription
-			}
+		pod(statefulset.Pods, eventMarksConfig)
+
+		service(statefulset.Service, eventMarksConfig)
+
+	}
+}
+
+func pod(pods map[string]ResponseDeploymenPod, events config.KubernetesMarksEvents) {
+
+	for _, pod := range pods {
+		for i, event := range pod.Events {
+			eventDescription := eventmark.MarkEvent(event.Message, events.Pod)
+			pod.Events[i].MarkDescriptions = eventDescription
 		}
 
-		for _, services := range statefulset.Service {
-			for i, svc := range services.Events {
-				eventDescription := eventmark.MarkEvent(svc.Message, eventMarksConfig.Service)
-				services.Events[i].MarkDescriptions = eventDescription
+		for _, pvc := range pod.PVC {
+			for i, event := range pvc {
+				eventDescription := eventmark.MarkEvent(event.Message, events.Pvc)
+				pvc[i].MarkDescriptions = eventDescription
 			}
 		}
 	}
+}
+
+func service(service map[string]ResponseServicesData, events config.KubernetesMarksEvents) {
+
+	for _, services := range service {
+		for i, svc := range services.Events {
+			eventDescription := eventmark.MarkEvent(svc.Message, events.Service)
+			services.Events[i].MarkDescriptions = eventDescription
+		}
+	}
+
 }

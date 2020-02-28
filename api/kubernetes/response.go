@@ -32,9 +32,10 @@ type ResponseMetaData struct {
 }
 
 type ResponseDeploymenPod struct {
-	Phase             *string                 `json:"Phase"`
-	CreationTimestamp time.Time               `json:"CreationTimestamp"`
-	Events            []ResponseEventMessages `json:"Events"`
+	Phase             *string                            `json:"Phase"`
+	CreationTimestamp time.Time                          `json:"CreationTimestamp"`
+	Events            []ResponseEventMessages            `json:"Events"`
+	PVC               map[string][]ResponseEventMessages `json:"Pvcs"`
 }
 
 type ResponseEventMessages struct {

@@ -19,7 +19,7 @@ const StatusBayVersion = () => {
   useEffect(() => {
     const getVersionData = async () => {
       const { data, error } = await API('/api/version');
-      if (data && data.Outdated) {
+      if (data && data.outdated) {
         setShowNewVersion(true);
       }
     };

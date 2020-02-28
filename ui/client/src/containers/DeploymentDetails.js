@@ -33,8 +33,14 @@ const useStyles = makeStyles((theme) => ({
   chips: {
     '& > *': {
       margin: theme.spacing(0.5),
-    },
+    }
   },
+  notFound: {
+    position: 'fixed',
+    top: '50%',
+    left: '50%',
+    transform: 'translateX(-50%)translateY(-50%)',
+  }
 }));
 
 const DeploymentDetails = () => {
@@ -63,7 +69,7 @@ const DeploymentDetails = () => {
       {
         ({ data, loading, error }) => {
           if (error) {
-            return <NoData message="Deployment not found" />;
+            return <div className={classes.notFound}><NoData  message="Deployment not found" /></div>;
           }
           if (loading) {
             return (

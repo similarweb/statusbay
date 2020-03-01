@@ -14,6 +14,7 @@ import Topbar from './components/Layout/Topbar';
 import Applications from './containers/Applications';
 import DeploymentDetails from './containers/DeploymentDetails';
 import ApplicationDeployments from './containers/ApplicationDeployments';
+import NotFound from './containers/NotFound';
 import { getMetaData } from './Services/API/TableApi';
 import { AppSettingsContext } from './context/AppSettingsContext';
 import useDarkMode from './Hooks/DarkMode';
@@ -110,6 +111,9 @@ function App() {
                         </Route>
                         <Route path="/application/:deploymentId">
                           <DeploymentDetails/>
+                        </Route>
+                        <Route path="*" >
+                          <NotFound />
                         </Route>
                       </RouterSwitch>
                     )

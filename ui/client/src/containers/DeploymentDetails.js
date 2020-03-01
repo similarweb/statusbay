@@ -27,14 +27,21 @@ import {
 } from '../context/DeploymentDetailsContext';
 import Loader from '../components/Loader/Loader';
 import ReplicaSetEvents from '../DataComponents/ReplicaSetEvents';
+import ServiceSetEvents from '../DataComponents/ServiceSetEvents';
 import NoData from '../components/Table/NoData';
 
 const useStyles = makeStyles((theme) => ({
   chips: {
     '& > *': {
       margin: theme.spacing(0.5),
-    },
+    }
   },
+  notFound: {
+    position: 'fixed',
+    top: '50%',
+    left: '50%',
+    transform: 'translateX(-50%)translateY(-50%)',
+  }
 }));
 
 const DeploymentDetails = () => {
@@ -63,7 +70,7 @@ const DeploymentDetails = () => {
       {
         ({ data, loading, error }) => {
           if (error) {
-            return <NoData message="Deployment not found" />;
+            return <div className={classes.notFound}><NoData  message="Deployment not found" /></div>;
           }
           if (loading) {
             return (
@@ -120,6 +127,7 @@ const DeploymentDetails = () => {
                 <PodEvents kindIndex={parseInt(tab)} />
                 <DeploymentEvents kindIndex={parseInt(tab)} />
                 <ReplicaSetEvents kindIndex={parseInt(tab)} />
+                <ServiceSetEvents kindIndex={parseInt(tab)} />
                 <Metrics kindIndex={parseInt(tab)} />
                 <Alerts kindIndex={parseInt(tab)} />
               </Box>

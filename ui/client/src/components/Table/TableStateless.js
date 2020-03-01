@@ -8,6 +8,8 @@ import TableCell from '@material-ui/core/TableCell';
 import Skeleton from '@material-ui/lab/Skeleton';
 import TableSortLabel from '@material-ui/core/TableSortLabel';
 import makeStyles from '@material-ui/core/styles/makeStyles';
+import Box from '@material-ui/core/Box';
+import Loader from '../Loader/Loader';
 
 const renderRows = (config, data, page) => data.map((row, rowIndex) => {
   const RowComponent = config.row.render(row, rowIndex);
@@ -20,23 +22,11 @@ const renderRows = (config, data, page) => data.map((row, rowIndex) => {
   );
 });
 
-const renderLoadingState = (config) => [...Array(10).keys()].map((index) => (
+const renderLoadingState = () => (
   <TableRow>
-    {
-        config.cells.map((cell, cellIndex, cells) => {
-          const isLast = cellIndex === cells.length - 1;
-          if (!isLast) {
-            return (
-              <TableCell key={cell.id}>
-                <Skeleton variant="rect" width="auto" height={27} />
-              </TableCell>
-            );
-          }
-          return null;
-        })
-      }
+    <Box display="flex" justifyContent="space-around"><Loader inline={true} /></Box>
   </TableRow>
-));
+);
 
 const TableStateless = (props) => {
   const {
@@ -49,6 +39,9 @@ const TableStateless = (props) => {
       onSort(id, 'desc');
     }
   };
+  if (loading) {
+    return <Box display="flex" justifyContent="space-around"><Loader inline={true} interval={100} /></Box>;
+  }
   return (
     <Table size={tableSize} stickyHeader={stickyHeader}>
       <TableHead>
@@ -66,7 +59,7 @@ const TableStateless = (props) => {
         </TableRow>
       </TableHead>
       <TableBody>
-        {loading ? renderLoadingState(config) : renderRows(config, data, page)}
+        {renderRows(config, data, page)}
       </TableBody>
     </Table>
   );

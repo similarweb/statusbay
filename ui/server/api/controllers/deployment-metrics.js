@@ -6,7 +6,7 @@ const {error} = require('../../logger');
 module.exports = {
   urlPath,
   async getAll(params = '') {
-    return axios.get(`${config.metricsApiUrl}${urlPath}${params}`)
+    return axios.get(`${config.apiUrl}${urlPath}${params}`)
   },
   async getSingleMetric(metric, provider, deploymentTime, minutesBefore = 30, minutesAfter = 30) {
     const params = {
@@ -17,13 +17,13 @@ module.exports = {
     };
     return new Promise(async (resolve, reject) => {
       try {
-        const {data} = await axios.get(`${config.metricsApiUrl}${urlPath}?${querystring.stringify(params)}`);
+        const {data} = await axios.get(`${config.apiUrl}${urlPath}?${querystring.stringify(params)}`);
         resolve(data)
       }
       catch (e) {
         error(`cannot get metrics for metric=${metric}, provider=${provider}, deploymentTime=${deploymentTime}`);
         error(e);
-        resolve([])
+        reject(e);
       }
     })
   }

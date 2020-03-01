@@ -54,6 +54,7 @@ type KubernetesMarksEvents struct {
 	Demonset    []EventMarksConfig `yaml:"demonset"`
 	Statefulset []EventMarksConfig `yaml:"statefulset"`
 	Service     []EventMarksConfig `yaml:"service"`
+	Pvc         []EventMarksConfig `yaml:"pvc"`
 }
 
 // API is holds all application configuration

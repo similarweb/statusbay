@@ -94,7 +94,7 @@ func TestNewApplicationDeployment(t *testing.T) {
 
 	t.Run("get_application", func(t *testing.T) {
 		uri := registryRow.GetURI()
-		uriExpected := fmt.Sprintf("deployments/%s/%d", registryRow.DBSchema.Application, registryRow.DBSchema.CreationTimestamp)
+		uriExpected := fmt.Sprintf("application/%s", registryRow.GetApplyID())
 		if uri != uriExpected {
 			t.Fatalf("unexpected deployment count, got %s expected %s", uri, uriExpected)
 		}

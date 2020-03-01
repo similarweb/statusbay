@@ -74,7 +74,7 @@ func pods(pods map[string]ResponseDeploymenPod, events config.KubernetesMarksEve
 	}
 }
 
-// services will mark pod messages from service event section
+// services will mark service messages from service event section
 func services(service map[string]ResponseServicesData, events config.KubernetesMarksEvents) {
 
 	for _, services := range service {

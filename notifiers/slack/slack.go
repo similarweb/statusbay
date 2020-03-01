@@ -149,6 +149,7 @@ func (sl *Manager) ReportEnded(message watcherCommon.DeploymentReport) {
 
 // Serve will periodically check slack for a change in the list of existing users
 func (sl *Manager) Serve(ctx context.Context, wg *sync.WaitGroup) {
+	wg.Add(1)
 	sl.updateUsers()
 
 	go func() {

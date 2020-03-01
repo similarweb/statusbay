@@ -51,6 +51,7 @@ func NewDaemonsetManager(kubernetesClientset kubernetes.Interface, eventManager 
 }
 
 func (dsm *DaemonsetManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
+	wg.Add(1)
 
 	go func() {
 		for {

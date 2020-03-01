@@ -26,11 +26,11 @@ func NewRegistryMock() (*kuberneteswatcher.RegistryManager, *testutil.MockStorag
 	reporter := kuberneteswatcher.NewReporter([]notifierCommon.Notifier{})
 	registry := kuberneteswatcher.NewRegistryManager(saveInterval, checkFinishDelay, collectDataAfterApplyFinish, storageMock, reporter, "mock-cluster")
 
-	var wg *sync.WaitGroup
+	var wg sync.WaitGroup
 	ctx := context.Background()
 
-	registry.Serve(ctx, wg)
-	reporter.Serve(ctx, wg)
+	registry.Serve(ctx, &wg)
+	reporter.Serve(ctx, &wg)
 	return registry, storageMock
 
 }

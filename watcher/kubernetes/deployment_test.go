@@ -99,12 +99,12 @@ func NewDeploymentManagerMock(client *fake.Clientset) (*kuberneteswatcher.Deploy
 	serviceManager := NewServiceManagerMockMock(client)
 	deploymentManager := kuberneteswatcher.NewDeploymentManager(client, eventManager, registryManager, replicasetManager, serviceManager, runningApplies, maxDeploymentTime)
 
-	var wg *sync.WaitGroup
+	var wg sync.WaitGroup
 	ctx := context.Background()
 
-	deploymentManager.Serve(ctx, wg)
-	serviceManager.Serve(ctx, wg)
-	replicasetManager.Serve(ctx, wg)
+	deploymentManager.Serve(ctx, &wg)
+	serviceManager.Serve(ctx, &wg)
+	replicasetManager.Serve(ctx, &wg)
 	return deploymentManager, storage
 
 }

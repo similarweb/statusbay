@@ -12,7 +12,7 @@ import (
 )
 
 func TestServe(t *testing.T) {
-	var wg *sync.WaitGroup
+	var wg sync.WaitGroup
 	ctx := context.Background()
 	t.Run("checking if the cancel function works", func(t *testing.T) {
 
@@ -29,7 +29,7 @@ func TestServe(t *testing.T) {
 		}
 
 		UpdateSlackUserInterval = time.Nanosecond
-		slackManager.Serve(ctx, wg)
+		slackManager.Serve(ctx, &wg)
 
 		mockClient.users = nil
 		time.Sleep(time.Millisecond)
@@ -52,7 +52,7 @@ func TestServe(t *testing.T) {
 		// start with no users
 		mockClient.users = nil
 
-		slackManager.Serve(ctx, wg)
+		slackManager.Serve(ctx, &wg)
 
 		time.Sleep(time.Millisecond)
 		if len(slackManager.emailToUser) != 0 {

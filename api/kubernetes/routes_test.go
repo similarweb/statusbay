@@ -30,12 +30,12 @@ func MockServer(t *testing.T, storageMockFile string, metrics map[string]metrics
 }
 
 func TestApplicationsData(t *testing.T) {
-	var wg *sync.WaitGroup
+	var wg sync.WaitGroup
 	ctx := context.Background()
 
 	ms := MockServer(t, "", nil, nil)
 	ms.api.BindEndpoints()
-	ms.api.Serve(ctx, wg)
+	ms.api.Serve(ctx, &wg)
 
 	testsResponseCount := []struct {
 		endpoint              string
@@ -70,12 +70,12 @@ func TestApplicationsData(t *testing.T) {
 }
 
 func TestApplicationsFiltersData(t *testing.T) {
-	var wg *sync.WaitGroup
+	var wg sync.WaitGroup
 	ctx := context.Background()
 
 	ms := MockServer(t, "", nil, nil)
 	ms.api.BindEndpoints()
-	ms.api.Serve(ctx, wg)
+	ms.api.Serve(ctx, &wg)
 
 	testsResponseCount := []struct {
 		endpoint              string

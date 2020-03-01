@@ -56,7 +56,7 @@ func NewServer(kubernetesStorage kubernetes.Storage, port string, kubernetesMark
 
 // Serve starts the HTTP server and listens until StopFunc is called
 func (server *Server) Serve(ctx context.Context, wg *sync.WaitGroup) {
-
+	wg.Add(1)
 	server.BindEndpoints()
 	log.WithField("bind_address", server.httpserver.Addr).Info("starting StatusBay server")
 	go func() {

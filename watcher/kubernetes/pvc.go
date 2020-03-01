@@ -43,6 +43,8 @@ func NewPvcManager(kubernetesClientset kubernetes.Interface, eventManager *Event
 
 // Serve will start listening on Pvc requests
 func (pm *PvcManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
+	wg.Add(1)
+
 	go func() {
 		for {
 			select {

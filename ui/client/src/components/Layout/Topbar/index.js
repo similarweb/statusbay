@@ -7,29 +7,35 @@ import AppBar from '@material-ui/core/AppBar';
 import React from 'react';
 import PropTypes from 'prop-types';
 import GitHubIcon from '@material-ui/icons/GitHub';
+import { makeStyles, SnackbarContent } from '@material-ui/core';
+import Alert from '@material-ui/lab/Alert';
 import logo from '../../../images/logo.png';
+import StatusBayVersion from './StatusBayVersion';
 
-const Topbar = ({ onChangeThemeType, isDarkMode, className }) => (
-  <AppBar position="fixed" className={className}>
-    <Toolbar>
-      <Box width="100%" display="flex" alignItems="center" justifyContent="space-between">
-        <Link to="/"><img src={logo} height={59} alt="" /></Link>
-        <Box display="flex" alignItems="center" width={180} justifyContent="space-between">
-          <FormControlLabel
-            control={(
-              <Switch
-                checked={isDarkMode}
-                onChange={onChangeThemeType}
-              />
-                          )}
-            label="Dark Mode"
-          />
-          <a href="https://github.com/similarweb/statusbay"><GitHubIcon /></a>
+const Topbar = ({ onChangeThemeType, isDarkMode, className }) => {
+  return (
+    <AppBar position="fixed" className={className}>
+      <Toolbar>
+        <Box width="100%" display="flex" alignItems="center" justifyContent="space-between">
+          <Link to="/"><img src={logo} height={59} alt="" /></Link>
+          <StatusBayVersion />
+          <Box display="flex" alignItems="center" width={180} justifyContent="space-between">
+            <FormControlLabel
+              control={(
+                <Switch
+                  checked={isDarkMode}
+                  onChange={onChangeThemeType}
+                />
+              )}
+              label="Dark Mode"
+            />
+            <a href="https://github.com/similarweb/statusbay"><GitHubIcon /></a>
+          </Box>
         </Box>
-      </Box>
-    </Toolbar>
-  </AppBar>
-);
+      </Toolbar>
+    </AppBar>
+  );
+};
 
 Topbar.propTypes = {
   onChangeThemeType: PropTypes.func,

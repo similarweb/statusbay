@@ -319,7 +319,7 @@ func (wbr *RegistryRow) GetApplyID() string {
 
 // GetURI will generate uri link for UI
 func (wbr *RegistryRow) GetURI() string {
-	return fmt.Sprintf("deployments/%s/%d", wbr.DBSchema.Application, wbr.DBSchema.CreationTimestamp)
+	return fmt.Sprintf("application/%s", wbr.GetApplyID())
 
 }
 

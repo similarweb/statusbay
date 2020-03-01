@@ -84,7 +84,7 @@ type DeploymentDataResponse struct {
 	Pods       map[string]ResponseDeploymenPod `json:"Pods"`
 	Replicaset map[string]ResponseReplicaset   `json:"Replicaset"`
 	Status     ResponseDeploymentStatus        `json:"Status"`
-	Service    map[string]ResponseServicesData `json:"Services"`
+	Services   map[string]ResponseServicesData `json:"Services"`
 }
 
 type DaemonsetDataResponse struct {
@@ -92,7 +92,7 @@ type DaemonsetDataResponse struct {
 	Events   []ResponseEventMessages         `json:"Events"`
 	Pods     map[string]ResponseDeploymenPod `json:"Pods"`
 	Status   ResponseDeploymentStatus        `json:"Status"`
-	Service  map[string]ResponseServicesData `json:"Services"`
+	Services map[string]ResponseServicesData `json:"Services"`
 }
 
 type StatefulsetDataResponse struct {
@@ -100,7 +100,7 @@ type StatefulsetDataResponse struct {
 	Events      []ResponseEventMessages         `json:"Events"`
 	Pods        map[string]ResponseDeploymenPod `json:"Pods"`
 	Status      ResponseDeploymentStatus        `json:"Status"`
-	Service     map[string]ResponseServicesData `json:"Services"`
+	Services    map[string]ResponseServicesData `json:"Services"`
 }
 
 type ResponseResourcesData struct {

@@ -23,9 +23,9 @@ func MarkApplicationDeploymentEvents(appDeployment *ResponseDeploymentData, even
 			}
 		}
 
-		pod(deployment.Pods, eventMarksConfig)
+		pods(deployment.Pods, eventMarksConfig)
 
-		service(deployment.Service, eventMarksConfig)
+		services(deployment.Services, eventMarksConfig)
 
 	}
 
@@ -36,9 +36,9 @@ func MarkApplicationDeploymentEvents(appDeployment *ResponseDeploymentData, even
 			daemonset.Events[i].MarkDescriptions = eventDescription
 		}
 
-		pod(daemonset.Pods, eventMarksConfig)
+		pods(daemonset.Pods, eventMarksConfig)
 
-		service(daemonset.Service, eventMarksConfig)
+		services(daemonset.Services, eventMarksConfig)
 
 	}
 
@@ -49,14 +49,15 @@ func MarkApplicationDeploymentEvents(appDeployment *ResponseDeploymentData, even
 			statefulset.Events[i].MarkDescriptions = eventDescription
 		}
 
-		pod(statefulset.Pods, eventMarksConfig)
+		pods(statefulset.Pods, eventMarksConfig)
 
-		service(statefulset.Service, eventMarksConfig)
+		services(statefulset.Services, eventMarksConfig)
 
 	}
 }
 
-func pod(pods map[string]ResponseDeploymenPod, events config.KubernetesMarksEvents) {
+// pod will mark pod messages from pod event section
+func pods(pods map[string]ResponseDeploymenPod, events config.KubernetesMarksEvents) {
 
 	for _, pod := range pods {
 		for i, event := range pod.Events {
@@ -73,7 +74,8 @@ func pod(pods map[string]ResponseDeploymenPod, events config.KubernetesMarksEven
 	}
 }
 
-func service(service map[string]ResponseServicesData, events config.KubernetesMarksEvents) {
+// services will mark pod messages from service event section
+func services(service map[string]ResponseServicesData, events config.KubernetesMarksEvents) {
 
 	for _, services := range service {
 		for i, svc := range services.Events {

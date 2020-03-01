@@ -64,8 +64,8 @@ func TestMarkApplicationDeploymentEvents(t *testing.T) {
 					Events: []ResponseEventMessages{
 						{Message: "statefulset error"},
 					},
-					Pods:    podEvent,
-					Service: service,
+					Pods:     podEvent,
+					Services: service,
 				},
 			},
 			Daemonsets: map[string]DaemonsetDataResponse{
@@ -73,8 +73,8 @@ func TestMarkApplicationDeploymentEvents(t *testing.T) {
 					Events: []ResponseEventMessages{
 						{Message: "demonset error"},
 					},
-					Pods:    podEvent,
-					Service: service,
+					Pods:     podEvent,
+					Services: service,
 				},
 			},
 			Deployments: map[string]DeploymentDataResponse{
@@ -92,7 +92,7 @@ func TestMarkApplicationDeploymentEvents(t *testing.T) {
 							},
 						},
 					},
-					Service: service,
+					Services: service,
 				},
 			},
 		},
@@ -145,7 +145,7 @@ func TestMarkApplicationDeploymentEvents(t *testing.T) {
 		{
 			"deployment service",
 			func(d ResponseDeploymentData) []ResponseEventMessages {
-				return d.Resources.Deployments["deployment"].Service["service"].Events
+				return d.Resources.Deployments["deployment"].Services["service"].Events
 			},
 			1,
 		},
@@ -166,7 +166,7 @@ func TestMarkApplicationDeploymentEvents(t *testing.T) {
 		{
 			"daemonset service",
 			func(d ResponseDeploymentData) []ResponseEventMessages {
-				return d.Resources.Daemonsets["daemonset"].Service["service"].Events
+				return d.Resources.Daemonsets["daemonset"].Services["service"].Events
 			},
 			1,
 		},
@@ -194,7 +194,7 @@ func TestMarkApplicationDeploymentEvents(t *testing.T) {
 		{
 			"statefulset service",
 			func(d ResponseDeploymentData) []ResponseEventMessages {
-				return d.Resources.Statefulsets["statefulset"].Service["service"].Events
+				return d.Resources.Statefulsets["statefulset"].Services["service"].Events
 			},
 			1,
 		},

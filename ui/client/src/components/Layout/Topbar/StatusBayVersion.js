@@ -15,21 +15,22 @@ const useStyles = makeStyles((theme) => ({
 
 const StatusBayVersion = () => {
   const classes = useStyles();
-  const [showNewVersion, setShowNewVersion] = useState(false);
+  const [newVersion, setNewVersion] = useState(null);
   useEffect(() => {
     const getVersionData = async () => {
       const { data, error } = await API('/api/version');
       if (data && data.outdated) {
-        setShowNewVersion(true);
+        setNewVersion(data);
       }
     };
     getVersionData();
   }, []);
-  return showNewVersion && (
-  <Alert severity="success" classes={{ root: classes.alertRoot, message: classes.alertMessage }}>
-    New version of StatusBay is available.
-    <a style={{ marginLeft: 8 }} href="https://github.com/similarweb/statusbay" target="_blank">Get it now!</a>
-  </Alert>
+  return newVersion && (
+    <Alert severity="success" classes={{ root: classes.alertRoot, message: classes.alertMessage }}>
+      New version of StatusBay is available: {newVersion.current_version}.
+      <a style={{ marginLeft: 8 }} href={newVersion.current_download_url} target="_blank">Get it
+        now!</a>
+    </Alert>
   );
 };
 

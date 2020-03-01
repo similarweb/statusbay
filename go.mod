@@ -1,7 +1,6 @@
 module statusbay
 
 require (
-	github.com/apex/log v1.1.1
 	github.com/cenkalti/backoff v2.1.1+incompatible // indirect
 	github.com/cenkalti/backoff/v4 v4.0.0
 	github.com/googleapis/gnostic v0.3.1 // indirect
@@ -15,12 +14,14 @@ require (
 	github.com/mitchellh/hashstructure v1.0.0
 	github.com/mitchellh/mapstructure v1.1.2
 	github.com/nlopes/slack v0.5.0
+	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pkg/errors v0.8.1
 	github.com/prometheus/client_golang v0.9.3-0.20190127221311-3c4408c8b829
 	github.com/prometheus/common v0.2.0
 	github.com/sirupsen/logrus v1.4.2
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/zorkian/go-datadog-api v2.20.0+incompatible
+	golang.org/x/crypto v0.0.0-20190426145343-a29dc8fdc734 // indirect
 	gopkg.in/gemnasium/logrus-graylog-hook.v2 v2.0.7
 	gopkg.in/yaml.v2 v2.2.4
 	k8s.io/api v0.0.0-20190814101207-0772a1bdf941

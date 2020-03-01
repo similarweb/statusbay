@@ -71,14 +71,13 @@ func TestCache(t *testing.T) {
 	datadog.GetMetric("single-metric", from, to)
 	datadog.GetMetric("multiple-metric", from, to)
 
-	if len(datadog.cacheResponses) != 2 {
-		t.Fatalf("unexpected metric cache, got %d, expected %d", len(datadog.cacheResponses), 2)
+	if datadog.cacheResponses.ItemCount() != 2 {
+		t.Fatalf("unexpected metric cache, got %d, expected %d", datadog.cacheResponses.ItemCount(), 2)
 	}
 
 	time.Sleep(time.Second * 5)
-
-	if len(datadog.cacheResponses) != 0 {
-		t.Fatalf("unexpected clear cache, got %d, expected %d", len(datadog.cacheResponses), 0)
+	if datadog.cacheResponses.ItemCount() != 0 {
+		t.Fatalf("unexpected clear cache, got %d, expected %d", datadog.cacheResponses.ItemCount(), 0)
 	}
 
 }

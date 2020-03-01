@@ -5,10 +5,10 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
+	"github.com/patrickmn/go-cache"
+	"github.com/zorkian/go-datadog-api"
 	"sync"
 	"time"
-
-	"github.com/zorkian/go-datadog-api"
 
 	"statusbay/api/httpresponse"
 
@@ -20,19 +20,12 @@ type ClientDescriber interface {
 	QueryMetrics(from int64, to int64, query string) ([]datadog.Series, error)
 }
 
-// cacheResponse is a cache structure
-type cacheResponse struct {
-	ttl  time.Time
-	data []httpresponse.MetricsQuery
-}
-
 // Datadog is responsible for communicate with datadog and cache storage save/cleanup
 type Datadog struct {
-	client               ClientDescriber
-	cacheCleanupInterval time.Duration
-	cacheExpiration      time.Duration
-	cacheResponses       map[string]cacheResponse
-	mu                   *sync.RWMutex
+	client ClientDescriber
+	//cacheResponses       map[string]cacheResponse
+	cacheResponses *cache.Cache
+	mu             *sync.RWMutex
 }
 
 // NewDatadogManager creates a new NewDatadog
@@ -43,24 +36,18 @@ func NewDatadogManager(cacheCleanupInterval, cacheExpiration time.Duration, apiK
 		client = datadog.NewClient(apiKey, appKey)
 	}
 	return &Datadog{
-
-		client:               client,
-		cacheCleanupInterval: cacheCleanupInterval,
-		cacheExpiration:      cacheExpiration,
-		cacheResponses:       make(map[string]cacheResponse, 0),
-		mu:                   &sync.RWMutex{},
+		client:         client,
+		cacheResponses: cache.New(cacheExpiration, cacheCleanupInterval),
+		mu:             &sync.RWMutex{},
 	}
 
 }
 
 // Serve will start listening metric request
 func (dd *Datadog) Serve(ctx context.Context, wg *sync.WaitGroup) {
-
 	go func() {
 		for {
 			select {
-			case <-time.After(dd.cacheCleanupInterval):
-				dd.DeleteCacheExpired()
 			case <-ctx.Done():
 				log.Warn("Datatog has been shut down")
 				wg.Done()
@@ -77,9 +64,10 @@ func (dd *Datadog) Serve(ctx context.Context, wg *sync.WaitGroup) {
 func (dd *Datadog) GetMetric(query string, from, to time.Time) ([]httpresponse.MetricsQuery, error) {
 
 	hashKey := dd.generateMetricHash(query, from, to)
-	if metrics, ok := dd.cacheResponses[hashKey]; ok {
+
+	if metrics, ok := dd.cacheResponses.Get(hashKey); ok {
 		log.Debug("Return Datadog metric from cache")
-		return metrics.data, nil
+		return metrics.([]httpresponse.MetricsQuery), nil
 	}
 
 	log.WithFields(log.Fields{
@@ -112,7 +100,7 @@ func (dd *Datadog) GetMetric(query string, from, to time.Time) ([]httpresponse.M
 		response = append(response, metricData)
 	}
 
-	dd.cacheResponses[hashKey] = cacheResponse{data: response, ttl: time.Now().Add(dd.cacheExpiration)}
+	dd.cacheResponses.Set(hashKey, response, 0)
 
 	return response, nil
 }
@@ -124,24 +112,4 @@ func (dd *Datadog) generateMetricHash(query string, from, to time.Time) string {
 	key := fmt.Sprintf("%s-%d-%d", query, from.Unix(), to.Unix())
 	hasher.Write([]byte(key))
 	return hex.EncodeToString(hasher.Sum(nil))
-}
-
-//DeleteCacheExpired will check if cached metric data should be deleted
-func (dd *Datadog) DeleteCacheExpired() {
-	dd.mu.Lock()
-	defer dd.mu.Unlock()
-	data := dd.cacheResponses
-
-	now := time.Now()
-
-	for index, cache := range data {
-		if now.After(cache.ttl) {
-			log.Info("Metrics cache was deleted")
-			delete(data, index)
-			continue
-		}
-	}
-
-	dd.cacheResponses = data
-
 }

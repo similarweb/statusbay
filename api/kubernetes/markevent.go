@@ -56,7 +56,7 @@ func MarkApplicationDeploymentEvents(appDeployment *ResponseDeploymentData, even
 	}
 }
 
-// pod will mark pod messages from pod event section
+// pods will mark pod messages from pod event section
 func pods(pods map[string]ResponseDeploymenPod, events config.KubernetesMarksEvents) {
 
 	for _, pod := range pods {

@@ -9,6 +9,7 @@ import { useDeploymentDetailsContext } from '../context/DeploymentDetailsContext
 const titles = {
   deployment: 'Deployment Events',
   daemonSet: 'DaemonSet Events',
+  StatefulSet: 'StatefulSet Events',
 };
 
 const DeploymentEvents = ({ kindIndex }) => {

@@ -7,6 +7,16 @@ pod:
         <li>Indicates whether the Container is ready to service requests. If the readiness probe fails, the endpoints controller removes the Pod’s IP address from the endpoints of all Services that match the Pod. </li>
         <li><a href="https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-readiness-gate" target="_blank">Read more on Readiness details</a></li>
       </ul>
+- pattern: "Error: ErrImagePull"
+  descriptions:
+    - >-
+      Error occurred during image pulling.
+      <ul>
+        <li>Check the repository, image name and tag are valid</li>
+        <li>Verify that image exists in the registry</li>
+        <li>Verify the host is authorized to download that image</li>
+        <li>Check connectivity from the host to the registry</li>
+      </ul>
 - pattern: "OOMKilled"
   descriptions:
     - >-
@@ -28,6 +38,7 @@ pod:
     <ul>
         <li>TODO....</li>
     </ul>
+
 
 replicaset:
 - pattern: "Replicaset event example"
@@ -59,6 +70,15 @@ demonset:
     
 statefulset:
 - pattern: "Statefulset event example"
+  descriptions:
+  - >-
+    TBD
+    <ul>
+        <li>TODO....</li>
+    </ul>
+
+service:
+- pattern: "Error creating load balancer"
   descriptions:
   - >-
     TBD

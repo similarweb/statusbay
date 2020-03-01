@@ -16,12 +16,36 @@ metrics:
   #   app_key: 
   #   cache_cleanup_interval: 1m
   #   cache_expiration: 3m
+  # prometheus:
+  #   address: http://prometheus-url.domain:9090
 
-alerts:  
-  # statuscake:
-  #   endpoint: https://app.statuscake.com/API
-  #   username: 
-  #   api_key: 
-  # pingdom:
-  #   endpoint: https://api.pingdom.com/api
-  #   token: 
+alerts:
+# statuscake:
+#   endpoint: https://app.statuscake.com/API
+#   username:
+#   api_key:
+# pingdom:
+#   endpoint: https://api.pingdom.com/api
+#   token:
+
+telemetry:
+#  flush_interval: 10
+#  allowed_prefixes:
+#    - 'abc'
+#    - 'def'
+#  blocked_prefixes:
+#    - 'abc'
+#    - 'def'
+#  disable_hostname: true
+#  metrics_prefix: ''
+#
+#  dogstatsd_addr: ''
+#  datadog_tags:
+#    - 'tag1:value1'
+#    - 'tag2:value2'
+#
+#  allow_metrics_by_default: true
+#
+#  prometheus_retention_time_sec: 3600
+#  statsd_address: ''
+#  statsite_address: ''

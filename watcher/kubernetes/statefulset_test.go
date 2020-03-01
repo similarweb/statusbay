@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	kuberneteswatcher "statusbay/watcher/kubernetes"
+	"statusbay/watcher/kubernetes/common"
 	"statusbay/watcher/kubernetes/testutil"
 	"sync"
 	"testing"
@@ -42,7 +43,7 @@ func createStatefulSetMock(client *fake.Clientset, name string, namespace string
 			Labels: labels,
 			Annotations: map[string]string{
 				"statusbay.io/application-name":          "application",
-				"statusbay.io/report-deploy-by":          "testme@similarweb.com",
+				"statusbay.io/report-deploy-by":          "foo@example.com",
 				"statusbay.io/report-slack-channels":     "#testchannel",
 				"statusbay.io/progress-deadline-seconds": "10",
 			},
@@ -58,10 +59,11 @@ func NewStatefulSetManagerMock(client *fake.Clientset) (*kuberneteswatcher.State
 	eventManager := kuberneteswatcher.NewEventsManager(client)
 	registryManager, Mockstorage := NewRegistryMock()
 	serviceManager := NewServiceManagerMockMock(client)
-	podManager := kuberneteswatcher.NewPodsManager(client, eventManager)
+	pvcManager := NewPvcManagerMock(client)
+	podManager := kuberneteswatcher.NewPodsManager(client, eventManager, pvcManager)
 	controllerRevisionManager := NewControllerRevisionManagerMock(client, podManager)
-
-	statefulsetManager := kuberneteswatcher.NewStatefulsetManager(client, eventManager, registryManager, serviceManager, controllerRevisionManager, maxDeploymentTime)
+	runningApplies := registryManager.LoadRunningApplies()
+	statefulsetManager := kuberneteswatcher.NewStatefulsetManager(client, eventManager, registryManager, serviceManager, controllerRevisionManager, runningApplies, maxDeploymentTime)
 
 	var wg *sync.WaitGroup
 	ctx := context.Background()
@@ -85,6 +87,14 @@ func TestStatefulsetWatch(t *testing.T) {
 	statefulsetObj := createStatefulSetMock(client, name, namespace, labels)
 	time.Sleep(time.Second)
 
+	svc := &v1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "service-1",
+			Labels:    labels,
+			Namespace: namespace,
+		},
+	}
+
 	// Update the number of replica
 	updateStatefulsetMock(client, namespace, statefulsetObj)
 
@@ -96,6 +106,8 @@ func TestStatefulsetWatch(t *testing.T) {
 		namespace,
 		labels)
 	time.Sleep(time.Second)
+
+	client.CoreV1().Services(namespace).Create(svc)
 
 	// Add the expected pod label for Statefulset ControllerRevision
 	pod.ObjectMeta.Labels[appsV1.ControllerRevisionHashLabelKey] = fmt.Sprintf("%s-%s",
@@ -112,14 +124,14 @@ func TestStatefulsetWatch(t *testing.T) {
 
 	// We need both Resource Generation and revision.Revision in order to compare them in ControllerRevision
 	revision.Revision = statefulsetObj.ObjectMeta.Generation
-	time.Sleep(time.Second)
+	time.Sleep(time.Second * 3)
 
 	event1 := &v1.Event{Message: "message for statefulset", ObjectMeta: metaV1.ObjectMeta{Name: "a", CreationTimestamp: metaV1.Time{Time: time.Now()}}}
 	client.CoreV1().Events(namespace).Create(event1)
 
 	NotValidControllerRevisionHashlabelKey := controllerRevisionManager.Error
 	application := Mockstorage.MockWriteDeployment["1"]
-	_ = application.Schema.Resources.Statefulsets["test-statefulset"]
+	_ = application.Schema.Resources.Statefulsets["application"]
 
 	var expectedProgressDeadLine int64 = 10
 
@@ -147,18 +159,24 @@ func TestStatefulsetWatch(t *testing.T) {
 		if application.Schema.Namespace != namespace {
 			t.Fatalf("unexpected application namespace, got %s expected %s", application.Schema.Namespace, namespace)
 		}
-		if application.Schema.DeploymentDescription != kuberneteswatcher.DeploymentStatusDescriptionRunning {
-			t.Fatalf("unexpected status description, got %s expected %s", application.Schema.Namespace, kuberneteswatcher.DeploymentStatusDescriptionRunning)
+		if application.Schema.DeploymentDescription != common.ApplyStatusDescriptionRunning {
+			t.Fatalf("unexpected status description, got %s expected %s", application.Schema.Namespace, common.ApplyStatusDescriptionRunning)
 		}
-		if application.Schema.DeployBy != "testme@similarweb.com" {
+		if application.Schema.DeployBy != "foo@example.com" {
 			t.Fatalf("unexpected field deployby , got %s expected %s", application.Schema.DeployBy, statefulsetObj.ObjectMeta.Labels["statusbay.io/report-deploy-by"])
 		}
 		if application.Schema.Resources.Statefulsets["application"].ProgressDeadlineSeconds != expectedProgressDeadLine {
 			t.Fatalf("unexpected values for ProgressDeadline field , got %d expected %d", application.Schema.Resources.Statefulsets["application"].ProgressDeadlineSeconds, expectedProgressDeadLine)
 		}
-		if len(application.Schema.Resources.Statefulsets["application"].Statefulset.Labels) != 2 {
-			t.Fatalf("unexpected amount of Lables values for statefulset labeles field , got %d expected %d", len(application.Schema.Resources.Statefulsets["application"].Statefulset.Labels), 2)
+		if len(application.Schema.Resources.Statefulsets["application"].Statefulset.Annotations) != 4 {
+			t.Fatalf("unexpected amount of Lables values for statefulset annotations field , got %d expected %d", len(application.Schema.Resources.Statefulsets["application"].Statefulset.Annotations), 4)
 		}
 
 	})
+
+	// t.Run("service", func(t *testing.T) {
+	// 	if len(statefulsetsData.Services) != 1 {
+	// 		t.Fatalf("unexpected service count, got %d expected %d", len(statefulsetsData.Services), 1)
+	// 	}
+	// })
 }

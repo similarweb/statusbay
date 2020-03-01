@@ -9,7 +9,7 @@ import AlarmOffIcon from '@material-ui/icons/AlarmOff';
 import Tooltip from '@material-ui/core/Tooltip';
 import Box from '@material-ui/core/Box';
 import { deploymentStatuses } from '../../../constants';
-import { cyan, yellow } from '@material-ui/core/colors';
+import { cyan, amber } from '@material-ui/core/colors';
 import CircularProgress from '@material-ui/core/CircularProgress';
 
 const useStyles = makeStyles((theme) => {
@@ -19,14 +19,17 @@ const useStyles = makeStyles((theme) => {
       color: cyan[500],
     },
     failed: {
-      color: theme.palette.error[type],
+      color: theme.palette.error.main,
     },
     successful: {
-      color: theme.palette.success[type],
+      color: theme.palette.success.main,
     },
     timeout: {
-      color: yellow[500],
+      color: amber[500],
     },
+    deleted: {
+      color: theme.palette.grey[500]
+    }
   };
 });
 
@@ -48,7 +51,7 @@ const CellStatus = ({ status }) => {
       icon = <AlarmOffIcon className={classes.timeout} />;
       break;
     case 'deleted':
-      icon = <DeleteSweepIcon className={classes.timeout} />;
+      icon = <DeleteSweepIcon className={classes.deleted} />;
       break;
     default:
       break;

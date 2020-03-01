@@ -7,9 +7,10 @@ import PropTypes from 'prop-types';
 
 const useStyles = makeStyles((theme) => ({
   card: {
-    borderWidth: 1,
-    borderColor: theme.palette.error.dark,
-    backgroundColor: theme.palette.error.light,
+    backgroundColor: theme.palette.error.main,
+    color: theme.palette.error.contrastText,
+    borderRadius: '5px',
+    boxShadow: 'none'
   },
 }));
 

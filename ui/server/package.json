@@ -18,6 +18,7 @@
     "express": "^4.17.1",
     "moment": "^2.24.0",
     "noderus": "^0.4.2",
+    "object-hash": "^2.0.3",
     "socket.io": "^2.3.0",
     "winston": "^3.2.1",
     "winston-gelf": "^1.7.0"

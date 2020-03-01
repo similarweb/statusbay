@@ -1,28 +1,33 @@
 import React from 'react';
 import makeStyles from '@material-ui/core/styles/makeStyles';
-import ErrorOutlineIcon from '@material-ui/icons/ErrorOutline';
 import Typography from '@material-ui/core/Typography';
+import Box from '@material-ui/core/Box';
+import PropTypes from 'prop-types';
+import image from './no-data.svg';
 
 const useStyles = makeStyles((theme) => ({
-  root: {
-    borderLeft: `2px solid ${theme.palette.warning.dark}`,
-    height: 60,
-    display: 'flex',
-    alignItems: 'center',
-    backgroundColor: theme.palette.warning.light,
-    padding: theme.spacing(2)
+  text: {
+    color: '#bdbdbd',
+    marginTop: 8,
+    fontWeight: 400,
   },
-  icon: {
-    marginRight: theme.spacing(1)
-  }
 }));
-const NoData = () => {
+const NoData = ({ message, imageWidth}) => {
   const classes = useStyles();
   return (
-    <div className={classes.root}>
-      <ErrorOutlineIcon className={classes.icon}/> <Typography variant="subtitle1">No results match your search criteria</Typography>
-    </div>
+    <Box display="flex" flexDirection="column" alignItems="center" mt={4} mb={4}>
+      <img src={image} alt="" width={imageWidth} />
+      <Typography variant="h6" className={classes.text}>{message}</Typography>
+    </Box>
   );
+};
+NoData.propTypes = {
+  message: PropTypes.string,
+  imageWidth: PropTypes.number
+};
+NoData.defaultProps = {
+  message: 'No results match your search',
+  imageWidth: 210
 };
 
 export default NoData;

@@ -41,9 +41,9 @@ const prepareParams = ({
 module.exports = {
   urlPath,
   async getAll(params) {
-    return axios.get(`${config.apiBaseUrl}${urlPath}?${prepareParams(params)}`)
+    return axios.get(`${config.kubernetesApiUrl}${urlPath}?${prepareParams(params)}`)
   },
   async getDistinct(params) {
-    return axios.get(`${config.apiBaseUrl}${urlPath}?${prepareParams(params)}&distinct=true`)
+    return axios.get(`${config.kubernetesApiUrl}${urlPath}?${prepareParams(params)}&distinct=true`)
   }
 };

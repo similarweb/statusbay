@@ -7,29 +7,34 @@ import PropTypes from 'prop-types';
 import useTheme from '@material-ui/core/styles/useTheme';
 import { addPlotLine } from '../utils';
 import SpotChartConfig from './SpotChartConfig';
+import * as moment from 'moment';
 
 Xrange(Highcharts);
 
 const SpotChart = ({ series, deploymentTime, currentTime }) => {
   const theme = useTheme();
-  let options = SpotChartConfig(series);
+  const isDarkMode = theme.palette.type === 'dark';
+  let options = SpotChartConfig(series, deploymentTime);
 
   options = addPlotLine({
-    color: theme.palette.error[theme.palette.type],
+    color: theme.palette.error.main,
     value: deploymentTime,
     label: {
       align: 'center',
       rotation: 0,
       x: 0,
       y: -10,
+      style: {
+        color: isDarkMode ? '#ffffff' : '#999999',
+      },
       formatter() {
-        return 'Deployment time: ';
+        return `Deployment time: ${moment.unix(deploymentTime).utc().format('HH:mm:ss')}`;
       },
     },
   }, options);
 
   options = addPlotLine({
-    color: theme.palette.primary[theme.palette.type],
+    color: theme.palette.primary.main,
     value: currentTime,
     dashStyle: 'solid',
     width: 2,

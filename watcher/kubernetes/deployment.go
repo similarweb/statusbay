@@ -2,10 +2,10 @@ package kuberneteswatcher
 
 import (
 	"context"
+	"fmt"
+	"statusbay/watcher/kubernetes/common"
 	"sync"
 	"time"
-
-	"statusbay/watcher/kubernetes/common"
 
 	"github.com/mitchellh/hashstructure"
 	log "github.com/sirupsen/logrus"
@@ -13,23 +13,7 @@ import (
 	appsV1 "k8s.io/api/apps/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	eventwatch "k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
-)
-
-// DeploymentStatusDescription are the various descriptions of the states a deployment can be in.
-type DeploymentStatusDescription string
-
-const (
-
-	// DeploymentStatusDescriptionRunning running deployment
-	DeploymentStatusDescriptionRunning DeploymentStatusDescription = "Deployment is running"
-
-	// DeploymentStatusDescriptionSuccessful successfully deployment
-	DeploymentStatusDescriptionSuccessful DeploymentStatusDescription = "Deployment completed successfully"
-
-	// DeploymentStatusDescriptionProgressDeadline progress deadline ended
-	DeploymentStatusDescriptionProgressDeadline DeploymentStatusDescription = "Failed due to progress deadline"
 )
 
 // DeploymentManager defined deployment struct
@@ -52,17 +36,21 @@ type DeploymentManager struct {
 
 	// Max watch time
 	maxDeploymentTime int64
+
+	// Initial Running Applies to load on start
+	initialRunningApplies []*RegistryRow
 }
 
 // NewDeploymentManager create new deployment instance
-func NewDeploymentManager(kubernetesClientset kubernetes.Interface, eventManager *EventsManager, registryManager *RegistryManager, replicaset *ReplicaSetManager, serviceManager *ServiceManager, maxDeploymentTime time.Duration) *DeploymentManager {
+func NewDeploymentManager(kubernetesClientset kubernetes.Interface, eventManager *EventsManager, registryManager *RegistryManager, replicaset *ReplicaSetManager, serviceManager *ServiceManager, runningApplies []*RegistryRow, maxDeploymentTime time.Duration) *DeploymentManager {
 	return &DeploymentManager{
-		client:            kubernetesClientset,
-		eventManager:      eventManager,
-		registryManager:   registryManager,
-		replicaset:        replicaset,
-		serviceManager:    serviceManager,
-		maxDeploymentTime: int64(maxDeploymentTime.Seconds()),
+		client:                kubernetesClientset,
+		eventManager:          eventManager,
+		registryManager:       registryManager,
+		replicaset:            replicaset,
+		serviceManager:        serviceManager,
+		maxDeploymentTime:     int64(maxDeploymentTime.Seconds()),
+		initialRunningApplies: runningApplies,
 	}
 }
 
@@ -73,7 +61,7 @@ func (dm *DeploymentManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 		for {
 			select {
 			case <-ctx.Done():
-				log.Warn("Deployment Manager has been shut down")
+				log.Warn("deployment manager has been shut down")
 				wg.Done()
 				return
 			}
@@ -81,16 +69,22 @@ func (dm *DeploymentManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 	}()
 
 	//Continue running deployments from storage state
-	runningDeploymentApplication := dm.registryManager.LoadRunningApplies()
+	runningDeploymentApplication := dm.initialRunningApplies
+	log.WithField("running_apps", len(runningDeploymentApplication)).Debug("loaded running applications in deployment manager")
 	for _, application := range runningDeploymentApplication {
+		app := application
 		for _, deploymentData := range application.DBSchema.Resources.Deployments {
+			depData := deploymentData
 			deploymentWatchListOptions := metaV1.ListOptions{LabelSelector: labels.SelectorFromSet(deploymentData.Deployment.Labels).String()}
-			go dm.watchDeployment(application.ctx, application.cancelFn, application.Log(), deploymentData, deploymentWatchListOptions, deploymentData.Deployment.Namespace, deploymentData.ProgressDeadlineSeconds)
+			app.Log().Logger.WithField("name", depData.GetName()).Debug("begining watching loaded running deployment")
+			go func(app *RegistryRow, depData *DeploymentData, listOptions metaV1.ListOptions) {
+				dm.watchDeployment(app.ctx, app.cancelFn, app.Log(), depData, listOptions, depData.Deployment.Namespace, depData.ProgressDeadlineSeconds)
+			}(app, depData, deploymentWatchListOptions)
 		}
 	}
-
+	// we dont need anymore that list
+	dm.initialRunningApplies = nil
 	dm.watchDeployments(ctx)
-
 }
 
 // watchDeployments start watch on all Kubernetes deployments
@@ -101,65 +95,57 @@ func (dm *DeploymentManager) watchDeployments(ctx context.Context) {
 	watcher, err := dm.client.AppsV1().Deployments("").Watch(deploymentWatchListOptions)
 
 	if err != nil {
-		log.WithError(err).WithField("list_option", deploymentWatchListOptions.String()).Error("Could not start a watcher on deployment")
+		log.WithError(err).WithField("list_option", deploymentWatchListOptions.String()).Error("could not start deployments watcher")
 
 		return
 	}
 
 	go func() {
-		log.WithField("resource_version", deploymentList.GetResourceVersion()).Info("Deployments watcher was started")
+		log.WithField("resource_version", deploymentList.GetResourceVersion()).Info("starting deployments watcher")
 		for {
 			select {
 			case event, watch := <-watcher.ResultChan():
 
 				if !watch {
-					log.WithField("list_options", deploymentWatchListOptions.String()).Info("Deployments watcher was stopped. Reopen the channel")
+					log.WithField("list_options", deploymentWatchListOptions.String()).Info("deployments watcher was stopped, reopening the channel")
 					dm.watchDeployments(ctx)
 					return
 				}
 
 				deployment, ok := event.Object.(*appsV1.Deployment)
 				if !ok {
-					log.WithField("object", event.Object).Warn("Failed to parse deployment watcher data")
+					log.WithField("object", event.Object).Warn("failed to parse deployment watcher data")
 					continue
 				}
 
+				log.WithFields(log.Fields{
+					"name":      deployment.GetName(),
+					"namespace": deployment.GetNamespace(),
+				}).Debug("deployment event detected")
 				deploymentName := GetApplicationName(deployment.GetAnnotations(), deployment.GetName())
 
-				if event.Type == eventwatch.Modified || event.Type == eventwatch.Added || event.Type == eventwatch.Deleted {
+				if common.IsSupportedEventType(event.Type) {
 
-					if event.Type == eventwatch.Deleted {
-						dm.registryManager.DeleteAppliedVersion(deployment.GetName(), deployment.GetNamespace(), "deployment")
-					} else {
-						hash, _ := hashstructure.Hash(deployment.Spec, nil)
-						if !dm.registryManager.UpdateAppliesVersionHistory(deployment.GetName(), deployment.GetNamespace(), "deployment", hash) {
-							continue
-						}
+					hash, _ := hashstructure.Hash(deployment.Spec, nil)
+					apply := ApplyEvent{
+						Event:        fmt.Sprintf("%v", event.Type),
+						ApplyName:    deploymentName,
+						ResourceName: deployment.GetName(),
+						Namespace:    deployment.GetNamespace(),
+						Kind:         "deployment",
+						Hash:         hash,
+						Annotations:  deployment.GetAnnotations(),
+						Labels:       deployment.GetLabels(),
 					}
 
-					applicationRegistry := dm.registryManager.Get(deploymentName, deployment.GetNamespace())
-
-					// extract annotation for progressDeadLine since Daemonset don't have hat feature.
-					progressDeadLine := GetProgressDeadlineApply(deployment.GetAnnotations(), dm.maxDeploymentTime)
-
+					applicationRegistry := dm.registryManager.NewApplyEvent(apply)
 					if applicationRegistry == nil {
-
-						deploymentStatus := common.DeploymentStatusRunning
-						if event.Type == eventwatch.Deleted {
-							deploymentStatus = common.DeploymentStatusDeleted
-						}
-						applicationRegistry = dm.registryManager.NewApplication(deploymentName,
-							deployment.GetNamespace(),
-							deployment.GetAnnotations(),
-							deploymentStatus)
+						continue
 					}
+					deploymentLog := applicationRegistry.Log()
+					deploymentLog.WithField("event", event.Type).Info("adding deployment to apply registry")
 
-					registryDeployment := applicationRegistry.AddDeployment(deployment.GetName(),
-						deployment.GetNamespace(),
-						deployment.GetLabels(),
-						deployment.GetAnnotations(),
-						*deployment.Spec.Replicas,
-						progressDeadLine)
+					registryDeployment := dm.AddNewDeployment(apply, applicationRegistry, *deployment.Spec.Replicas)
 
 					deploymentWatchListOptions := metaV1.ListOptions{LabelSelector: labels.SelectorFromSet(deployment.GetLabels()).String()}
 
@@ -168,7 +154,7 @@ func (dm *DeploymentManager) watchDeployments(ctx context.Context) {
 					go dm.watchDeployment(
 						applicationRegistry.ctx,
 						applicationRegistry.cancelFn,
-						applicationRegistry.Log(),
+						deploymentLog,
 						registryDeployment,
 						deploymentWatchListOptions,
 						deployment.GetNamespace(),
@@ -178,11 +164,11 @@ func (dm *DeploymentManager) watchDeployments(ctx context.Context) {
 					log.WithFields(log.Fields{
 						"event_type":      event.Type,
 						"deployment_name": deploymentName,
-					}).Info("Event type not supported")
+					}).Info("event type not supported")
 				}
 
 			case <-ctx.Done():
-				log.Warn("Deployment watch was stopped. Got ctx done signal")
+				log.Warn("deployment watch was stopped, got ctx done signal")
 				watcher.Stop()
 				return
 
@@ -198,12 +184,12 @@ func (dm *DeploymentManager) watchDeployments(ctx context.Context) {
 func (dm *DeploymentManager) watchDeployment(ctx context.Context, cancelFn context.CancelFunc, lg log.Entry, registryDeployment *DeploymentData, listOptions metaV1.ListOptions, namespace string, maxWatchTime int64) {
 
 	deploymentLog := lg.WithField("deployment_name", registryDeployment.GetName())
-	deploymentLog.Info("Starting watch on deployment")
-	deploymentLog.WithField("list_option", listOptions.String()).Debug("List option for deployment filtering")
+	deploymentLog.Info("initializing deployments watcher")
+	deploymentLog.WithField("list_option", listOptions.String()).Debug("list option for deployment filtering")
 
 	watcher, err := dm.client.AppsV1().Deployments(namespace).Watch(listOptions)
 	if err != nil {
-		deploymentLog.Error("Could not start watch on deployment")
+		deploymentLog.WithError(err).Error("could not start deployments watcher")
 		return
 	}
 
@@ -213,14 +199,14 @@ func (dm *DeploymentManager) watchDeployment(ctx context.Context, cancelFn conte
 		select {
 		case event, watch := <-watcher.ResultChan():
 			if !watch {
-				deploymentLog.Warn("Deployment watcher was stopped. Channel was closed")
+				deploymentLog.Warn("deployment watcher was stopped, channel was closed")
 				cancelFn()
 				return
 			}
 
 			deployment, isOk := event.Object.(*appsV1.Deployment)
 			if !isOk {
-				deploymentLog.WithField("object", event.Object).Warn("Failed to parse deployment watcher data")
+				deploymentLog.WithField("object", event.Object).Warn("failed to parse deployment watcher data")
 				continue
 			}
 
@@ -235,7 +221,6 @@ func (dm *DeploymentManager) watchDeployment(ctx context.Context, cancelFn conte
 					// ResourceVersion: deployment.ResourceVersion,
 				}
 				dm.watchEvents(ctx, *deploymentLog, registryDeployment, eventListOptions, namespace)
-
 				//Starting replicaset watch
 				dm.replicaset.Watch <- WatchReplica{
 					DesiredReplicas: *deployment.Spec.Replicas,
@@ -258,7 +243,7 @@ func (dm *DeploymentManager) watchDeployment(ctx context.Context, cancelFn conte
 			registryDeployment.UpdateDeploymentStatus(deployment.Status)
 
 		case <-ctx.Done():
-			deploymentLog.Debug("Deployment watcher was stopped. Got ctx done signal")
+			deploymentLog.Debug("deployment watcher was stopped, got ctx done signal")
 			watcher.Stop()
 			return
 
@@ -269,7 +254,7 @@ func (dm *DeploymentManager) watchDeployment(ctx context.Context, cancelFn conte
 
 // watchEvents will start watch on deployment event messages changes
 func (dm *DeploymentManager) watchEvents(ctx context.Context, lg log.Entry, registryDeployment *DeploymentData, listOptions metaV1.ListOptions, namespace string) {
-	lg.Info("Started the event watcher on deployment events")
+	lg.Info("initializing events watcher")
 
 	watchData := WatchEvents{
 		ListOptions: listOptions,
@@ -286,9 +271,36 @@ func (dm *DeploymentManager) watchEvents(ctx context.Context, lg log.Entry, regi
 			case event := <-eventChan:
 				registryDeployment.UpdateDeploymentEvents(event)
 			case <-ctx.Done():
-				lg.Info("Stop watch on deployment events")
+				lg.Info("stopping events watcher")
 				return
 			}
 		}
 	}()
+}
+
+// AddNewDeployment add new deployment under application
+func (dm *DeploymentManager) AddNewDeployment(data ApplyEvent, applicationRegistry *RegistryRow, desiredState int32) *DeploymentData {
+
+	log := applicationRegistry.Log()
+	dd := &DeploymentData{
+		Deployment: MetaData{
+			Name:         data.ApplyName,
+			Namespace:    data.Namespace,
+			Annotations:  data.Annotations,
+			Labels:       data.Labels,
+			Metrics:      GetMetricsDataFromAnnotations(data.Annotations),
+			Alerts:       GetAlertsDataFromAnnotations(data.Annotations),
+			DesiredState: desiredState,
+		},
+		Pods:                    make(map[string]DeploymenPod, 0),
+		Replicaset:              make(map[string]Replicaset, 0),
+		Services:                make(map[string]ServicesData, 0),
+		ProgressDeadlineSeconds: GetProgressDeadlineApply(data.Annotations, dm.maxDeploymentTime),
+	}
+	applicationRegistry.DBSchema.Resources.Deployments[data.ResourceName] = dd
+
+	log.Info("deployment was associated with application")
+
+	return dd
+
 }

@@ -35,6 +35,12 @@ const useStyles = makeStyles((theme) => ({
   typography: {
     textTransform: 'uppercase',
   },
+  expandIcon: {
+    transform: 'rotate(-90deg)',
+    '&.Mui-expanded': {
+      transform: 'rotate(0deg)',
+    }
+  },
 }));
 
 const DeploymentDetailsSection = ({
@@ -45,7 +51,7 @@ const DeploymentDetailsSection = ({
     <ExpansionPanel className={classes.root} defaultExpanded={defaultExpanded}>
       <ExpansionPanelSummary
         className={classes.summary}
-        classes={{ content: classes.summaryContent }}
+        classes={{ content: classes.summaryContent, expandIcon: classes.expandIcon }}
         expandIcon={<ExpandMoreIcon />}
         IconButtonProps={{
           disableFocusRipple: true,

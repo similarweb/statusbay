@@ -13,6 +13,7 @@ BINARY_LINUX=$(BINARY_NAME)_linux
 
 DOCKER=docker
 DOCKER_IMAGE=statusbay
+DOCKER_UI_IMAGE=statusbay-ui
 DOCKER_TAG=dev
 
 
@@ -33,8 +34,9 @@ test-html: test ## Run tests with HTML for the project
 build-linux: ## Build Cross Platform Binary
 		CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GOBUILD) -o $(BINARY_LINUX) -v
 
-build-docker: ## BUild Docker image file
+build-docker: ## Build Docker image file
 		$(DOCKER) build -t $(DOCKER_IMAGE):$(DOCKER_TAG) .
+		cd ui/ && $(DOCKER) build -t $(DOCKER_UI_IMAGE):$(DOCKER_TAG) .
 
 gofmt: ## gofmt code formating
 	@echo Running go formating with the following command:

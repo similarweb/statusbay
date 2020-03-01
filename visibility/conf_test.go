@@ -37,7 +37,7 @@ func TestSetLoggingLevel(t *testing.T) {
 	for _, logType := range logTest {
 		visibility.SetLoggingLevel(logType.Set)
 		if log.GetLevel() != logType.expected {
-			t.Fatalf("unexpected logLevel. got %s, expected %s", log.GetLevel(), logType.expected)
+			t.Fatalf("unexpected log level, got %s, expected %s", log.GetLevel(), logType.expected)
 		}
 
 	}

@@ -1,26 +1,57 @@
 import React from 'react';
 import Grid from '@material-ui/core/Grid';
-import MetricChart from '../components/MetricChart/MetricChart';
-import DeploymentDetailsSection from '../components/DeploymentDetailsSection';
 import * as PropTypes from 'prop-types';
+import Box from '@material-ui/core/Box';
+import DeploymentDetailsSection from '../components/DeploymentDetailsSection';
 import { useDeploymentDetailsContext } from '../context/DeploymentDetailsContext';
+import MetricChartContainer from './MetricChartContainer';
+import Widget from '../components/Widget/Widget';
+import MetricIntegrationModal
+  from '../components/IntergationModals/MetricIntegrationModal/MetricIntegrationModal';
 
 const Metrics = ({ kindIndex }) => {
-  const data = useDeploymentDetailsContext();
+  const { data } = useDeploymentDetailsContext();
   if (!data) {
     return null;
   }
-  const { deploymentTime, ...allMetrics } = data.kinds[kindIndex].metrics;
+  const { metrics } = data.kinds[kindIndex];
+  let content;
+  if (metrics.length === 0) {
+    content = (
+      <Grid item xs={12}>
+        <Widget>
+          <Box
+            mt={2}
+            mb={2}
+            display="flex"
+            justifyContent="space-around"
+          >
+            <MetricIntegrationModal />
+          </Box>
+        </Widget>
+      </Grid>
+    );
+  } else {
+    content = metrics.map((metric) => (
+      <MetricChartContainer
+        key={metric.name}
+        name={metric.name}
+        provider={metric.provider}
+        query={metric.query}
+        deploymentTime={data.time}
+      />
+    ));
+  }
   return (
-    <DeploymentDetailsSection title="Metrics" defaultExpanded><Grid container spacing={2}>
-      {
-        Object.entries(allMetrics).map(([metricName, series]) => (
-          <Grid key={metricName} item xs={6}>
-            <MetricChart metric={metricName} series={series} deploymentTime={deploymentTime}/>
-          </Grid>
-        ))
-      }
-    </Grid></DeploymentDetailsSection>
+    <div>
+      <DeploymentDetailsSection title="Metrics" defaultExpanded>
+        <Grid container spacing={2}>
+          {
+          content
+        }
+        </Grid>
+      </DeploymentDetailsSection>
+    </div>
   );
 };
 

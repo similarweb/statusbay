@@ -3,10 +3,11 @@ package kuberneteswatcher_test
 import (
 	"context"
 	kuberneteswatcher "statusbay/watcher/kubernetes"
+	"statusbay/watcher/kubernetes/common"
 	"statusbay/watcher/kubernetes/testutil"
 	"sync"
-
 	"testing"
+
 	"time"
 
 	appsV1 "k8s.io/api/apps/v1"
@@ -14,6 +15,20 @@ import (
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 )
+
+func createMockDeploymentData(registryManager *kuberneteswatcher.RegistryManager, registryRow *kuberneteswatcher.RegistryRow, applyEvent kuberneteswatcher.ApplyEvent, progressDeadlineSeconds string) *kuberneteswatcher.DeploymentData {
+
+	maxDeploymentTime, _ := time.ParseDuration(progressDeadlineSeconds)
+	client := fake.NewSimpleClientset()
+	runningApplies := registryManager.LoadRunningApplies()
+	eventManager := NewEventsMock(client)
+	replicasetManager := NewReplicasetMock(client)
+	serviceManager := NewServiceManagerMockMock(client)
+	deploymentManager := kuberneteswatcher.NewDeploymentManager(client, eventManager, registryManager, replicasetManager, serviceManager, runningApplies, maxDeploymentTime)
+
+	return deploymentManager.AddNewDeployment(applyEvent, registryRow, 3)
+
+}
 
 func updateDeploymentMock(client *fake.Clientset, deployment *appsV1.Deployment) {
 
@@ -40,7 +55,7 @@ func createDeploymentMock(client *fake.Clientset, name string, labels map[string
 			Labels: labels,
 			Annotations: map[string]string{
 				"statusbay.io/application-name":       "custom-application-name",
-				"statusbay.io/report-deploy-by":       "elad.kaplan@similarweb.com",
+				"statusbay.io/report-deploy-by":       "foo@example.com",
 				"statusbay.io/report-slack-channels":  "#channel",
 				"statusbay.io/alerts-statuscake-tags": "nginx",
 				"statusbay.io/kibana-query":           "application: statusbay AND mode: watcher",
@@ -63,7 +78,7 @@ func GetFakeDeployment(progressDeadlineSeconds int32) *appsV1.Deployment {
 		ObjectMeta: metaV1.ObjectMeta{
 			Namespace: "pe",
 			Annotations: map[string]string{
-				"statusbay.io/report-deploy-by":      "elad.kaplan@similarweb.com",
+				"statusbay.io/report-deploy-by":      "foo@example.com",
 				"statusbay.io/report-slack-channels": "#channel",
 			},
 		},
@@ -79,9 +94,10 @@ func NewDeploymentManagerMock(client *fake.Clientset) (*kuberneteswatcher.Deploy
 
 	eventManager := NewEventsMock(client)
 	registryManager, storage := NewRegistryMock()
+	runningApplies := registryManager.LoadRunningApplies()
 	replicasetManager := NewReplicasetMock(client)
 	serviceManager := NewServiceManagerMockMock(client)
-	deploymentManager := kuberneteswatcher.NewDeploymentManager(client, eventManager, registryManager, replicasetManager, serviceManager, maxDeploymentTime)
+	deploymentManager := kuberneteswatcher.NewDeploymentManager(client, eventManager, registryManager, replicasetManager, serviceManager, runningApplies, maxDeploymentTime)
 
 	var wg *sync.WaitGroup
 	ctx := context.Background()
@@ -92,6 +108,7 @@ func NewDeploymentManagerMock(client *fake.Clientset) (*kuberneteswatcher.Deploy
 	return deploymentManager, storage
 
 }
+
 func TestDeploymentsWatch(t *testing.T) {
 	client := fake.NewSimpleClientset()
 	_, storage := NewDeploymentManagerMock(client)
@@ -99,7 +116,7 @@ func TestDeploymentsWatch(t *testing.T) {
 	labels := map[string]string{
 		"app.kubernetes.io/name": "custom-application-name",
 	}
-
+	namespace := "pe"
 	deploymentObj := createDeploymentMock(client, "test-deployment", labels)
 
 	time.Sleep(time.Second)
@@ -121,14 +138,24 @@ func TestDeploymentsWatch(t *testing.T) {
 		},
 	}
 
-	createServiceMock(client, "service")
-	client.AppsV1().ReplicaSets("pe").Create(replicaset)
+	svc := &v1.Service{
+		ObjectMeta: metaV1.ObjectMeta{
+			Name: "service-1",
+			Labels: map[string]string{
+				"app": "application",
+			},
+			Namespace: namespace,
+		},
+	}
+
+	createServiceMock(client, "service", namespace)
+	client.AppsV1().ReplicaSets(namespace).Create(replicaset)
 	time.Sleep(time.Second)
 	replicaset.Status.Replicas = 2
-	client.AppsV1().ReplicaSets("pe").Update(replicaset)
-
+	client.AppsV1().ReplicaSets(namespace).Update(replicaset)
+	client.CoreV1().Services(namespace).Create(svc)
 	event1 := &v1.Event{Message: "message", ObjectMeta: metaV1.ObjectMeta{Name: "a", CreationTimestamp: metaV1.Time{Time: time.Now()}}}
-	client.CoreV1().Events("pe").Create(event1)
+	client.CoreV1().Events(namespace).Create(event1)
 
 	time.Sleep(time.Second)
 
@@ -150,11 +177,11 @@ func TestDeploymentsWatch(t *testing.T) {
 		if application.Schema.Application != "custom-application-name" {
 			t.Fatalf("unexpected application name, got %s expected %s", application.Schema.Application, "custom-application-name")
 		}
-		if application.Schema.Namespace != "pe" {
-			t.Fatalf("unexpected application namespace, got %s expected %s", application.Schema.Namespace, "pe")
+		if application.Schema.Namespace != namespace {
+			t.Fatalf("unexpected application namespace, got %s expected %s", application.Schema.Namespace, namespace)
 		}
-		if application.Schema.DeploymentDescription != kuberneteswatcher.DeploymentStatusDescriptionRunning {
-			t.Fatalf("unexpected status description, got %s expected %s", application.Schema.Namespace, kuberneteswatcher.DeploymentStatusDescriptionRunning)
+		if application.Schema.DeploymentDescription != common.ApplyStatusDescriptionRunning {
+			t.Fatalf("unexpected status description, got %s expected %s", application.Schema.Namespace, common.ApplyStatusDescriptionRunning)
 		}
 
 	})
@@ -164,5 +191,11 @@ func TestDeploymentsWatch(t *testing.T) {
 			t.Fatalf("unexpected replicaset count, got %d expected %d", len(deployment.Replicaset), 1)
 		}
 	})
+
+	// t.Run("service", func(t *testing.T) {
+	// 	if len(deployment.Services) != 1 {
+	// 		t.Fatalf("unexpected service count, got %d expected %d", len(deployment.Services), 1)
+	// 	}
+	// })
 
 }

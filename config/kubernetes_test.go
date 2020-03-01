@@ -18,7 +18,7 @@ func TestKubernetes(t *testing.T) {
 		cfg, err := config.LoadKubernetesConfig(fmt.Sprintf("%s/testutil/mock/test-config.yaml", currentFolderPath))
 
 		if err != nil {
-			t.Fatalf("unexpected error ")
+			t.Errorf("unexpected error: %v", err)
 		}
 
 		if reflect.TypeOf(cfg).String() != "config.Kubernetes" {
@@ -31,14 +31,14 @@ func TestKubernetes(t *testing.T) {
 		_, err := config.LoadKubernetesConfig(fmt.Sprintf("%s/testutil/mock/no-config.yaml", currentFolderPath))
 
 		if err == nil {
-			t.Fatalf("unexpected load configuration error")
+			t.Errorf("unexpected error: %v", err)
 		}
 	})
 	t.Run("invalid_schema", func(t *testing.T) {
 		data, err := config.LoadKubernetesConfig(fmt.Sprintf("%s/testutil/mock/no-config.yaml", currentFolderPath))
 
 		if err == nil {
-			t.Fatalf("unexpected load configuration error")
+			t.Fatalf("unexpected error: %v", err)
 		}
 		t.Log(data)
 	})

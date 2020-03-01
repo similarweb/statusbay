@@ -4,7 +4,7 @@ import ReplicasStatsBoxes from '../components/ReplicasStats/ReplicasStatsBoxes';
 import { useDeploymentDetailsContext } from '../context/DeploymentDetailsContext';
 
 const ReplicasStats = ({ kindIndex }) => {
-  const data = useDeploymentDetailsContext();
+  const {data} = useDeploymentDetailsContext();
   if (!data) {
     return null;
   }

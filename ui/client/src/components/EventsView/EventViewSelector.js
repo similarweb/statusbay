@@ -5,6 +5,8 @@ import makeStyles from '@material-ui/core/styles/makeStyles';
 import PropTypes from 'prop-types';
 import CellStatus from '../Table/Cells/CellStatus';
 import TableStateless from '../Table/TableStateless';
+import Box from '@material-ui/core/Box';
+import ArrowForwardIosIcon from '@material-ui/icons/ArrowForwardIos';
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -17,6 +19,13 @@ const useStyles = makeStyles((theme) => ({
   hover: {
     cursor: 'pointer',
   },
+  marker: {
+    width: 10,
+    height: 10,
+    backgroundColor: `${theme.palette.error.main}`,
+    borderRadius: `50%`,
+    marginRight: 12
+  }
 }));
 
 
@@ -40,7 +49,7 @@ const EventsViewSelector = ({ items, selected, onRowClick }) => {
       {
         name: 'Pod',
         header: (name) => <TableCell>{name}</TableCell>,
-        cell: (row) => row.name,
+        cell: (row) => {return <Box display="flex" alignItems="center"><div className={row.hasError && classes.marker}></div> {row.name}</Box>},
       },
       {
         name: 'Status',
@@ -48,10 +57,10 @@ const EventsViewSelector = ({ items, selected, onRowClick }) => {
         cell: (row) => row.status,
       },
     ],
-  }), []);
+  }), [selected]);
   return (
     <div className={classes.container}>
-      <TableStateless data={items} config={tableConfig} tableSize="small" stickyHeader={true}/>
+      <TableStateless data={items} config={tableConfig} tableSize="small" stickyHeader={false}/>
     </div>
   );
 };

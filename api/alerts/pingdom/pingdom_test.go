@@ -73,14 +73,14 @@ func TestGetAlertByTags(t *testing.T) {
 
 	t.Run("validate checks", func(t *testing.T) {
 		if err != nil {
-			t.Fatalf("unexpected error")
+			t.Errorf("unexpected error: %v", err)
 		}
 
 		if len(pingdomChecks) != 2 {
-			t.Fatalf("unexpected checks count, got %d expected %d", len(pingdomChecks), 2)
+			t.Fatalf("unexpected checks length, got %d expected %d", len(pingdomChecks), 2)
 		}
-		check := pingdomChecks[0]
 
+		check := pingdomChecks[0]
 		if check.ID != 2 {
 			t.Fatalf("unexpected check ID, got %d expected %d", check.ID, 2)
 		}
@@ -90,7 +90,7 @@ func TestGetAlertByTags(t *testing.T) {
 		}
 
 		if check.Name != "foo2" {
-			t.Fatalf("unexpected check Name, got %s expected %s", check.Name, "foo2")
+			t.Fatalf("unexpected check name, got %s expected %s", check.Name, "foo2")
 		}
 
 		if len(check.Periods) != 2 {
@@ -98,15 +98,15 @@ func TestGetAlertByTags(t *testing.T) {
 		}
 
 		if check.Periods[0].Status != "up" {
-			t.Fatalf("unexpected periods check count, got %s expected %s", check.Periods[0].Status, "up")
+			t.Fatalf("unexpected period status, got %s expected %s", check.Periods[0].Status, "up")
 		}
 
 		if check.Periods[0].StartUnix != 1 {
-			t.Fatalf("unexpected periods check count, got %d expected %d", check.Periods[0].StartUnix, 1)
+			t.Fatalf("unexpected period start time, got %d expected %d", check.Periods[0].StartUnix, 1)
 		}
 
 		if check.Periods[0].EndUnix != 2 {
-			t.Fatalf("unexpected periods check count, got %d expected %d", check.Periods[0].EndUnix, 2)
+			t.Fatalf("unexpected period end time, got %d expected %d", check.Periods[0].EndUnix, 2)
 		}
 	})
 
@@ -125,7 +125,7 @@ func TestGetAlertByTags(t *testing.T) {
 	t.Run("validate summary.outage request queries", func(t *testing.T) {
 
 		if len(mockClient.getCheckSummaryOutage) != 2 {
-			t.Fatalf("unexpected summary.outage http requests, got %d expected %d", len(mockClient.getCheckSummaryOutage), 2)
+			t.Fatalf("unexpected summary outage http requests length, got %d expected %d", len(mockClient.getCheckSummaryOutage), 2)
 		}
 
 		checkSummary := mockClient.getCheckSummaryOutage[2]

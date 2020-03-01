@@ -15,6 +15,7 @@ import (
 
 	"k8s.io/client-go/kubernetes/fake"
 
+	"statusbay/watcher/kubernetes/common"
 	"statusbay/watcher/kubernetes/testutil"
 )
 
@@ -31,19 +32,13 @@ func createDaemonSetMock(client *fake.Clientset, name string, labels map[string]
 		Spec: appsV1.DaemonSetSpec{
 			Template: v1.PodTemplateSpec{
 				ObjectMeta: metaV1.ObjectMeta{
-					Name: name,
-					Labels: map[string]string{
-						"app":  "application",
-						"name": name,
-					},
+					Name:   name,
+					Labels: labels,
 				},
 				Spec: v1.PodSpec{},
 			},
 			Selector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"app":  "application",
-					"name": name,
-				},
+				MatchLabels: labels,
 			},
 		},
 		ObjectMeta: metaV1.ObjectMeta{
@@ -51,7 +46,7 @@ func createDaemonSetMock(client *fake.Clientset, name string, labels map[string]
 			Labels: labels,
 			Annotations: map[string]string{
 				"statusbay.io/application-name":       "custom-application-name",
-				"statusbay.io/report-deploy-by":       "test@similarweb.com",
+				"statusbay.io/report-deploy-by":       "test@example.com",
 				"statusbay.io/report-slack-channels":  "#channel",
 				"statusbay.io/alerts-statuscake-tags": "fluentd",
 			},
@@ -66,9 +61,11 @@ func NewDaemonSetManagerMock(client *fake.Clientset) (*kuberneteswatcher.Daemons
 	eventManager := NewEventsMock(client)
 	registryManager, storage := NewRegistryMock()
 	serviceManager := NewServiceManagerMockMock(client)
-	podManager := kuberneteswatcher.NewPodsManager(client, eventManager)
+	pvcManager := NewPvcManagerMock(client)
+	podManager := kuberneteswatcher.NewPodsManager(client, eventManager, pvcManager)
 	controllerRevisionManager := NewControllerRevisionManagerMock(client, podManager)
-	daemonsetManager := kuberneteswatcher.NewDaemonsetManager(client, eventManager, registryManager, serviceManager, controllerRevisionManager, maxDeploymentTime)
+	runningApplies := registryManager.LoadRunningApplies()
+	daemonsetManager := kuberneteswatcher.NewDaemonsetManager(client, eventManager, registryManager, serviceManager, controllerRevisionManager, runningApplies, maxDeploymentTime)
 
 	var wg *sync.WaitGroup
 	ctx := context.Background()
@@ -87,20 +84,31 @@ func TestDaemonsetWatch(t *testing.T) {
 	labels := map[string]string{
 		"app": "application",
 	}
+	namespace := "pe"
 
 	// Create daemonset object
 	daemonsetObj := createDaemonSetMock(client, "test-daemonset", labels)
 	time.Sleep(time.Second)
 
+	svc := &v1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "service-1",
+			Labels:    labels,
+			Namespace: namespace,
+		},
+	}
+
 	// Update the number of replica
-	updateDaemonsetMock(client, "pe", daemonsetObj)
+	updateDaemonsetMock(client, namespace, daemonsetObj)
 
 	pod := createPod(client,
 		v1.PodRunning,
 		daemonsetObj.GetName(),
-		"pe",
+		namespace,
 		labels)
 	time.Sleep(time.Second)
+
+	client.CoreV1().Services(namespace).Create(svc)
 
 	pod.ObjectMeta.Labels[appsV1.ControllerRevisionHashLabelKey] = controllerRevisionHash
 
@@ -120,7 +128,8 @@ func TestDaemonsetWatch(t *testing.T) {
 		deamonsetLabels)
 
 	revision.Revision = daemonsetObj.ObjectMeta.Generation
-	client.AppsV1().ControllerRevisions("pe").Create(revision)
+	client.AppsV1().ControllerRevisions(namespace).Create(revision)
+
 	time.Sleep(time.Second)
 	// create matchin pods to the revision hash
 
@@ -143,11 +152,17 @@ func TestDaemonsetWatch(t *testing.T) {
 		if application.Schema.Application != "custom-application-name" {
 			t.Fatalf("unexpected application name, got %s expected %s", application.Schema.Application, "custom-application-name")
 		}
-		if application.Schema.Namespace != "pe" {
-			t.Fatalf("unexpected application namespace, got %s expected %s", application.Schema.Namespace, "pe")
+		if application.Schema.Namespace != namespace {
+			t.Fatalf("unexpected application namespace, got %s expected %s", application.Schema.Namespace, namespace)
 		}
-		if application.Schema.DeploymentDescription != kuberneteswatcher.DeploymentStatusDescriptionRunning {
-			t.Fatalf("unexpected status description, got %s expected %s", application.Schema.Namespace, kuberneteswatcher.DeploymentStatusDescriptionRunning)
+		if application.Schema.DeploymentDescription != common.ApplyStatusDescriptionRunning {
+			t.Fatalf("unexpected status description, got %s expected %s", application.Schema.Namespace, common.ApplyStatusDescriptionRunning)
 		}
 	})
+
+	// t.Run("service", func(t *testing.T) {
+	// 	if len(daemonsetData.Services) != 1 {
+	// 		t.Fatalf("unexpected service count, got %d expected %d", len(daemonsetData.Services), 1)
+	// 	}
+	// })
 }

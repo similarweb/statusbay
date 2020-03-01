@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import Box from '@material-ui/core/Box';
 import PropTypes from 'prop-types';
 import Paper from '@material-ui/core/Paper';
@@ -15,7 +15,7 @@ const EventsView = ({ items }) => {
     return null;
   }
   const selectedLogs = items[selectedItem].logs;
-  const eventsViewSelectorItems = items.map(({ name, status }) => ({ name, status }));
+  const eventsViewSelectorItems = items.map(({ name, status, logs = [] }) => ({ name, status, hasError: logs.some(({ error }) => error) }));
   return (
 
     <Grid container>

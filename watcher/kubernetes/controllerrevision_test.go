@@ -32,7 +32,8 @@ func NewControllerRevisionManagerMock(client *fake.Clientset, podsManager *kuber
 	ctx := context.Background()
 	if podManager == nil {
 		eventManager := kuberneteswatcher.NewEventsManager(client)
-		podManager = kuberneteswatcher.NewPodsManager(client, eventManager)
+		pvcManager := NewPvcManagerMock(client)
+		podManager = kuberneteswatcher.NewPodsManager(client, eventManager, pvcManager)
 		podManager.Serve(ctx, wg)
 		eventManager.Serve(ctx, wg)
 	}

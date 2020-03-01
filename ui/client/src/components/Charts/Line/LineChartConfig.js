@@ -1,14 +1,52 @@
 import * as moment from 'moment';
 import useTheme from '@material-ui/core/styles/useTheme';
+import numeral from 'numeral';
+import {
+  amber,
+  blue,
+  brown,
+  cyan,
+  deepPurple,
+  lightGreen,
+  lime,
+  teal
+} from '@material-ui/core/colors';
+import Highcharts from 'highcharts';
+
+const createTooltipContent = (points) => points.map(({ color, y, series: { name } }) => `<br><span style="color:${color}">●</span> ${name}: <b>${numeral(y).format('0,0')}</b>`);
+
+const colors = [
+  deepPurple[500],
+  blue[500],
+  cyan[500],
+  teal[500],
+  lightGreen[500],
+  lime[500],
+  amber[500],
+  brown[500],
+];
+
+const darkColors = [
+  deepPurple[300],
+  blue[300],
+  cyan[300],
+  teal[300],
+  lightGreen[300],
+  lime[300],
+  amber[300],
+  brown[300],
+];
 
 export default (series, plotlines) => {
   const theme = useTheme();
   const isDarkMode = theme.palette.type === 'dark';
   return ({
     chart: {
+      marginTop: 20,
       zoomType: 'x',
       backgroundColor: isDarkMode ? '#424242' : '#ffffff',
     },
+    colors: isDarkMode ? darkColors : colors,
     title: {
       text: null,
     },
@@ -16,18 +54,36 @@ export default (series, plotlines) => {
       align: 'left',
       layout: 'horizontal',
       useHTML: true,
+      itemStyle: {
+        color: isDarkMode ? '#ffffff' : '#333333',
+      }
     },
     xAxis: {
       labels: {
         formatter() {
-          return moment.unix(this.value).format('HH:MM:SS');
+          return moment.utc(this.value).format('HH:mm:ss');
         },
+        style: {
+          color: isDarkMode ? '#ffffff' : '#666666',
+        }
       },
       plotLines: plotlines.map((line) => ({
-        color: theme.palette.error[theme.palette.type],
+        color: theme.palette.error.main,
         dashStyle: 'dash',
         value: line,
         width: 1,
+        label: {
+          align: 'center',
+          rotation: 0,
+          x: 0,
+          y: -10,
+          style: {
+            color: isDarkMode ? '#ffffff' : '#999999',
+          },
+          formatter() {
+            return `Deployment time: ${moment.utc(line).format('HH:mm:ss')}`;
+          },
+        },
       })),
     },
     yAxis: {
@@ -36,22 +92,25 @@ export default (series, plotlines) => {
       },
       min: 0,
       gridLineColor: '#f5f5f5',
+      labels: {
+        style: {
+          color: isDarkMode ? '#ffffff' : '#666666',
+        }
+      }
     },
     tooltip: {
       shared: true,
       crosshairs: true,
-      // backgroundColor: 'red',
       useHTML: true,
-      // formatter() {
-      //   return moment.unix(this.x).format('HH:MM:SS');
-      // },
+      formatter() {
+        return `<span style="font-size: 10px">${moment.utc(this.x).format('DD/MM/YYYY HH:mm:ss')}</span>${createTooltipContent(this.points)}`;
+      },
     },
     plotOptions: {
       line: {
         marker: {
           enabled: false,
         },
-
         lineWidth: 1,
         states: {
           hover: {

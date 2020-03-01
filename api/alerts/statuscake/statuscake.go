@@ -25,7 +25,7 @@ type Statuscake struct {
 
 // NewStatuscakeManager create new Statuscake instance
 func NewStatuscakeManager(client ClientDescriber) *Statuscake {
-	log.Info("Init Statuscake manager")
+	log.Info("initializing StatusCake manager")
 
 	return &Statuscake{
 		client: client,
@@ -46,11 +46,11 @@ func (sc *Statuscake) GetAlertByTags(tags string, from, to time.Time) ([]httpres
 	tests, err := sc.client.GetTests(v)
 
 	if err != nil {
-		lg.WithError(err).Error("Error when trying to get Statuscake tests")
+		lg.WithError(err).Error("could not get tests from StatusCake")
 		return checkResponses, err
 	}
 
-	lg.WithField("tests", len(tests)).Debug("Alerts was found")
+	lg.WithField("tests", len(tests)).Debug("received checks from StatusCake")
 
 	var wg = sync.WaitGroup{}
 	GoroutinesRequests := make(chan struct{}, ParallelCheckRequests)
@@ -61,7 +61,7 @@ func (sc *Statuscake) GetAlertByTags(tags string, from, to time.Time) ([]httpres
 			defer wg.Done()
 			alertEvents, err := sc.client.Periods(test.TestID)
 			if err != nil {
-				lg.WithError(err).WithField("test_id", test.TestID).Info("Failed to period test")
+				lg.WithError(err).WithField("test_id", test.TestID).Info("could not get uptime periods for check")
 				return
 			}
 

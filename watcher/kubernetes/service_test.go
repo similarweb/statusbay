@@ -2,7 +2,6 @@ package kuberneteswatcher_test
 
 import (
 	"context"
-	"fmt"
 	kuberneteswatcher "statusbay/watcher/kubernetes"
 	"statusbay/watcher/kubernetes/common"
 	"sync"
@@ -16,28 +15,42 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 )
 
-func createServiceMock(client *fake.Clientset, name string) {
+func createServiceMock(client *fake.Clientset, name, namespace string) {
 	service := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
-			Namespace: "pe",
+			Namespace: namespace,
 		},
 	}
 
-	client.CoreV1().Services("pe").Create(service)
+	client.CoreV1().Services(namespace).Create(service)
 }
 
 func NewServiceManagerMockMock(client *fake.Clientset) *kuberneteswatcher.ServiceManager {
 
-	serviceManager := kuberneteswatcher.NewServiceManager(client)
+	eventManager := NewEventsMock(client)
+	serviceManager := kuberneteswatcher.NewServiceManager(client, eventManager)
 	return serviceManager
 
 }
 
 func TestServiceWatch(t *testing.T) {
-	registory, storageMock := NewRegistryMock()
+	registry, storageMock := NewRegistryMock()
 
-	registryDeploymentData := createMockDeploymentData(registory, common.DeploymentStatusRunning)
+	registryRow := registry.NewApplication("nginx", "default", map[string]string{}, common.ApplyStatusRunning)
+	namespace := "default"
+	apply := kuberneteswatcher.ApplyEvent{
+		Event:        "create",
+		ApplyName:    "nginx-deployment",
+		ResourceName: "resourceName",
+		Namespace:    namespace,
+		Kind:         "deployment",
+		Hash:         1234,
+		Annotations:  map[string]string{},
+		Labels:       map[string]string{},
+	}
+
+	registryDeploymentData := createMockDeploymentData(registry, registryRow, apply, "10m")
 	lg := log.WithField("test", "TestServiceWatch")
 	ctx := context.Background()
 
@@ -49,21 +62,32 @@ func TestServiceWatch(t *testing.T) {
 
 	serviceManager.Serve(ctx, wg)
 
-	createServiceMock(client, "service-1")
-
 	serviceManager.Watch <- kuberneteswatcher.WatchData{
 		ListOptions:  metav1.ListOptions{},
 		RegistryData: registryDeploymentData,
-		Namespace:    "pe",
+		Namespace:    namespace,
 		Ctx:          ctx,
 		LogEntry:     *lg,
 	}
 
-	time.Sleep(time.Second * 5)
+	time.Sleep(time.Second)
+	createServiceMock(client, "service-1", namespace)
+	createServiceMock(client, "service-2", namespace)
+	time.Sleep(time.Second)
 
-	deployment := storageMock.MockWriteDeployment["1"].Schema.Resources.Deployments["application"]
+	event1 := &v1.Event{Message: "message", InvolvedObject: v1.ObjectReference{Kind: "Service", Name: "service-1"}, ObjectMeta: metav1.ObjectMeta{CreationTimestamp: metav1.Time{Time: time.Now()}}}
+	client.CoreV1().Events(namespace).Create(event1)
 
-	// TODO.. complete the test when the task https://trello.com/c/VheJxFTE/42-add-deployment-service-to-the-db is completed
-	fmt.Println(deployment)
+	time.Sleep(time.Second * 2)
+
+	deployment := storageMock.MockWriteDeployment["1"].Schema.Resources.Deployments["resourceName"]
+
+	if len(deployment.Services) != 2 {
+		t.Fatalf("unexpected services count, got %d expected %d", len(deployment.Services), 2)
+	}
+
+	if len(*deployment.Services["service-1"].Events) != 1 {
+		t.Fatalf("unexpected event count, got %d expected %d", len(*deployment.Services["service-1"].Events), 1)
+	}
 
 }

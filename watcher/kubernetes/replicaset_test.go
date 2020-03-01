@@ -35,8 +35,8 @@ func createReplicasetMock(client *fake.Clientset, name string, specSelector *met
 func NewReplicasetMock(client *fake.Clientset) *kuberneteswatcher.ReplicaSetManager {
 
 	eventManager := kuberneteswatcher.NewEventsManager(client)
-
-	podManager := kuberneteswatcher.NewPodsManager(client, eventManager)
+	pvcManager := NewPvcManagerMock(client)
+	podManager := kuberneteswatcher.NewPodsManager(client, eventManager, pvcManager)
 	replicasetManager := kuberneteswatcher.NewReplicasetManager(client, eventManager, podManager)
 
 	var wg *sync.WaitGroup
@@ -52,7 +52,7 @@ func NewReplicasetMock(client *fake.Clientset) *kuberneteswatcher.ReplicaSetMana
 
 // 	registry, storageMock, _ := NewRegistryMock()
 
-// 	registryDeploymentData := createMockDeploymentData(registry, kuberneteswatcher.DeploymentStatusRunning)
+// 	registryDeploymentData := createMockDeploymentData(registry, kuberneteswatcher.ApplyStatusRunning)
 // lg := log.WithField("test", "TestReplicasetWatch")
 // 	ctx := context.Background()
 
@@ -113,7 +113,20 @@ func TestInvalidSelector(t *testing.T) {
 
 	registry, storageMock := NewRegistryMock()
 
-	registryDeploymentData := createMockDeploymentData(registry, common.DeploymentStatusRunning)
+	registryRow := registry.NewApplication("nginx", "default", map[string]string{}, common.ApplyStatusRunning)
+
+	apply := kuberneteswatcher.ApplyEvent{
+		Event:        "create",
+		ApplyName:    "application",
+		ResourceName: "resourceName",
+		Namespace:    "default",
+		Kind:         "deployment",
+		Hash:         1234,
+		Annotations:  map[string]string{},
+		Labels:       map[string]string{},
+	}
+
+	registryDeploymentData := createMockDeploymentData(registry, registryRow, apply, "10m")
 	lg := log.WithField("test", "TestInvalidSelector")
 	ctx := context.Background()
 
@@ -140,7 +153,7 @@ func TestInvalidSelector(t *testing.T) {
 	time.Sleep(time.Second * 1)
 
 	time.Sleep(2 * time.Second)
-	deployment := storageMock.MockWriteDeployment["1"].Schema.Resources.Deployments["application"]
+	deployment := storageMock.MockWriteDeployment["1"].Schema.Resources.Deployments["resourceName"]
 	if len(deployment.Pods) != 0 {
 		t.Fatalf("unexpected pod count watch event count, got %d expected %d", len(deployment.Pods), 0)
 	}

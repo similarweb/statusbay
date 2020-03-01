@@ -6,6 +6,10 @@ import (
 	"net/url"
 )
 
+// EmptyResponse return empty json response
+type EmptyResponse struct {
+}
+
 // JSONWrite return JSON response to the client
 func JSONWrite(resp http.ResponseWriter, statusCode int, data interface{}) error {
 

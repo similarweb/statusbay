@@ -20,17 +20,11 @@ type RouterKubernetesManager struct {
 }
 
 //NewKubernetesRoutes sets up the Kubernetes router to handle API endpoints
-func NewKubernetesRoutes(storage Storage, router *mux.Router, eventPath string) *RouterKubernetesManager {
-
-	eventMarksConfig, err := config.LoadKubernetesMarksConfig(eventPath)
-	if err != nil {
-		log.WithError(err).WithField("path", eventPath).Error("could not load events configuration file")
-	}
-
+func NewKubernetesRoutes(storage Storage, router *mux.Router, eventsConfig config.KubernetesMarksEvents) *RouterKubernetesManager {
 	kubernetesRoutes := &RouterKubernetesManager{
 		storage:          storage,
 		router:           router,
-		eventMarksConfig: eventMarksConfig,
+		eventMarksConfig: eventsConfig,
 	}
 	kubernetesRoutes.bindEndpoints()
 	return kubernetesRoutes
@@ -60,12 +54,16 @@ func (route *RouterKubernetesManager) Applications(resp http.ResponseWriter, req
 
 	rows, err := route.storage.Applications(queryFilter)
 	if err != nil {
+		log.WithError(err).Error("could not return filtered applications")
 		httpresponse.JSONWrite(resp, http.StatusNotFound, httpresponse.HTTPErrorResponse{Error: "Could not return applications"})
+		return
 	}
 
 	count, err := route.storage.ApplicationsCount(allFilter)
 	if err != nil {
+		log.WithError(err).Error("could not return all applications")
 		httpresponse.JSONWrite(resp, http.StatusNotFound, httpresponse.HTTPErrorResponse{Error: "Could not return all applications"})
+		return
 	}
 
 	response := []ResponseKubernetesApplications{}
@@ -108,7 +106,7 @@ func (route *RouterKubernetesManager) ApplicationsColumnValues(resp http.Respons
 	}
 
 	if _, ok := allowColumns[columnName]; !ok {
-		errs.Add("column", "Column name is not allow")
+		errs.Add("column", "Unknown column name")
 	}
 
 	if len(errs) > 0 {
@@ -120,8 +118,12 @@ func (route *RouterKubernetesManager) ApplicationsColumnValues(resp http.Respons
 
 	values, err := route.storage.GetUniqueFieldValues(table.TableName(), columnName)
 	if err != nil {
+		log.WithFields(log.Fields{
+			"column_name": columnName,
+			"table_name":  table.TableName(),
+		}).Error("could not find column in table")
 		httpresponse.JSONError(resp, http.StatusNotFound, err)
-
+		return
 	}
 
 	httpresponse.JSONWrite(resp, http.StatusOK, values)
@@ -135,6 +137,7 @@ func (route *RouterKubernetesManager) GetDeployment(resp http.ResponseWriter, re
 
 	deployment, err := route.storage.GetDeployment(applyID)
 	if err != nil {
+		log.WithField("apply_id", applyID).Error("deployment not found")
 		httpresponse.JSONError(resp, http.StatusNotFound, errors.New("Deployment not found"))
 		return
 	}
@@ -143,7 +146,7 @@ func (route *RouterKubernetesManager) GetDeployment(resp http.ResponseWriter, re
 
 	err = json.Unmarshal([]byte(deployment.Details), &kubernetesDeploymentResponse)
 	if err != nil {
-		log.WithError(err).WithFields(log.Fields{}).Error("Could not parse deployment detail")
+		log.WithError(err).WithFields(log.Fields{}).Error("could not parse deployment details")
 		httpresponse.JSONError(resp, http.StatusNotFound, errors.New("Could not parse deployment detail"))
 		return
 	}
@@ -152,6 +155,7 @@ func (route *RouterKubernetesManager) GetDeployment(resp http.ResponseWriter, re
 
 	response := ResponseKubernetesDeployment{
 		Name:      deployment.Name,
+		DeployBy:  deployment.DeployBy,
 		Time:      deployment.Time,
 		Status:    deployment.Status,
 		Cluster:   deployment.Cluster,

@@ -9,8 +9,9 @@ import (
 	"statusbay/api"
 	"statusbay/api/alerts"
 	"statusbay/api/kubernetes"
-	"statusbay/api/kubernetes/testutil"
 	"statusbay/api/metrics"
+	"statusbay/api/testutil"
+	"statusbay/config"
 	"sync"
 	"testing"
 )
@@ -21,9 +22,10 @@ type testServer struct {
 
 func MockServer(t *testing.T, storageMockFile string, metrics map[string]metrics.MetricManagerDescriber, alertsClient map[string]alerts.AlertsManagerDescriber) testServer {
 
+	version := testutil.NewMockVersion()
 	storage := testutil.NewMockStorage()
 	return testServer{
-		api: api.NewServer(storage, "8080", "api/kubernetes/testutil/events.yaml", metrics, alertsClient),
+		api: api.NewServer(storage, "8080", config.KubernetesMarksEvents{}, metrics, alertsClient, version),
 	}
 }
 
@@ -48,23 +50,19 @@ func TestApplicationsData(t *testing.T) {
 			rr := httptest.NewRecorder()
 			req, err := http.NewRequest("GET", test.endpoint, nil)
 			if err != nil {
-				t.Fatalf("Http request returned with error")
+				t.Errorf("unexpected error: %v", err)
 			}
 
 			ms.api.Router().ServeHTTP(rr, req)
 			if rr.Code != test.expectedStatusCode {
-				t.Fatalf("handler returned wrong status code: got %v want %v", rr.Code, test.expectedStatusCode)
-			}
-
-			if err != nil {
-				t.Fatal(err)
+				t.Fatalf("unexpected status code: got %d want %d", rr.Code, test.expectedStatusCode)
 			}
 
 			response := &kubernetes.ResponseKubernetesApplicationsCount{}
 			body, err := ioutil.ReadAll(rr.Body)
 			err = json.Unmarshal(body, &response)
 			if len(response.Records) != test.expectedCountResponse {
-				t.Fatalf("unexpected deployment events, got %d expected %d", len(response.Records), test.expectedCountResponse)
+				t.Fatalf("unexpected deployment events length, got %d expected %d", len(response.Records), test.expectedCountResponse)
 			}
 		})
 	}
@@ -94,16 +92,12 @@ func TestApplicationsFiltersData(t *testing.T) {
 			rr := httptest.NewRecorder()
 			req, err := http.NewRequest("GET", test.endpoint, nil)
 			if err != nil {
-				t.Fatalf("Http request returned with error")
+				t.Errorf("unexpected error: %v", err)
 			}
 
 			ms.api.Router().ServeHTTP(rr, req)
 			if rr.Code != test.expectedStatusCode {
-				t.Fatalf("handler returned wrong status code: got %v want %v", rr.Code, test.expectedStatusCode)
-			}
-
-			if err != nil {
-				t.Fatal(err)
+				t.Fatalf("unexpected status code: got %d want %d", rr.Code, test.expectedStatusCode)
 			}
 
 			response := []string{}
@@ -111,7 +105,7 @@ func TestApplicationsFiltersData(t *testing.T) {
 			err = json.Unmarshal(body, &response)
 
 			if len(response) != test.expectedCountResponse {
-				t.Fatalf("unexpected filters response count, got %d expected %d", len(response), test.expectedCountResponse)
+				t.Fatalf("unexpected filters response length, got %d expected %d", len(response), test.expectedCountResponse)
 			}
 
 		})

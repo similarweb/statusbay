@@ -45,7 +45,7 @@ func (c HTTPClient) Request(method string, url string, v url.Values, body io.Rea
 	log.WithFields(log.Fields{
 		"method": method,
 		"url":    url,
-	}).Debug("Prepare HTTP client request")
+	}).Debug("preparing HTTP client request")
 
 	r, err := http.NewRequest(method, url, body)
 	if err != nil {

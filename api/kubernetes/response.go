@@ -1,6 +1,8 @@
 package kubernetes
 
-import "time"
+import (
+	"time"
+)
 
 // START Kubernetes deployment response
 
@@ -44,15 +46,26 @@ type ResponseEventMessages struct {
 }
 
 type ResponseReplicaset struct {
-	Events []ResponseEventMessages `json:"Events"`
+	Events []ResponseEventMessages  `json:"Events"`
+	Status ResponseDeploymentStatus `json:"Status"`
 }
 
+type ResponseServicesData struct {
+	Events []ResponseEventMessages `json:"Events"`
+}
 type ResponseMetricsQuery struct {
 	Query    string `json:"Query"`
 	Title    string `json:"Title"`
 	SubTitle string `json:"SubTitle"`
 }
 
+type ResponseCondition struct {
+	Type               string    `json:"Type"`
+	Status             string    `json:"Status"`
+	LastTransitionTime time.Time `json:"LastTransitionTime"`
+	Reason             string    `json:"Reason"`
+	Message            string    `json:"Message"`
+}
 type ResponseDeploymentStatus struct {
 	ObservedGeneration  int64 `json:"ObservedGeneration"`
 	Replicas            int32 `json:"Replicas"`
@@ -60,6 +73,7 @@ type ResponseDeploymentStatus struct {
 	ReadyReplicas       int32 `json:"ReadyReplicas"`
 	AvailableReplicas   int32 `json:"AvailableReplicas"`
 	UnavailableReplicas int32 `json:"UnavailableReplicas"`
+	Conditions          []ResponseCondition
 }
 
 type DeploymentDataResponse struct {
@@ -69,6 +83,7 @@ type DeploymentDataResponse struct {
 	Pods       map[string]ResponseDeploymenPod `json:"Pods"`
 	Replicaset map[string]ResponseReplicaset   `json:"Replicaset"`
 	Status     ResponseDeploymentStatus        `json:"Status"`
+	Service    map[string]ResponseServicesData `json:"Services"`
 }
 
 type DaemonsetDataResponse struct {
@@ -76,6 +91,7 @@ type DaemonsetDataResponse struct {
 	Events   []ResponseEventMessages         `json:"Events"`
 	Pods     map[string]ResponseDeploymenPod `json:"Pods"`
 	Status   ResponseDeploymentStatus        `json:"Status"`
+	Service  map[string]ResponseServicesData `json:"Services"`
 }
 
 type StatefulsetDataResponse struct {
@@ -83,6 +99,7 @@ type StatefulsetDataResponse struct {
 	Events      []ResponseEventMessages         `json:"Events"`
 	Pods        map[string]ResponseDeploymenPod `json:"Pods"`
 	Status      ResponseDeploymentStatus        `json:"Status"`
+	Service     map[string]ResponseServicesData `json:"Services"`
 }
 
 type ResponseResourcesData struct {
@@ -97,6 +114,7 @@ type ResponseDeploymentData struct {
 
 type ResponseKubernetesDeployment struct {
 	Name      string                 `json:"Name"`
+	DeployBy  string                 `json:"DeployBy"`
 	Cluster   string                 `json:"Cluster"`
 	Namespace string                 `json:"Namespace"`
 	Status    string                 `json:"Status"`

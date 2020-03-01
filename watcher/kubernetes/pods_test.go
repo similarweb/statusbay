@@ -30,7 +30,8 @@ func NewPodManagerMock() (*fake.Clientset, *kuberneteswatcher.PodsManager) {
 
 	client := fake.NewSimpleClientset()
 	eventManager := kuberneteswatcher.NewEventsManager(client)
-	podManager := kuberneteswatcher.NewPodsManager(client, eventManager)
+	pvcManager := NewPvcManagerMock(client)
+	podManager := kuberneteswatcher.NewPodsManager(client, eventManager, pvcManager)
 
 	var wg *sync.WaitGroup
 	ctx := context.Background()
@@ -43,7 +44,21 @@ func NewPodManagerMock() (*fake.Clientset, *kuberneteswatcher.PodsManager) {
 func TestPodWatch(t *testing.T) {
 	registry, storageMock := NewRegistryMock()
 
-	registryDeploymentData := createMockDeploymentData(registry, common.DeploymentStatusRunning)
+	registryRow := registry.NewApplication("nginx", "default", map[string]string{}, common.ApplyStatusRunning)
+
+	apply := kuberneteswatcher.ApplyEvent{
+		Event:        "create",
+		ApplyName:    "application",
+		ResourceName: "resourceName",
+		Namespace:    "default",
+		Kind:         "deployment",
+		Hash:         1234,
+		Annotations:  map[string]string{},
+		Labels:       map[string]string{},
+	}
+
+	registryDeploymentData := createMockDeploymentData(registry, registryRow, apply, "10m")
+
 	lg := log.WithField("test", "TestPodWatch")
 	ctx := context.Background()
 
@@ -88,7 +103,7 @@ func TestPodWatch(t *testing.T) {
 	createPodMock(client, "nginx2", v1.PodStatus{Phase: v1.PodRunning}, &metav1.Time{Time: time.Now()})
 	time.Sleep(time.Second * 3)
 
-	pods := storageMock.MockWriteDeployment["1"].Schema.Resources.Deployments["application"].Pods
+	pods := storageMock.MockWriteDeployment["1"].Schema.Resources.Deployments["resourceName"].Pods
 	t.Run("registory_pods", func(t *testing.T) {
 		podCount := len(pods)
 
@@ -136,7 +151,21 @@ func TestPodWatch(t *testing.T) {
 func TestPodWatchEvent(t *testing.T) {
 	registry, storageMock := NewRegistryMock()
 
-	registryDeploymentData := createMockDeploymentData(registry, common.DeploymentStatusRunning)
+	registryRow := registry.NewApplication("nginx", "default", map[string]string{}, common.ApplyStatusRunning)
+
+	apply := kuberneteswatcher.ApplyEvent{
+		Event:        "create",
+		ApplyName:    "application",
+		ResourceName: "resourceName",
+		Namespace:    "default",
+		Kind:         "deployment",
+		Hash:         1234,
+		Annotations:  map[string]string{},
+		Labels:       map[string]string{},
+	}
+
+	registryDeploymentData := createMockDeploymentData(registry, registryRow, apply, "10m")
+
 	lg := log.WithField("test", "TestPodWatchEvent")
 	ctx := context.Background()
 
@@ -159,7 +188,7 @@ func TestPodWatchEvent(t *testing.T) {
 	client.CoreV1().Events("pe").Create(event2)
 
 	time.Sleep(time.Second)
-	pods := storageMock.MockWriteDeployment["1"].Schema.Resources.Deployments["application"].Pods
+	pods := storageMock.MockWriteDeployment["1"].Schema.Resources.Deployments["resourceName"].Pods
 
 	if len(*pods["nginx"].Events) != 2 {
 		t.Fatalf("unexpected watch pod events count, got %d expected %d", len(*pods["nginx"].Events), 2)

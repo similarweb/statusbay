@@ -5,7 +5,7 @@ import (
 	"statusbay/config"
 )
 
-// MarkApplicationDeploymentEvents returns list of markes events from given configuration (See file /events.yaml)
+// MarkApplicationDeploymentEvents returns list of markes events from configuration
 // This is a ugly/bad and fast implementation, we must refactor this code. I have open a github issue for that https://github.com/similarweb/statusbay/issues/72
 func MarkApplicationDeploymentEvents(appDeployment *ResponseDeploymentData, eventMarksConfig config.KubernetesMarksEvents) {
 
@@ -29,6 +29,13 @@ func MarkApplicationDeploymentEvents(appDeployment *ResponseDeploymentData, even
 				pod.Events[i].MarkDescriptions = eventDescription
 			}
 		}
+
+		for _, services := range deployment.Service {
+			for i, svc := range services.Events {
+				eventDescription := eventmark.MarkEvent(svc.Message, eventMarksConfig.Service)
+				services.Events[i].MarkDescriptions = eventDescription
+			}
+		}
 	}
 
 	for _, daemonset := range appDeployment.Resources.Daemonsets {
@@ -45,6 +52,13 @@ func MarkApplicationDeploymentEvents(appDeployment *ResponseDeploymentData, even
 			}
 		}
 
+		for _, services := range daemonset.Service {
+			for i, svc := range services.Events {
+				eventDescription := eventmark.MarkEvent(svc.Message, eventMarksConfig.Service)
+				services.Events[i].MarkDescriptions = eventDescription
+			}
+		}
+
 	}
 
 	for _, statefulset := range appDeployment.Resources.Statefulsets {
@@ -58,6 +72,13 @@ func MarkApplicationDeploymentEvents(appDeployment *ResponseDeploymentData, even
 			for i, event := range pod.Events {
 				eventDescription := eventmark.MarkEvent(event.Message, eventMarksConfig.Pod)
 				pod.Events[i].MarkDescriptions = eventDescription
+			}
+		}
+
+		for _, services := range statefulset.Service {
+			for i, svc := range services.Events {
+				eventDescription := eventmark.MarkEvent(svc.Message, eventMarksConfig.Service)
+				services.Events[i].MarkDescriptions = eventDescription
 			}
 		}
 	}

@@ -2,6 +2,7 @@ package kuberneteswatcher
 
 import (
 	"context"
+	"fmt"
 	"statusbay/watcher/kubernetes/common"
 	"sync"
 	"time"
@@ -11,7 +12,6 @@ import (
 	appsV1 "k8s.io/api/apps/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	eventwatch "k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -34,17 +34,21 @@ type StatefulsetManager struct {
 
 	// Max time we want to watch a statefulset deployment
 	maxDeploymentTime int64
+
+	// Initial Running Applies to load on start
+	initialRunningApplies []*RegistryRow
 }
 
 // NewStatefulsetManager creates a new instance to manage statefulset related resources
-func NewStatefulsetManager(k8sClient kubernetes.Interface, eventManager *EventsManager, registryManager *RegistryManager, serviceManager *ServiceManager, controllerRevisionManager ControllerRevision, maxDeploymentTime time.Duration) *StatefulsetManager {
+func NewStatefulsetManager(k8sClient kubernetes.Interface, eventManager *EventsManager, registryManager *RegistryManager, serviceManager *ServiceManager, controllerRevisionManager ControllerRevision, runningApplies []*RegistryRow, maxDeploymentTime time.Duration) *StatefulsetManager {
 	return &StatefulsetManager{
-		client:               k8sClient,
-		eventManager:         eventManager,
-		registryManager:      registryManager,
-		serviceManager:       serviceManager,
-		controllerRevManager: controllerRevisionManager,
-		maxDeploymentTime:    int64(maxDeploymentTime.Seconds()),
+		client:                k8sClient,
+		eventManager:          eventManager,
+		registryManager:       registryManager,
+		serviceManager:        serviceManager,
+		controllerRevManager:  controllerRevisionManager,
+		maxDeploymentTime:     int64(maxDeploymentTime.Seconds()),
+		initialRunningApplies: runningApplies,
 	}
 }
 
@@ -55,7 +59,7 @@ func (ssm *StatefulsetManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 		for {
 			select {
 			case <-ctx.Done():
-				log.Warn("Statefulsets Manager has been shut down")
+				log.Warn("statefulsets manager has been shut down")
 				wg.Done()
 				return
 			}
@@ -63,16 +67,23 @@ func (ssm *StatefulsetManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 	}()
 
 	// Continue watching on running statefulsets from storage state
-	runningStatefulsetApps := ssm.registryManager.LoadRunningApplies()
+	runningStatefulsetApps := ssm.initialRunningApplies
+	log.WithField("running_apps", len(runningStatefulsetApps)).Debug("loaded running applications in statefulset manager")
 	for _, application := range runningStatefulsetApps {
+		app := application
 		for _, staefulsetData := range application.DBSchema.Resources.Statefulsets {
+			sData := staefulsetData
 			staefulsetWatchListOptions := metaV1.ListOptions{
 				LabelSelector: labels.SelectorFromSet(staefulsetData.Statefulset.Labels).String(),
 			}
-			go ssm.watchStatefulset(application.ctx, application.cancelFn, application.Log(), staefulsetData,
-				staefulsetWatchListOptions, staefulsetData.Statefulset.Namespace, staefulsetData.ProgressDeadlineSeconds)
+			app.Log().Logger.WithField("name", sData.GetName()).Debug("begining watching loaded running statefulset")
+			go func(app *RegistryRow, sData *StatefulsetData, listOptions metaV1.ListOptions) {
+				ssm.watchStatefulset(app.ctx, app.cancelFn, app.Log(), sData, listOptions, sData.Statefulset.Namespace, sData.ProgressDeadlineSeconds)
+			}(app, sData, staefulsetWatchListOptions)
 		}
 	}
+	// we dont need that anymore
+	ssm.initialRunningApplies = nil
 	ssm.watchStatefulsets(ctx)
 
 }
@@ -82,62 +93,56 @@ func (ssm *StatefulsetManager) watchStatefulsets(ctx context.Context) {
 	statefulsetWatchListOptions := metaV1.ListOptions{ResourceVersion: statefulsetsList.GetResourceVersion()}
 	watcher, err := ssm.client.AppsV1().StatefulSets("").Watch(statefulsetWatchListOptions)
 	if err != nil {
-		log.WithError(err).WithField("list_option", statefulsetWatchListOptions.String()).Error("Could not start a watcher on statefulset")
+		log.WithError(err).WithField("list_option", statefulsetWatchListOptions.String()).Error("could not start watching statefulset")
 		return
 	}
 	go func() {
-		log.WithField("resource_version", statefulsetsList.GetResourceVersion()).Info("Statefulsets watcher was started")
+		log.WithField("resource_version", statefulsetsList.GetResourceVersion()).Info("statefulsets watcher started")
 		for {
 			select {
 			case event, watch := <-watcher.ResultChan():
 				if !watch {
-					log.WithField("list_options", statefulsetWatchListOptions.String()).Info("Statefulsets watcher was stopped. Reopen the channel")
+					log.WithField("list_options", statefulsetWatchListOptions.String()).Info("statefulsets watcher was stopped, reopening the channel")
 					ssm.watchStatefulsets(ctx)
 					return
 				}
 				statefulset, ok := event.Object.(*appsV1.StatefulSet)
 
 				if !ok {
-					log.WithField("object", event.Object).Warn("Failed to parse statefulset watcher data")
+					log.WithField("object", event.Object).Warn("failed to parse statefulset watcher data")
 					continue
 				}
 
+				log.WithFields(log.Fields{
+					"name":      statefulset.GetName(),
+					"namespace": statefulset.GetNamespace(),
+				}).Debug("statefulset event detected")
 				statefulsetName := GetApplicationName(statefulset.GetAnnotations(), statefulset.GetName())
 
-				if event.Type == eventwatch.Modified || event.Type == eventwatch.Added || event.Type == eventwatch.Deleted {
-					// handle modified event
-					if event.Type == eventwatch.Deleted {
-						ssm.registryManager.DeleteAppliedVersion(statefulset.GetName(), statefulset.GetNamespace(), "statefulset")
-					} else {
-						hash, _ := hashstructure.Hash(statefulset.Spec, nil)
-						if !ssm.registryManager.UpdateAppliesVersionHistory(statefulset.GetName(), statefulset.GetNamespace(), "statefulset", hash) {
-							continue
-						}
+				if common.IsSupportedEventType(event.Type) {
+
+					hash, _ := hashstructure.Hash(statefulset.Spec, nil)
+					apply := ApplyEvent{
+						Event:        fmt.Sprintf("%v", event.Type),
+						ApplyName:    statefulsetName,
+						ResourceName: statefulset.GetName(),
+						Namespace:    statefulset.GetNamespace(),
+						Kind:         "statefulset",
+						Hash:         hash,
+						Annotations:  statefulset.GetAnnotations(),
+						Labels:       map[string]string{},
 					}
-					appRegistry := ssm.registryManager.Get(statefulsetName, statefulset.GetNamespace())
 
-					// extract annotation for progressDeadLine since statefulset don't have this feature
-					progressDeadLine := GetProgressDeadlineApply(statefulset.GetAnnotations(), ssm.maxDeploymentTime)
-
+					appRegistry := ssm.registryManager.NewApplyEvent(apply)
 					if appRegistry == nil {
-						statefulsetStatus := common.DeploymentStatusRunning
-						if event.Type == eventwatch.Deleted {
-							statefulsetStatus = common.DeploymentStatusDeleted
-						}
-
-						appRegistry = ssm.registryManager.NewApplication(statefulsetName,
-							statefulset.GetNamespace(),
-							statefulset.GetAnnotations(),
-							statefulsetStatus)
+						continue
 					}
 
-					registryApply := appRegistry.AddStatefulset(
-						statefulsetName,
-						statefulset.GetNamespace(),
-						statefulset.GetLabels(),
-						statefulset.GetAnnotations(),
-						*statefulset.Spec.Replicas,
-						progressDeadLine)
+					statefulsetLog := appRegistry.Log()
+					statefulsetLog.WithField("event", event.Type).Info("adding statefulset to apply registry")
+
+					registryApply := ssm.AddNewStatefulset(apply, appRegistry, *statefulset.Spec.Replicas)
+
 					statefulsetWatchListOptions := metaV1.ListOptions{
 						LabelSelector: labels.SelectorFromSet(statefulset.GetLabels()).String()}
 
@@ -148,15 +153,16 @@ func (ssm *StatefulsetManager) watchStatefulsets(ctx context.Context) {
 						registryApply,
 						statefulsetWatchListOptions,
 						statefulset.GetNamespace(),
-						progressDeadLine)
+						GetProgressDeadlineApply(statefulset.GetAnnotations(), ssm.maxDeploymentTime))
+
 				} else {
 					log.WithFields(log.Fields{
 						"event_type":  event.Type,
 						"statefulset": statefulsetName,
-					}).Info("Event type not supported")
+					}).Info("event type not supported")
 				}
 			case <-ctx.Done():
-				log.Warn("Statefulset watcher was stopped. Got ctx done signal")
+				log.Warn("statefulset watcher was stopped, got ctx done signal")
 				watcher.Stop()
 				return
 			}
@@ -169,12 +175,12 @@ func (ssm *StatefulsetManager) watchStatefulset(ctx context.Context, cancelFn co
 
 	statefulsetLog := lg.WithField("statefulset_name", registryStatefulset.GetName())
 
-	statefulsetLog.Info("Starting Statefulset watcher")
-	statefulsetLog.WithField("list_option", listOptions.String()).Debug("List option for statefulset filtering")
+	statefulsetLog.Info("start watching statefulset")
+	statefulsetLog.WithField("list_option", listOptions.String()).Debug("list option for statefulset filtering")
 
 	watcher, err := ssm.client.AppsV1().StatefulSets(namespace).Watch(listOptions)
 	if err != nil {
-		statefulsetLog.WithError(err).Error("Could not start statefulset watcher")
+		statefulsetLog.WithError(err).Error("could not start statefulset watcher")
 		return
 	}
 	firstInit := true
@@ -182,13 +188,13 @@ func (ssm *StatefulsetManager) watchStatefulset(ctx context.Context, cancelFn co
 		select {
 		case event, watch := <-watcher.ResultChan():
 			if !watch {
-				statefulsetLog.Warn("Statefulset watcher was stopped. Channel was closed")
+				statefulsetLog.Warn("statefulset watcher was stopped, channel was closed")
 				cancelFn()
 				return
 			}
 			statefulset, isOk := event.Object.(*appsV1.StatefulSet)
 			if !isOk {
-				statefulsetLog.WithField("object", event.Object).Warn("Failed to parse statefulset watcher data")
+				statefulsetLog.WithField("object", event.Object).Warn("failed to parse statefulset watcher data")
 				continue
 			}
 			if firstInit {
@@ -221,10 +227,11 @@ func (ssm *StatefulsetManager) watchStatefulset(ctx context.Context, cancelFn co
 					Ctx:          ctx,
 					LogEntry:     *statefulsetLog,
 				}
+
 			}
 			registryStatefulset.UpdateApplyStatus(statefulset.Status)
 		case <-ctx.Done():
-			statefulsetLog.Debug("Statefulset watcher was stopped. Got ctx done signal")
+			statefulsetLog.Debug("statefulset watcher was stopped, got ctx done signal")
 			watcher.Stop()
 			return
 		}
@@ -234,7 +241,7 @@ func (ssm *StatefulsetManager) watchStatefulset(ctx context.Context, cancelFn co
 // watchEvents will watch for events relate d to the Statefulset Resources
 func (ssm *StatefulsetManager) watchEvents(ctx context.Context, lg log.Entry, registryStatefulset *StatefulsetData, listOptions metaV1.ListOptions, namespace string) {
 
-	lg.Info("Started the event watcher on statefulset events")
+	lg.Info("started the event watcher on statefulset events")
 	watchData := WatchEvents{
 		ListOptions: listOptions,
 		Namespace:   namespace,
@@ -249,9 +256,35 @@ func (ssm *StatefulsetManager) watchEvents(ctx context.Context, lg log.Entry, re
 			case event := <-eventChan:
 				registryStatefulset.UpdateStatefulsetEvents(event)
 			case <-ctx.Done():
-				lg.Info("Stopped the event watcher on statefulset events")
+				lg.Info("stopped the event watcher on statefulset events")
 				return
 			}
 		}
 	}()
+}
+
+// AddNewStatefulset add a new statefulset under application settings
+func (ssm *StatefulsetManager) AddNewStatefulset(data ApplyEvent, applicationRegistry *RegistryRow, desiredState int32) *StatefulsetData {
+
+	log := applicationRegistry.Log()
+	dd := &StatefulsetData{
+		Statefulset: MetaData{
+			Name:         data.ApplyName,
+			Namespace:    data.Namespace,
+			Annotations:  data.Annotations,
+			Labels:       data.Labels,
+			Metrics:      GetMetricsDataFromAnnotations(data.Annotations),
+			Alerts:       GetAlertsDataFromAnnotations(data.Annotations),
+			DesiredState: desiredState,
+		},
+		Pods:                    make(map[string]DeploymenPod, 0),
+		Services:                make(map[string]ServicesData, 0),
+		ProgressDeadlineSeconds: GetProgressDeadlineApply(data.Annotations, ssm.maxDeploymentTime),
+	}
+	applicationRegistry.DBSchema.Resources.Statefulsets[data.ResourceName] = dd
+
+	log.Info("daemonset was associated to the application")
+
+	return dd
+
 }

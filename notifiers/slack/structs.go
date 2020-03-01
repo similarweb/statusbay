@@ -6,15 +6,16 @@ import (
 
 var defaultMessageConfig = map[ReportStage]*Message{
 	started: {
-		Title:   "Latency, Hits, Events and more can be found in Statusier report. <{link}|Click here> to view Statusier report",
 		Pretext: "Kubernetes deployment started {deployed_by}",
+		Text:    "Metrics, events, links and more are available through the <{link}|StatusBay report>",
 	},
 	ended: {
 		Pretext: "Kubernetes deployment finished with status {status}",
-		Text:    "<{link}|Click here> to view Statusier report",
+		Text:    "<{link}|Click here> to view the StatusBay report",
 	},
 	deleted: {
-		Title: "Deployment deleted {deployed_by}. <{link}|Click here> to view statusbay report",
+		Pretext: "Deployment deleted {deployed_by}",
+		Text:    "<{link}|Click here> to view the StatusBay report",
 	},
 }
 

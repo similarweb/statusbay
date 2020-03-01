@@ -21,7 +21,7 @@ module.exports = {
       catch (e) {
         error(`cannot get alerts for tags=${tags}, provider=${provider}, deploymentTime=${deploymentTime}`);
         error(e);
-        resolve([])
+        reject(e);
       }
     })
   }

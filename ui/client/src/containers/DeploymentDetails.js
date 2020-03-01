@@ -27,6 +27,7 @@ import {
 } from '../context/DeploymentDetailsContext';
 import Loader from '../components/Loader/Loader';
 import ReplicaSetEvents from '../DataComponents/ReplicaSetEvents';
+import ServiceSetEvents from '../DataComponents/ServiceSetEvents';
 import NoData from '../components/Table/NoData';
 
 const useStyles = makeStyles((theme) => ({
@@ -120,6 +121,7 @@ const DeploymentDetails = () => {
                 <PodEvents kindIndex={parseInt(tab)} />
                 <DeploymentEvents kindIndex={parseInt(tab)} />
                 <ReplicaSetEvents kindIndex={parseInt(tab)} />
+                <ServiceSetEvents kindIndex={parseInt(tab)} />
                 <Metrics kindIndex={parseInt(tab)} />
                 <Alerts kindIndex={parseInt(tab)} />
               </Box>

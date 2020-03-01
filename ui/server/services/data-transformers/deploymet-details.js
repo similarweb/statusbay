@@ -8,12 +8,12 @@ const createDeploymentData = ([name, rawData]) => {
     name: name,
     type: kinds.Deployment,
     stats: transformers.status(rawData),
-    // replicaSets: [],
     deploymentEvents: transformers.deploymentEvents(rawData),
     podEvents: transformers.podEvents(rawData),
     metrics: transformers.metrics(rawData),
     alerts: transformers.alerts(rawData),
     replicaSet: transformers.replicaSet(rawData),
+    service: transformers.service(rawData),
   }
 }
 const createDaemonSetData = ([name, rawData]) => {
@@ -21,11 +21,11 @@ const createDaemonSetData = ([name, rawData]) => {
     name: name,
     type: kinds.DaemonSet,
     stats: transformers.status(rawData),
-    // replicaSets: [],
     deploymentEvents: transformers.daemonSetEvents(rawData),
     podEvents: transformers.podEvents(rawData),
     metrics: transformers.metrics(rawData),
     alerts: transformers.alerts(rawData),
+    service: transformers.service(rawData),
   }
 }
 
@@ -126,6 +126,25 @@ const transformers = {
   },
   replicaSet: (rawData) => {
     return Object.entries(rawData.Replicaset).map(([name, value]) => {
+      const events = value.Events || [];
+      return {
+        name,
+        logs: events.map(event => {
+          return {
+            title: event.Message,
+            time: event.Time,
+            content: event.MarkDescriptions && event.MarkDescriptions.length > 0 && event.MarkDescriptions[0],
+            error: event.MarkDescriptions ? event.MarkDescriptions.length > 0 : false,
+          }
+        })
+      }
+    })
+  },
+  service: (rawData) => {
+    if (!rawData.Services) {
+      return []
+    }
+    return Object.entries(rawData.Services).map(([name, value]) => {
       const events = value.Events || [];
       return {
         name,

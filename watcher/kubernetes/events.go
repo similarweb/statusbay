@@ -42,6 +42,7 @@ func NewEventsManager(kubernetesClientset kubernetes.Interface) *EventsManager {
 
 // Serve will start listening on pods request
 func (em *EventsManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
+	wg.Add(1)
 
 	go func() {
 		for {

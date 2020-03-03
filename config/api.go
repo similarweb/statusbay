@@ -2,6 +2,7 @@ package config
 
 import (
 	"io/ioutil"
+	"statusbay/cache"
 	"statusbay/state"
 	"time"
 
@@ -22,10 +23,9 @@ type AlertProvider struct {
 
 // DatadogConfig configuration
 type DatadogConfig struct {
-	APIKey               string        `yaml:"api_key"`
-	AppKey               string        `yaml:"app_key"`
-	CacheCleanupInterval time.Duration `yaml:"cache_cleanup_interval"`
-	CacheExpiration      time.Duration `yaml:"cache_expiration"`
+	APIKey          string        `yaml:"api_key"`
+	AppKey          string        `yaml:"app_key"`
+	CacheExpiration time.Duration `yaml:"cache_expiration"`
 }
 
 // PrometheusConfig configuration
@@ -61,10 +61,10 @@ type KubernetesMarksEvents struct {
 type API struct {
 	Log             LogConfig          `yaml:"log"`
 	MySQL           *state.MySQLConfig `yaml:"mysql"`
+	Redis           *cache.RedisConfig `yaml:redis`
 	MetricsProvider *MetricsProvider   `yaml:"metrics"`
 	AlertProvider   *AlertProvider     `yaml:"alerts"`
-
-	Telemetry MetricsConfig `yaml:"telemetry"`
+	Telemetry       MetricsConfig      `yaml:"telemetry"`
 }
 
 // LoadConfigAPI will load all yaml configuration file to struct

@@ -37,6 +37,7 @@ func NewReporter(availableNotifiers []notifierCommon.Notifier) *ReporterManager 
 
 // Serve will start to reporter listener
 func (re *ReporterManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
+	wg.Add(1)
 
 	for _, notifier := range re.availableNotifiers {
 		notifier.Serve(ctx, wg)

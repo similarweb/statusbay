@@ -17,11 +17,11 @@ func MockPrometheus() *Prometheus {
 }
 
 func TestGetMetric(t *testing.T) {
-	var wg *sync.WaitGroup
+	var wg sync.WaitGroup
 	ctx := context.Background()
 
 	prometheus := MockPrometheus()
-	prometheus.Serve(ctx, wg)
+	prometheus.Serve(ctx, &wg)
 
 	from := time.Unix(1557942490, 0)
 	to := time.Unix(1557942490, 0)

@@ -33,10 +33,10 @@ func NewPodManagerMock() (*fake.Clientset, *kuberneteswatcher.PodsManager) {
 	pvcManager := NewPvcManagerMock(client)
 	podManager := kuberneteswatcher.NewPodsManager(client, eventManager, pvcManager)
 
-	var wg *sync.WaitGroup
+	var wg sync.WaitGroup
 	ctx := context.Background()
 
-	podManager.Serve(ctx, wg)
+	podManager.Serve(ctx, &wg)
 	return client, podManager
 
 }

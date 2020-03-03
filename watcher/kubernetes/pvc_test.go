@@ -65,10 +65,10 @@ func NewPvcManagerMock(client *fake.Clientset) *kuberneteswatcher.PvcManager {
 	pvcManager := kuberneteswatcher.NewPvcManager(client, eventManager)
 
 	// Start the pvcManger
-	var wg *sync.WaitGroup
+	var wg sync.WaitGroup
 	ctx := context.Background()
-	pvcManager.Serve(ctx, wg)
-	eventManager.Serve(ctx, wg)
+	pvcManager.Serve(ctx, &wg)
+	eventManager.Serve(ctx, &wg)
 
 	return pvcManager
 }

@@ -33,7 +33,7 @@ const createStatefulsetData = ([name, rawData]) => {
   return {
     name: name,
     type: kinds.Statefulset,
-    stats: transformers.status(rawData),    
+    stats: transformers.status(rawData),
     deploymentEvents: transformers.statefulsetEvents(rawData),
     podEvents: transformers.podEvents(rawData),
     metrics: transformers.metrics(rawData),
@@ -112,14 +112,32 @@ const transformers = {
         name,
         status: pod.Phase.toLowerCase(),
         time: pod.CreationTimestamp,
-        logs: (pod.Events || []).map(event => {
-          return {
-            title: event.Message,
-            time: event.Time,
-            content: event.MarkDescriptions && event.MarkDescriptions.length > 0 && event.MarkDescriptions[0],
-            error: event.MarkDescriptions ? event.MarkDescriptions.length > 0 : false,
-          }
-        })
+        events: [
+          {
+            name: 'Events',
+            logs: (pod.Events || []).map(event => {
+              return {
+                title: event.Message,
+                time: event.Time,
+                content: event.MarkDescriptions && event.MarkDescriptions.length > 0 && event.MarkDescriptions[0],
+                error: event.MarkDescriptions ? event.MarkDescriptions.length > 0 : false,
+              }
+            })
+          },
+          ...Object.entries(pod.Pvcs || {}).map(([pvcName, pvcEvents]) => {
+            return {
+              name: pvcName,
+              logs: (pvcEvents || []).map(event => {
+                return {
+                  title: event.Message,
+                  time: event.Time,
+                  content: event.MarkDescriptions && event.MarkDescriptions.length > 0 && event.MarkDescriptions[0],
+                  error: event.MarkDescriptions ? event.MarkDescriptions.length > 0 : false,
+                }
+              })
+            }
+          }),
+        ]
       }
     })
   },

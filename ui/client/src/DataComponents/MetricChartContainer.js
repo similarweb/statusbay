@@ -40,7 +40,7 @@ Metric
       name: item.metric,
       points: item.points,
     }));
-    content = <LineChart series={series} deploymentTime={deploymentTime * 1000} />;
+    content = <LineChart series={series} deploymentTime={deploymentTime} />;
   }
   return (
     <Grid key={name} item xs={12} xl={6}>

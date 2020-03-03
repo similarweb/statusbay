@@ -34,5 +34,5 @@ In order to enable this provider please proceed with the next steps:
 ![Metrics](../../../ui/client/src/components/IntergationModals/MetricIntegrationModal/metrics.png)
 
 * In the example above here are the comparison for the following
-  * `<Metric-Name>` -> `2xx vs 4xx`
-  * `prometheus-query` -> `sw.haproxy.backend.response.2xx{*}.as_count(), sw.haproxy.backend.response.4xx{*}.as_count()`
+  * `<Metric-Name>` -> `Total Requests`
+  * `prometheus-query` -> `prometheus_http_requests_total`

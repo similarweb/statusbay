@@ -14,19 +14,13 @@ import Loader from '../Loader/Loader';
 const renderRows = (config, data, page) => data.map((row, rowIndex) => {
   const RowComponent = config.row.render(row, rowIndex);
   // eslint-disable-next-line max-len
-  const rowCells = config.cells.map((cellConfig) => <TableCell>{cellConfig.cell(row, ((page) * data.length) + rowIndex)}</TableCell>);
+  const rowCells = config.cells.map((cellConfig) => <TableCell style={cellConfig.cellStyle}>{cellConfig.cell(row, ((page) * data.length) + rowIndex)}</TableCell>);
   return (
     <RowComponent>
       {rowCells}
     </RowComponent>
   );
 });
-
-const renderLoadingState = () => (
-  <TableRow>
-    <Box display="flex" justifyContent="space-around"><Loader inline={true} /></Box>
-  </TableRow>
-);
 
 const TableStateless = (props) => {
   const {
@@ -48,12 +42,13 @@ const TableStateless = (props) => {
         <TableRow>
           {
             config.cells.map(({
-              id, name, sortable, className
+              id, name, sortable, width
             }) => {
+              let content = name;
               if (sortable) {
-                return <TableCell className={className} key={`table-header-cell-${name}`}><TableSortLabel active={sortBy === id} direction={sortDirection} onClick={onSortClick(id)}>{name}</TableSortLabel></TableCell>;
+                content = <TableSortLabel active={sortBy === id} direction={sortDirection} onClick={onSortClick(id)}>{name}</TableSortLabel>;
               }
-              return <TableCell className={className} key={`table-header-cell-${name}`}>{name}</TableCell>;
+              return <TableCell style={{width}} key={`table-header-cell-${name}`}>{content}</TableCell>;
             })
           }
         </TableRow>

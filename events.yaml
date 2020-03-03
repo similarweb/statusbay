@@ -103,38 +103,29 @@ replicaset:
   descriptions:
   - >-
     Replicaset event example.
-    <ul>
-        <li>Foo.</li>
-        <li>Bar.</li>
-    </ul>
-    
+
     
 deployment:
 - pattern: "Deployment event example"
   descriptions:
   - >-
     Deployment event example.
-    <ul>
-        <li>Foo.</li>
-        <li>Bar.</li>
-    </ul>
+
 
 daemonset:
 - pattern: "Daemonset event example"
   descriptions:
   - >-
     Daemonset event example.
-    <ul>
-        <li>Foo.</li>
-        <li>Bar.</li>
-    </ul>
     
 statefulset:
 - pattern: "Statefulset event example"
   descriptions:
   - >-
     Statefulset event example.
-    <ul>
-        <li>Foo.</li>
-        <li>Bar.</li>
-    </ul>
+
+pvc:
+  - pattern: "not found"
+    descriptions:
+    - >-
+      The request storage class is not supported, please validate the storage class exists. <a href="https://kubernetes.io/docs/concepts/storage/persistent-volumes/#persistentvolumeclaims" target="_blank">Read more on PersistentVolumeClaims</a>

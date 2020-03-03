@@ -247,30 +247,6 @@ func (dr *RegistryManager) NewApplication(appName string, namespace string, anno
 		encodedID = fmt.Sprintf("deleted-%s", encodedID)
 	}
 	dr.registryData[encodedID] = &row
-	switch status {
-	case common.ApplyStatusRunning:
-		dr.reporter.DeploymentStarted <- common.DeploymentReport{
-			To:          reportTo,
-			DeployBy:    deployBy,
-			Name:        appName,
-			URI:         row.GetURI(),
-			Status:      status,
-			LogEntry:    lg,
-			ClusterName: dr.clusterName,
-		}
-	case common.ApplyStatusDeleted:
-		dr.reporter.DeploymentDeleted <- common.DeploymentReport{
-			To:          reportTo,
-			DeployBy:    deployBy,
-			Name:        appName,
-			URI:         row.GetURI(),
-			Status:      status,
-			LogEntry:    lg,
-			ClusterName: dr.clusterName,
-		}
-	default:
-		lg.WithField("status", status).Info("reporter status not supported")
-	}
 
 	lg.Info("new application created in registry")
 
@@ -808,6 +784,33 @@ func (dr *RegistryManager) save() {
 					return
 				}
 				data.applyID = applyID
+
+				switch data.status {
+				case common.ApplyStatusRunning:
+					dr.reporter.DeploymentStarted <- common.DeploymentReport{
+						To:          data.DBSchema.ReportTo,
+						DeployBy:    data.DBSchema.DeployBy,
+						Name:        data.DBSchema.Application,
+						URI:         data.GetURI(),
+						Status:      data.status,
+						LogEntry:    data.Log(),
+						ClusterName: dr.clusterName,
+					}
+				case common.ApplyStatusDeleted:
+					dr.reporter.DeploymentDeleted <- common.DeploymentReport{
+						To:          data.DBSchema.ReportTo,
+						DeployBy:    data.DBSchema.DeployBy,
+						Name:        data.DBSchema.Application,
+						URI:         data.GetURI(),
+						Status:      data.status,
+						LogEntry:    data.Log(),
+						ClusterName: dr.clusterName,
+					}
+				default:
+					lg := data.Log()
+					lg.WithField("status", data.status).Info("reporter status not supported")
+				}
+
 			} else {
 				dr.storage.UpdateApply(data.applyID, data, data.status)
 			}

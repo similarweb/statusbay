@@ -28,7 +28,7 @@ const SpotChart = ({ series, deploymentTime, currentTime }) => {
         color: isDarkMode ? '#ffffff' : '#999999',
       },
       formatter() {
-        return `Deployment time: ${moment.unix(deploymentTime).utc().format('HH:mm:ss')}`;
+        return `Deployment time: ${moment.unix(deploymentTime).format('HH:mm:ss')}`;
       },
     },
   }, options);

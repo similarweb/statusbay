@@ -30,14 +30,14 @@ export default (series, deploymentTime) => {
     xAxis: {
       labels: {
         formatter() {
-          return moment.unix(this.value).utc().format('HH:mm:ss');
+          return moment.unix(this.value).format('HH:mm:ss');
         },
         style: {
           color: isDarkMode ? '#ffffff' : '#666666',
         },
       },
-      min: moment.unix(deploymentTime).utc().subtract(30, 'm').valueOf() / 1000,
-      max: moment.unix(deploymentTime).utc().add(30, 'm').valueOf() / 1000,
+      min: moment.unix(deploymentTime).subtract(30, 'm').valueOf() / 1000,
+      max: moment.unix(deploymentTime).add(30, 'm').valueOf() / 1000,
       startOnTick: true,
       endOnTick: true,
     },
@@ -53,10 +53,10 @@ export default (series, deploymentTime) => {
     tooltip: {
       useHTML: true,
       formatter() {
-        const downTime = numeral(moment.unix(this.x2).utc().diff(moment.unix(this.x).utc(), 'minutes')).format('0,0');
+        const downTime = numeral(moment.unix(this.x2).diff(moment.unix(this.x), 'minutes')).format('0,0');
         return `<b>${series[this.y].name}</b><br /><b>Downtime:</b> ${downTime} minutes
-<br /><b>From:</b> ${moment.unix(this.x).utc().format('DD/MM/YYYY HH:mm:ss')}
-<br /><b>To:</b> ${moment.unix(this.x2).utc().format('DD/MM/YYYY HH:mm:ss')}`
+<br /><b>From:</b> ${moment.unix(this.x).format('DD/MM/YYYY HH:mm:ss')}
+<br /><b>To:</b> ${moment.unix(this.x2).format('DD/MM/YYYY HH:mm:ss')}`
       },
     },
     series: [{

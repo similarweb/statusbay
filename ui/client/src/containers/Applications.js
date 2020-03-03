@@ -11,9 +11,9 @@ const Applications = () => {
       pathname: `/application/${row.id}`,
     });
   };
-  const filters = useMemo(() => {return {
-    distinct: false
-  }}, []);
+  const filters = useMemo(() => ({
+    distinct: false,
+  }), []);
   return (
     <Table onRowClick={onRowClick} filters={filters} title="Applications" showHistoryBtn={true} />
   );

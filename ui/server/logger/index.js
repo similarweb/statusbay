@@ -1,4 +1,3 @@
-const { trace, error, fatal, info, warn } = require('noderus');
 const winston = require('winston');
 const GelfTransport = require('winston-gelf');
 const config = require('../config')

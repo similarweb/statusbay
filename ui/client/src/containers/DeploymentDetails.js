@@ -113,7 +113,7 @@ const DeploymentDetails = () => {
                   <Chip label={(
                     <Typography>
                       Deployment Time:
-                      {moment.unix(data.time).utc().format('DD/MM/YYYY HH:mm:ss')}
+                      {moment.unix(data.time).format('DD/MM/YYYY HH:mm:ss')}
                     </Typography>
                   )}
                   />

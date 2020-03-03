@@ -59,18 +59,22 @@ export default (series, plotlines) => {
       }
     },
     xAxis: {
+      min: parseInt(moment.unix(plotlines[0]).subtract(30, 'm').valueOf()),
+      max: parseInt(moment.unix(plotlines[0]).add(30, 'm').valueOf()),
       labels: {
         formatter() {
-          return moment.utc(this.value).format('HH:mm:ss');
+          return moment(this.value).format('HH:mm:ss');
         },
         style: {
           color: isDarkMode ? '#ffffff' : '#666666',
-        }
+        },
+        startOnTick: true,
+        endOnTick: true
       },
       plotLines: plotlines.map((line) => ({
         color: theme.palette.error.main,
         dashStyle: 'dash',
-        value: line,
+        value: line * 1000,
         width: 1,
         label: {
           align: 'center',
@@ -81,7 +85,7 @@ export default (series, plotlines) => {
             color: isDarkMode ? '#ffffff' : '#999999',
           },
           formatter() {
-            return `Deployment time: ${moment.utc(line).format('HH:mm:ss')}`;
+            return `Deployment time: ${moment(line).format('HH:mm:ss')}`;
           },
         },
       })),
@@ -103,7 +107,7 @@ export default (series, plotlines) => {
       crosshairs: true,
       useHTML: true,
       formatter() {
-        return `<span style="font-size: 10px">${moment.utc(this.x).format('DD/MM/YYYY HH:mm:ss')}</span>${createTooltipContent(this.points)}`;
+        return `<span style="font-size: 10px">${moment(this.x).format('DD/MM/YYYY HH:mm:ss')}</span>${createTooltipContent(this.points)}`;
       },
     },
     plotOptions: {

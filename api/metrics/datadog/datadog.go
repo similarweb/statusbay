@@ -4,12 +4,12 @@ import (
 	"context"
 	"crypto/md5"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"sync"
 	"time"
 
 	"github.com/zorkian/go-datadog-api"
-	"gopkg.in/yaml.v2"
 
 	"statusbay/api/httpresponse"
 	"statusbay/cache"
@@ -73,17 +73,17 @@ func (dd *Datadog) GetMetric(query string, from, to time.Time) ([]httpresponse.M
 	cacheMetrics, err := dd.cache.Client.Get(hashKey)
 	if err == nil && cacheMetrics != "" {
 		response := []httpresponse.MetricsQuery{}
-		err = yaml.Unmarshal([]byte(cacheMetrics), &response)
-		dd.logger.Debug("found metric in cache")
-		if err != nil {
+		err = json.Unmarshal([]byte(cacheMetrics), &response)
+
+		if err == nil {
+			dd.logger.Info("found metric in cache")
 			return response, nil
-		} else {
-			dd.logger.WithError(err).WithFields(log.Fields{
-				"query": query,
-				"from":  from,
-				"to":    to,
-			}).Error("cache Unmarshal failed")
 		}
+		dd.logger.WithError(err).WithFields(log.Fields{
+			"query": query,
+			"from":  from,
+			"to":    to,
+		}).Error("cache Unmarshal failed")
 	}
 
 	metrics, err := dd.client.QueryMetrics(from.Unix(), to.Unix(), query)
@@ -110,7 +110,13 @@ func (dd *Datadog) GetMetric(query string, from, to time.Time) ([]httpresponse.M
 		response = append(response, metricData)
 	}
 
-	err = dd.cache.Client.Set(hashKey, fmt.Sprintf("%v", response), dd.cacheExpiration)
+	jsonResponse, err := json.Marshal(response)
+	if err != nil {
+		dd.logger.WithError(err).Error("could not serialize response")
+		return response, nil
+	}
+
+	err = dd.cache.Client.Set(hashKey, string(jsonResponse), dd.cacheExpiration)
 	if err != nil {
 		dd.logger.WithError(err).Error("could not save metric response")
 	}

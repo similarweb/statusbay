@@ -40,7 +40,7 @@ const init = (io) => {
       emitOnce(socket, { metric, provider, deploymentTime });
       intervalId = setInterval(async () => {
         emitOnce(socket, { metric, provider, deploymentTime });
-      }, 5000)
+      }, 10000)
     });
     socket.on('disconnect', () => {
       clearInterval(intervalId);

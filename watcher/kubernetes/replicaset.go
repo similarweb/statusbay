@@ -45,6 +45,7 @@ func NewReplicasetManager(kubernetesClientset kubernetes.Interface, eventManager
 
 // Serve will start listening replicaset request
 func (rm *ReplicaSetManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
+	wg.Add(1)
 
 	go func() {
 		for {

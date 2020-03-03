@@ -24,6 +24,7 @@ func MockServeStruct() *ServeStruct {
 }
 
 func (m *ServeStruct) Serve(ctx context.Context, wg *sync.WaitGroup) {
+	wg.Add(1)
 
 	go func() {
 		m.init = true

@@ -5,10 +5,11 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
-	"github.com/patrickmn/go-cache"
-	"github.com/zorkian/go-datadog-api"
 	"sync"
 	"time"
+
+	"github.com/patrickmn/go-cache"
+	"github.com/zorkian/go-datadog-api"
 
 	"statusbay/api/httpresponse"
 
@@ -46,6 +47,7 @@ func NewDatadogManager(cacheCleanupInterval, cacheExpiration time.Duration, apiK
 
 // Serve will start listening metric request
 func (dd *Datadog) Serve(ctx context.Context, wg *sync.WaitGroup) {
+	wg.Add(1)
 	go func() {
 		for {
 			select {
@@ -56,7 +58,6 @@ func (dd *Datadog) Serve(ctx context.Context, wg *sync.WaitGroup) {
 			}
 		}
 	}()
-
 }
 
 // GetMetric comunicate with Datadog

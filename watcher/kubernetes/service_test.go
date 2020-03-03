@@ -58,9 +58,9 @@ func TestServiceWatch(t *testing.T) {
 
 	serviceManager := NewServiceManagerMockMock(client)
 
-	var wg *sync.WaitGroup
+	var wg sync.WaitGroup
 
-	serviceManager.Serve(ctx, wg)
+	serviceManager.Serve(ctx, &wg)
 
 	serviceManager.Watch <- kuberneteswatcher.WatchData{
 		ListOptions:  metav1.ListOptions{},

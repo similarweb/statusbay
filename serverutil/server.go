@@ -26,7 +26,7 @@ func RunAll(ctx context.Context, servers []Server) *Runner {
 			continue
 		}
 		server.Serve(ctx, &r.wg)
-		r.wg.Add(1)
+
 	}
 
 	return r

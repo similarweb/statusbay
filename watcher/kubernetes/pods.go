@@ -53,6 +53,7 @@ func (pm *PodsManager) loadPodFirstInit(key string) bool {
 
 // Serve will start listening on pods request
 func (pm *PodsManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
+	wg.Add(1)
 
 	go func() {
 		for {

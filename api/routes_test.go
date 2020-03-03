@@ -30,14 +30,14 @@ func MockServer(t *testing.T, storageMockFile string, metrics map[string]metrics
 }
 
 func TestApplicationMetricsEndpoint(t *testing.T) {
-	var wg *sync.WaitGroup
+	var wg sync.WaitGroup
 	ctx := context.Background()
 
 	metrics := make(map[string]metrics.MetricManagerDescriber)
 	metrics["dummy"] = testutil.NewMockMetrics()
 	ms := MockServer(t, "", metrics, nil)
 	ms.api.BindEndpoints()
-	ms.api.Serve(ctx, wg)
+	ms.api.Serve(ctx, &wg)
 
 	rr := httptest.NewRecorder()
 	req, err := http.NewRequest("GET", "/api/v1/application/metric?provider=dummy&query=foo.2xx&from=1&to=1", nil)
@@ -69,14 +69,14 @@ func TestApplicationMetricsEndpoint(t *testing.T) {
 }
 
 func TestApplicationMetricsEndpointWithInvalidQueryParameters(t *testing.T) {
-	var wg *sync.WaitGroup
+	var wg sync.WaitGroup
 	ctx := context.Background()
 
 	metrics := make(map[string]metrics.MetricManagerDescriber)
 	metrics["dummy"] = testutil.NewMockMetrics()
 	ms := MockServer(t, "", metrics, nil)
 	ms.api.BindEndpoints()
-	ms.api.Serve(ctx, wg)
+	ms.api.Serve(ctx, &wg)
 
 	testCases := []struct {
 		endpoint                string
@@ -123,13 +123,13 @@ func TestApplicationMetricsEndpointWithInvalidQueryParameters(t *testing.T) {
 }
 
 func TestApplicationAlertsEndpoint(t *testing.T) {
-	var wg *sync.WaitGroup
+	var wg sync.WaitGroup
 	ctx := context.Background()
 
 	alerts := testutil.NewMultipleMockAlerts()
 	ms := MockServer(t, "", nil, alerts)
 	ms.api.BindEndpoints()
-	ms.api.Serve(ctx, wg)
+	ms.api.Serve(ctx, &wg)
 
 	rr := httptest.NewRecorder()
 	req, err := http.NewRequest("GET", "/api/v1/application/alerts?tags=foo,foo2&from=1&to=1&provider=foo", nil)
@@ -157,13 +157,13 @@ func TestApplicationAlertsEndpoint(t *testing.T) {
 }
 
 func TestApplicationAlertsEndpointWithInvalidQueryParameters(t *testing.T) {
-	var wg *sync.WaitGroup
+	var wg sync.WaitGroup
 	ctx := context.Background()
 
 	alerts := testutil.NewMultipleMockAlerts()
 	ms := MockServer(t, "", nil, alerts)
 	ms.api.BindEndpoints()
-	ms.api.Serve(ctx, wg)
+	ms.api.Serve(ctx, &wg)
 
 	testCases := []struct {
 		endpoint                string

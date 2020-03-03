@@ -21,6 +21,7 @@ const (
 // Pingdom struct
 type Pingdom struct {
 	client ClientDescriber
+	mutex  *sync.RWMutex
 }
 
 // NewPingdomManager create new Pingdom instance
@@ -28,6 +29,7 @@ func NewPingdomManager(client ClientDescriber) *Pingdom {
 	log.Info("initializing Pingdom manager")
 	return &Pingdom{
 		client: client,
+		mutex:  &sync.RWMutex{},
 	}
 }
 
@@ -87,7 +89,9 @@ func (pi *Pingdom) GetAlertByTags(tags string, from, to time.Time) ([]httprespon
 				})
 			}
 
+			pi.mutex.Lock()
 			checkResponses = append(checkResponses, checkData)
+			pi.mutex.Unlock()
 			<-GoroutinesRequests
 		}(check)
 

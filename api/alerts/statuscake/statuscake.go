@@ -21,6 +21,7 @@ const (
 // Statuscake struct
 type Statuscake struct {
 	client ClientDescriber
+	mutex  *sync.RWMutex
 }
 
 // NewStatuscakeManager create new Statuscake instance
@@ -29,6 +30,7 @@ func NewStatuscakeManager(client ClientDescriber) *Statuscake {
 
 	return &Statuscake{
 		client: client,
+		mutex:  &sync.RWMutex{},
 	}
 }
 
@@ -82,7 +84,9 @@ func (sc *Statuscake) GetAlertByTags(tags string, from, to time.Time) ([]httpres
 				}
 
 			}
+			sc.mutex.Lock()
 			checkResponses = append(checkResponses, check)
+			sc.mutex.Unlock()
 			<-GoroutinesRequests
 		}(test)
 

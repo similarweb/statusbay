@@ -3,6 +3,7 @@ package pingdom
 import (
 	"fmt"
 	"net/url"
+	"sync"
 	"testing"
 	"time"
 )
@@ -13,6 +14,7 @@ type MockPingdomClient struct {
 
 	getChecksFilters      url.Values
 	getCheckSummaryOutage map[int]url.Values
+	mutex                 *sync.RWMutex
 }
 
 func (mp *MockPingdomClient) GetChecks(filterOptions url.Values) (*ChecksResponse, error) {
@@ -22,7 +24,8 @@ func (mp *MockPingdomClient) GetChecks(filterOptions url.Values) (*ChecksRespons
 }
 
 func (mp *MockPingdomClient) GetCheckSummaryOutage(ID int, filterOptions url.Values) (*SummaryOutageResponse, error) {
-
+	mp.mutex.Lock()
+	defer mp.mutex.Unlock()
 	summaryOutageResponse := mp.returnSummaryOutageResponse[ID]
 	mp.getCheckSummaryOutage[ID] = filterOptions
 	return &summaryOutageResponse, nil
@@ -32,6 +35,7 @@ func MockPingdomManager(checkResponse ChecksResponse, summaryOutageResponse map[
 	mockClient := &MockPingdomClient{
 		returnChecksResponse:        checkResponse,
 		returnSummaryOutageResponse: summaryOutageResponse,
+		mutex:                       &sync.RWMutex{},
 	}
 
 	mockClient.getCheckSummaryOutage = map[int]url.Values{}

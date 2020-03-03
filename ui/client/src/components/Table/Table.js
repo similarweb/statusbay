@@ -1,14 +1,13 @@
 import React, {
   useCallback,
   useContext,
-  useEffect, useMemo, useState,
+  useMemo
 } from 'react';
 import TableContainer from '@material-ui/core/TableContainer';
 import Paper from '@material-ui/core/Paper';
 import {
-  Link, useHistory, useLocation,
+  Link
 } from 'react-router-dom';
-import Toolbar from '@material-ui/core/Toolbar';
 import Box from '@material-ui/core/Box';
 import TableRow from '@material-ui/core/TableRow';
 import TablePagination from '@material-ui/core/TablePagination';
@@ -17,9 +16,7 @@ import * as PropTypes from 'prop-types';
 import Button from '@material-ui/core/Button';
 import makeStyles from '@material-ui/core/styles/makeStyles';
 import numeral from 'numeral';
-import ArrowBackIcon from '@material-ui/icons/ArrowBack';
 import Typography from '@material-ui/core/Typography';
-import Tooltip from '@material-ui/core/Tooltip';
 import MultiSelect from './Filters/MultiSelect';
 import TableStateless from './TableStateless';
 import CellStatus from './Cells/CellStatus';
@@ -35,6 +32,7 @@ import NoData from './NoData';
 import { useApplicationsData } from '../../Hooks/ApplicationsHooks';
 import ToggleFilter from './Filters/ToggleFilter';
 import CellDetails from './Cells/CellDetails';
+import TableCell from '@material-ui/core/TableCell';
 
 const parseSortBy = (sortby = '|') => sortby.split('|');
 const paramToArray = (param = '') => (param ? param.split(',') : []);
@@ -62,12 +60,12 @@ const useStyles = makeStyles((theme) => ({
     opacity: 0,
     display: 'flex',
     flexDirection: 'row-reverse',
-  },
+  }
 }));
 
 const Table = ({
-  hideNameFilter, hideDistinctFilter, onRowClick, filters, title, showHistoryBtn,
-}) => {
+                 hideNameFilter, hideDistinctFilter, onRowClick, filters, title, showHistoryBtn,
+               }) => {
   const { appSettings, dispatch } = useContext(AppSettingsContext);
   const [tableFilters, setTableFilters, resetTableFilters] = useTableFilters({
     cluster: {
@@ -137,13 +135,16 @@ const Table = ({
   const onSort = useCallback((id, direction) => {
     setTableFilters('sortBy', `${id}|${direction}`);
   }, []);
+  const onLinkClick = e => {
+    e.stopPropagation();
+  }
   const classes = useStyles();
   const tableConfig = useMemo(() => ({
     row: {
       render: (row, index) => ({ children }) => (
         <TableRow
           classes={{ root: classes.row }}
-          onClickCapture={onRowClick(row)}
+          onClick={onRowClick(row)}
           hover
           key={`${row.name}-${index}`}
         >
@@ -153,14 +154,21 @@ const Table = ({
     },
     cells: [
       {
+        id: 'status',
+        name: '',
+        cell: (row) => (
+          <CellStatus status={row.status}/>
+        ),
+        sortable: false,
+        width: 40,
+        cellStyle: {
+          paddingRight: 0
+        }
+      },
+      {
         id: 'name',
         name: t('table.filters.name'),
-        cell: (row) => (
-          <Box display="flex" alignItems="center">
-            <div className={classes.iconName}><CellStatus status={row.status} /></div>
-            <span>{row.name}</span>
-          </Box>
-        ),
+        cell: (row) => row.name,
         sortable: true,
       },
       {
@@ -184,7 +192,7 @@ const Table = ({
       {
         id: 'time',
         name: t('table.columns.time'),
-        cell: (row) => <CellTime time={row.time} />,
+        cell: (row) => <CellTime time={row.time}/>,
         sortable: true,
       },
       {
@@ -194,18 +202,18 @@ const Table = ({
           <>
             <div className={classes.actions}>
               {row.status !== 'deleted' && (
-              <Link to={`/application/${row.id}`}>
-                <Box display="flex" alignItems="center" ml={1}>
-                  <Button variant="contained" color="primary">Details</Button>
-                </Box>
-              </Link>
+                <Link to={`/application/${row.id}`} onClick={onLinkClick}>
+                  <Box display="flex" alignItems="center" ml={1}>
+                    <Button variant="contained" color="primary">Details</Button>
+                  </Box>
+                </Link>
               )}
               {showHistoryBtn && (
-              <Link to={`/applications/${row.name}`}>
-                <Box display="flex" alignItems="center" ml={1}>
-                  <Button variant="contained" color="primary">History</Button>
-                </Box>
-              </Link>
+                <Link to={`/applications/${row.name}`} onClick={onLinkClick}>
+                  <Box display="flex" alignItems="center" ml={1}>
+                    <Button variant="contained" color="primary">History</Button>
+                  </Box>
+                </Link>
               )}
             </div>
           </>
@@ -222,11 +230,11 @@ const Table = ({
         {' '}
         {
           tableData && tableData.totalCount > 0 && (
-          <Typography className={classes.subTitle} variant="body1">
-            (
-            {numeral(tableData.totalCount).format('0,0')}
-            )
-          </Typography>
+            <Typography className={classes.subTitle} variant="body1">
+              (
+              {numeral(tableData.totalCount).format('0,0')}
+              )
+            </Typography>
           )
         }
       </Typography>
@@ -258,11 +266,11 @@ const Table = ({
                 delay={250}
               />
               {!hideDistinctFilter && (
-              <ToggleFilter
-                label="Distinct"
-                checked={tableFilters.distinct}
-                onChange={handleDistinctChange}
-              />
+                <ToggleFilter
+                  label="Distinct"
+                  checked={tableFilters.distinct}
+                  onChange={handleDistinctChange}
+                />
               )}
 
             </Box>
@@ -320,7 +328,7 @@ const Table = ({
             )
           }
           {
-            showNoData && <Box m={2}><NoData /></Box>
+            showNoData && <Box m={2}><NoData/></Box>
           }
         </TableContainer>
       </Paper>

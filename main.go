@@ -10,6 +10,7 @@ import (
 	"statusbay/api/alerts"
 	apiKubernetes "statusbay/api/kubernetes"
 	"statusbay/api/metrics"
+	"statusbay/cache"
 	"statusbay/config"
 	"statusbay/serverutil"
 	"statusbay/state"
@@ -176,6 +177,8 @@ func startAPIServer(ctx context.Context, configPath string, eventsPath string) *
 		os.Exit(1)
 	}
 
+	cacheManager := cache.NewRedisClient(apiConfig.Redis)
+
 	//Setup logging
 	visibility.SetupLogging(apiConfig.Log.Level, apiConfig.Log.GelfAddress, "api")
 
@@ -185,7 +188,7 @@ func startAPIServer(ctx context.Context, configPath string, eventsPath string) *
 	// TODO:: should be more generic solution, we can start with this solution when we use only one orchestration
 	kubernetesStorage := apiKubernetes.NewMysql(mysqlManager)
 
-	metricsProviders := metrics.Load(apiConfig.MetricsProvider)
+	metricsProviders := metrics.Load(apiConfig.MetricsProvider, cacheManager)
 
 	alertsProviders := alerts.Load(apiConfig.AlertProvider)
 

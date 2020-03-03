@@ -1,52 +1,111 @@
 pod:
+# Pod probing
 - pattern: "Readiness probe failed"
   descriptions:
     - >-
-      The pod not pass the hatcheck:
+      Pod failed to pass readiness probe:
       <ul>
-        <li>Indicates whether the Container is ready to service requests. If the readiness probe fails, the endpoints controller removes the Pod’s IP address from the endpoints of all Services that match the Pod. </li>
-        <li><a href="https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-readiness-gate" target="_blank">Read more on Readiness details</a></li>
+        <li>Examine the Pod's readiness check to see what's the "ready" criteria, try to run the check yourself.</li>
+        <li>Make sure the readiness check isn't timing out.</li>
+        <li>Once readiness probe failed after it was marked healthy, Kubernetes won't restart the Pod, you'll need to redeploy your application for the readiness.</li>
+        <li><a href="https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-readiness-probes" target="_blank">Read more on Pod readiness</a>.</li>
       </ul>
+- pattern: "Liveness probe failed"
+  descriptions:
+    - >-
+      Pod failed to pass liveness probe:
+      <ul>
+        <li>Examine the Pod's liveness check to see what's the "healthy" criteria, try to run the check yourself.</li>
+        <li>Note: Kubernetes will restart the Pod until it's healthy.</li>
+        <li><a href="https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-a-liveness-command" target="_blank">Read more on Pod liveness</a>.</li>
+      </ul>
+# Image
 - pattern: "Error: ErrImagePull"
   descriptions:
     - >-
       Error occurred during image pulling.
       <ul>
-        <li>Check the repository, image name and tag are valid</li>
-        <li>Verify that image exists in the registry</li>
-        <li>Verify the host is authorized to download that image</li>
-        <li>Check connectivity from the host to the registry</li>
+        <li>Check the repository, image name and tag are valid.</li>
+        <li>Verify that image exists in the registry.</li>
+        <li>Verify the host is authorized to download that image in case the registry is private.</li>
+        <li>Check connectivity from the host to the registry.</li>
+      </ul>
+- pattern: "Error: ImagePullBackOff"
+  descriptions:
+    - >-
+      Error occurred during image pulling.
+      <ul>
+        <li>Check the repository, image name and tag are valid.</li>
+        <li>Verify that image exists in the registry.</li>
+        <li>Verify the host is authorized to download that image in case the registry is private.</li>
+        <li>Check connectivity from the host to the registry.</li>
+      </ul>
+- pattern: "Failed to pull image"
+  descriptions:
+    - >-
+      Error occurred during image pulling.
+      <ul>
+        <li>Check the repository, image name and tag are valid.</li>
+        <li>Verify that image exists in the registry.</li>
+        <li>Verify the host is authorized to download that image in case the registry is private.</li>
+        <li>Check connectivity from the host to the registry.</li>
+      </ul>
+- pattern: "ErrImagePull - rpc error: code = Unknown desc = Error response from daemon: manifest for"
+  descriptions:
+    - >-
+      Error occurred during image pulling.
+      <ul>
+        <li>Check the repository, image name and tag are valid.</li>
+        <li>Verify that image exists in the registry.</li>
+        <li>Verify the host is authorized to download that image in case the registry is private.</li>
+        <li>Check connectivity from the host to the registry.</li>
+      </ul>
+# Others
+- pattern: "CrashLoopBackOff"
+  descriptions:
+  - >-
+      Pod could not start and entered crash loop.
+      <ul>
+        <li>Try to run the container locally to see if it works.</li>
+        <li>Check application logs.</li>
+        <li>Run `kubectl describe` on the failed Pod to see if you can find a lead.</li>
       </ul>
 - pattern: "OOMKilled"
   descriptions:
     - >-
-      Whether this container has been killed because it ran out of memory.:
+      Pod killed due to Out Of Memory exception.
       <ul>
-        <li><TODO.../li>
+        <li>Check if the Pod's memory consumption has changed recently.</li>
+        <li>Check if there's any application memory leak.</li>
+        <li>Increase the amount of memory allocated to the Pod.</li>
       </ul>
-- pattern: "ExitCode"
+- pattern: "Error: cannot find volume"
   descriptions:
     - >-
-      The last exit code of this container.:
+      Could not find the Pod's volume.
       <ul>
-        <li>TODO..</li>
+        <li>Make sure the Kubernetes node has enough free disk space.</li>
+        <li>Run `kubectl describe` on the volume to see if you can find a lead.</li>
       </ul>
-- pattern: "CrashLoopBackOff"
+
+service:
+- pattern: "could not find any suitable subnets for creating the ELB"
   descriptions:
   - >-
-    TBD
+    Could not find any suitable subnets.
     <ul>
-        <li>TODO....</li>
+        <li>Make sure the subnets are configured properly (i.e tagging).</li>
+        <li>Make sure you have enough IPs available in the subnets your load balancer uses.</li>
     </ul>
-
 
 replicaset:
 - pattern: "Replicaset event example"
   descriptions:
   - >-
-    TBD
+    Replicaset event example.
     <ul>
-        <li>TODO....</li>
+        <li>Foo.</li>
+        <li>Bar.</li>
     </ul>
     
     
@@ -54,43 +113,28 @@ deployment:
 - pattern: "Deployment event example"
   descriptions:
   - >-
-    TBD
+    Deployment event example.
     <ul>
-        <li>TODO....</li>
+        <li>Foo.</li>
+        <li>Bar.</li>
     </ul>
 
-demonset:
-- pattern: "Demonset event example"
+daemonset:
+- pattern: "Daemonset event example"
   descriptions:
   - >-
-    TBD
+    Daemonset event example.
     <ul>
-        <li>TODO....</li>
+        <li>Foo.</li>
+        <li>Bar.</li>
     </ul>
     
 statefulset:
 - pattern: "Statefulset event example"
   descriptions:
   - >-
-    TBD
+    Statefulset event example.
     <ul>
-        <li>TODO....</li>
-    </ul>
-
-service:
-- pattern: "Error creating load balancer"
-  descriptions:
-  - >-
-    TBD
-    <ul>
-        <li>TODO....</li>
-    </ul>
-    
-pvc:
-- pattern: "not found"
-  descriptions:
-  - >-
-    TBD
-    <ul>
-        <li>TODO....</li>
+        <li>Foo.</li>
+        <li>Bar.</li>
     </ul>

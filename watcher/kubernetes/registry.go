@@ -103,6 +103,7 @@ func NewRegistryManager(saveInterval time.Duration, checkFinishDelay time.Durati
 
 // Serve will start listening schema registry request
 func (dr *RegistryManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
+	wg.Add(1)
 
 	go func() {
 		for {

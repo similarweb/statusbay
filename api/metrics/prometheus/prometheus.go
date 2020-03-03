@@ -48,7 +48,7 @@ func NewPrometheusManager(address string, v1api ClientDescriber) *Prometheus {
 
 // Serve will start listening metric request
 func (pm *Prometheus) Serve(ctx context.Context, wg *sync.WaitGroup) {
-
+	wg.Add(1)
 	go func() {
 		for {
 			select {

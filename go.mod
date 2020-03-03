@@ -4,6 +4,7 @@ require (
 	github.com/armon/go-metrics v0.3.2
 	github.com/cenkalti/backoff v2.1.1+incompatible // indirect
 	github.com/cenkalti/backoff/v4 v4.0.0
+	github.com/go-redis/redis/v7 v7.2.0
 	github.com/googleapis/gnostic v0.3.1 // indirect
 	github.com/gorilla/handlers v1.4.0
 	github.com/gorilla/mux v1.7.4
@@ -24,6 +25,7 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/zorkian/go-datadog-api v2.20.0+incompatible
 	golang.org/x/crypto v0.0.0-20190426145343-a29dc8fdc734 // indirect
+	google.golang.org/genproto v0.0.0-20190404172233-64821d5d2107
 	gopkg.in/gemnasium/logrus-graylog-hook.v2 v2.0.7
 	gopkg.in/yaml.v2 v2.2.5
 	k8s.io/api v0.0.0-20190814101207-0772a1bdf941

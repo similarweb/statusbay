@@ -54,6 +54,7 @@ func NewStatefulsetManager(k8sClient kubernetes.Interface, eventManager *EventsM
 
 //Serve Will serve the watch channels of statefulset
 func (ssm *StatefulsetManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
+	wg.Add(1)
 
 	go func() {
 		for {

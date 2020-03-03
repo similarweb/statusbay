@@ -33,6 +33,7 @@ func NewServiceManager(kubernetesClientset kubernetes.Interface, eventManager *E
 
 // Serve will start listening on pods request
 func (sm *ServiceManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
+	wg.Add(1)
 
 	go func() {
 		for {

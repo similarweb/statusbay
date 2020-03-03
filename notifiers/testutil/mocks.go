@@ -56,4 +56,6 @@ func (*NotifierMock) ReportEnded(watcherCommon.DeploymentReport) {
 }
 
 func (*NotifierMock) Serve(ctx context.Context, wg *sync.WaitGroup) {
+	wg.Add(1)
+
 }

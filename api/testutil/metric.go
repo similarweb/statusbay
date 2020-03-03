@@ -24,5 +24,5 @@ func (m *MockMetrics) GetMetric(query string, from, to time.Time) ([]httprespons
 }
 
 func (dd *MockMetrics) Serve(ctx context.Context, wg *sync.WaitGroup) {
-
+	wg.Add(1)
 }

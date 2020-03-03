@@ -56,6 +56,7 @@ func NewDeploymentManager(kubernetesClientset kubernetes.Interface, eventManager
 
 // Serve will start listening on deployment request
 func (dm *DeploymentManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
+	wg.Add(1)
 
 	go func() {
 		for {

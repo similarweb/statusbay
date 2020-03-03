@@ -4,14 +4,15 @@ import (
 	"context"
 	"crypto/md5"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"sync"
 	"time"
 
-	"github.com/patrickmn/go-cache"
 	"github.com/zorkian/go-datadog-api"
 
 	"statusbay/api/httpresponse"
+	"statusbay/cache"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -23,24 +24,26 @@ type ClientDescriber interface {
 
 // Datadog is responsible for communicate with datadog and cache storage save/cleanup
 type Datadog struct {
-	client         ClientDescriber
-	cacheResponses *cache.Cache
-	mu             *sync.RWMutex
-	logger         *log.Entry
+	client          ClientDescriber
+	cache           *cache.CacheManager
+	cacheExpiration time.Duration
+	mu              *sync.RWMutex
+	logger          *log.Entry
 }
 
 // NewDatadogManager creates a new NewDatadog
-func NewDatadogManager(cacheCleanupInterval, cacheExpiration time.Duration, apiKey, appKey string, client ClientDescriber) *Datadog {
+func NewDatadogManager(cache *cache.CacheManager, cacheExpiration time.Duration, apiKey, appKey string, client ClientDescriber) *Datadog {
 
 	if client == nil {
 		log.Info("initializing Datadog client")
 		client = datadog.NewClient(apiKey, appKey)
 	}
 	return &Datadog{
-		client:         client,
-		cacheResponses: cache.New(cacheExpiration, cacheCleanupInterval),
-		mu:             &sync.RWMutex{},
-		logger:         log.WithField("metric_engine", "datadog"),
+		client:          client,
+		cache:           cache,
+		cacheExpiration: cacheExpiration,
+		mu:              &sync.RWMutex{},
+		logger:          log.WithField("metric_engine", "datadog"),
 	}
 
 }
@@ -67,16 +70,21 @@ func (dd *Datadog) GetMetric(query string, from, to time.Time) ([]httpresponse.M
 
 	hashKey := dd.generateMetricHash(query, from, to)
 
-	if metrics, ok := dd.cacheResponses.Get(hashKey); ok {
-		dd.logger.Debug("found metric in cache")
-		return metrics.([]httpresponse.MetricsQuery), nil
-	}
+	cacheMetrics, err := dd.cache.Client.Get(hashKey)
+	if err == nil && cacheMetrics != "" {
+		response := []httpresponse.MetricsQuery{}
+		err = json.Unmarshal([]byte(cacheMetrics), &response)
 
-	dd.logger.WithFields(log.Fields{
-		"query": query,
-		"from":  from,
-		"to":    to,
-	}).Debug("fetching metrics")
+		if err == nil {
+			dd.logger.Info("found metric in cache")
+			return response, nil
+		}
+		dd.logger.WithError(err).WithFields(log.Fields{
+			"query": query,
+			"from":  from,
+			"to":    to,
+		}).Error("cache Unmarshal failed")
+	}
 
 	metrics, err := dd.client.QueryMetrics(from.Unix(), to.Unix(), query)
 
@@ -102,7 +110,16 @@ func (dd *Datadog) GetMetric(query string, from, to time.Time) ([]httpresponse.M
 		response = append(response, metricData)
 	}
 
-	dd.cacheResponses.Set(hashKey, response, 0)
+	jsonResponse, err := json.Marshal(response)
+	if err != nil {
+		dd.logger.WithError(err).Error("could not serialize response")
+		return response, nil
+	}
+
+	err = dd.cache.Client.Set(hashKey, string(jsonResponse), dd.cacheExpiration)
+	if err != nil {
+		dd.logger.WithError(err).Error("could not save metric response")
+	}
 
 	return response, nil
 }
@@ -113,5 +130,6 @@ func (dd *Datadog) generateMetricHash(query string, from, to time.Time) string {
 	hasher := md5.New()
 	key := fmt.Sprintf("%s-%d-%d", query, from.Unix(), to.Unix())
 	hasher.Write([]byte(key))
-	return hex.EncodeToString(hasher.Sum(nil))
+	val := hex.EncodeToString(hasher.Sum(nil))
+	return fmt.Sprintf("datadog-metrics-%s", val)
 }

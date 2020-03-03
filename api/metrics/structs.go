@@ -5,6 +5,7 @@ import (
 	"statusbay/api/httpresponse"
 	"statusbay/api/metrics/datadog"
 	"statusbay/api/metrics/prometheus"
+	"statusbay/cache"
 	"statusbay/config"
 	"sync"
 	"time"
@@ -17,7 +18,7 @@ type MetricManagerDescriber interface {
 }
 
 // Load sets all metrics providers
-func Load(metricsProviders *config.MetricsProvider) map[string]MetricManagerDescriber {
+func Load(metricsProviders *config.MetricsProvider, cache *cache.CacheManager) map[string]MetricManagerDescriber {
 
 	providers := map[string]MetricManagerDescriber{}
 
@@ -25,7 +26,7 @@ func Load(metricsProviders *config.MetricsProvider) map[string]MetricManagerDesc
 		return providers
 	}
 	if metricsProviders.DataDog != nil {
-		providers["datadog"] = datadog.NewDatadogManager(metricsProviders.DataDog.CacheCleanupInterval, metricsProviders.DataDog.CacheExpiration, metricsProviders.DataDog.APIKey, metricsProviders.DataDog.AppKey, nil)
+		providers["datadog"] = datadog.NewDatadogManager(cache, metricsProviders.DataDog.CacheExpiration, metricsProviders.DataDog.APIKey, metricsProviders.DataDog.AppKey, nil)
 	}
 
 	if metricsProviders.Prometheus != nil {

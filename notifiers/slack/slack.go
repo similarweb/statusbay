@@ -85,7 +85,15 @@ func (sl *Manager) sendToAll(stage ReportStage, message watcherCommon.Deployment
 	}
 
 	status := strings.ToUpper(string(message.Status))
-	link := fmt.Sprintf("%s/%s", sl.urlBase, message.URI)
+
+	var slackBaseURL string = sl.urlBase
+	if !strings.HasPrefix(slackBaseURL, "http") {
+		message.LogEntry.WithField("slack_base_url", slackBaseURL).Debug("slack base url has a missing *http://* going to add it")
+		slackBaseURL = fmt.Sprintf("http://%s", sl.urlBase)
+	}
+
+	link := fmt.Sprintf("%s/%s", slackBaseURL, message.URI)
+	message.LogEntry.WithField("link", link).Debug("final slack message URL")
 
 	for _, to := range distinct(append(message.To, sl.config.DefaultChannels...)) {
 		if to == "" {

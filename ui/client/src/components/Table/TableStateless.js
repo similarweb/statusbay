@@ -48,12 +48,12 @@ const TableStateless = (props) => {
         <TableRow>
           {
             config.cells.map(({
-              id, name, sortable,
+              id, name, sortable, className
             }) => {
               if (sortable) {
-                return <TableCell key={`table-header-cell-${name}`}><TableSortLabel active={sortBy === id} direction={sortDirection} onClick={onSortClick(id)}>{name}</TableSortLabel></TableCell>;
+                return <TableCell className={className} key={`table-header-cell-${name}`}><TableSortLabel active={sortBy === id} direction={sortDirection} onClick={onSortClick(id)}>{name}</TableSortLabel></TableCell>;
               }
-              return <TableCell key={`table-header-cell-${name}`}>{name}</TableCell>;
+              return <TableCell className={className} key={`table-header-cell-${name}`}>{name}</TableCell>;
             })
           }
         </TableRow>

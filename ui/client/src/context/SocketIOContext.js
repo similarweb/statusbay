@@ -9,6 +9,8 @@ const SocketIOContext = React.createContext({});
 const SocketIOProvider = ({ children, io }) => {
   const deploymentDetails = io(`${endpoint}/deployment-details`, {
     path: '/api/socket',
+    transports: ['websocket'],
+    secure: true,
   });
 
   const applications = io(`${endpoint}/applications`, {

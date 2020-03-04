@@ -14,6 +14,7 @@ export const useMetricsData = (provider, query, deploymentTime) => {
     // validate we use the relevant data
     if (config.query === query && config.provider === provider) {
       setData(newData);
+      console.log(newData);
       if (loading) {
         setLoading(false);
       }

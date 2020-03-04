@@ -6,8 +6,8 @@ export default {
   title: 'UI|Loader',
 };
 
-
-export const Story = () => {
-  <Loader inline={boolean('inline', false)} />;
-};
-Story.story = { name: 'Loader' };
+//
+// export const Story = () => {
+//   <Loader inline={boolean('inline', false)} />;
+// };
+// Story.story = { name: 'Loader' };

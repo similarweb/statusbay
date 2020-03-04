@@ -5,24 +5,26 @@ const endpoint = process.env.NODE_ENV === 'development' ? 'localhost:5000' : '';
 
 
 const SocketIOContext = React.createContext({});
-
+const baseSocketConfig = {
+  transports: ['websocket'],
+  secure: true,
+  path: '/api/socket',
+};
 const SocketIOProvider = ({ children, io }) => {
   const deploymentDetails = io(`${endpoint}/deployment-details`, {
-    path: '/api/socket',
-    transports: ['websocket'],
-    secure: true,
+    ...baseSocketConfig,
   });
 
   const applications = io(`${endpoint}/applications`, {
-    path: '/api/socket',
+    ...baseSocketConfig,
   });
 
   const metrics = io(`${endpoint}/metrics`, {
-    path: '/api/socket',
+    ...baseSocketConfig,
   });
 
   const alerts = io(`${endpoint}/alerts`, {
-    path: '/api/socket',
+    ...baseSocketConfig,
   });
 
   const value = useMemo(() => ({

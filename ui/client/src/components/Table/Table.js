@@ -34,7 +34,20 @@ import ToggleFilter from './Filters/ToggleFilter';
 import CellDetails from './Cells/CellDetails';
 import TableCell from '@material-ui/core/TableCell';
 
-const parseSortBy = (sortby = '|') => sortby.split('|');
+const parseSortBy = (value) => {
+  const defaultSortBy = ["time", "desc"]
+  if (value === undefined){
+    return defaultSortBy
+  }
+  
+  const sort = value.split('|')
+  if (sort.length !== 2){
+    return defaultSortBy
+  }
+  
+  return sort
+    
+};
 const paramToArray = (param = '') => (param ? param.split(',') : []);
 const paramToNumber = (value) => {
   if (value || value === 0) {

@@ -1,5 +1,5 @@
 import React, {
-  useCallback, useEffect, useMemo, useState,
+  useCallback, useState,
 } from 'react';
 import Box from '@material-ui/core/Box';
 import PropTypes from 'prop-types';

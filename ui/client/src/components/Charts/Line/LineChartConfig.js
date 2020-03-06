@@ -11,7 +11,6 @@ import {
   lime,
   teal
 } from '@material-ui/core/colors';
-import Highcharts from 'highcharts';
 
 const createTooltipContent = (points) => points.map(({ color, y, series: { name } }) => `<br><span style="color:${color}">●</span> ${name}: <b>${numeral(y).format('0,0')}</b>`);
 

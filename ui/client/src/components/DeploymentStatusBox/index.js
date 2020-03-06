@@ -42,13 +42,6 @@ const messages = {
   deleted: 'Deployment deleted',
 };
 
-const icons = {
-  running: <CircularProgress size={16} color="secondary" />,
-  successful: <DoneIcon color="primary" />,
-  failed: <ClearIcon color="primary" />,
-  timeout: <AlarmOffIcon color="primary" />,
-};
-
 const DeploymentStatusBox = ({ status }) => {
   const classes = useStyles({ status });
   if (status) {

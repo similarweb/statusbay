@@ -17,6 +17,8 @@ type RegistryData interface {
 	UpdatePod(pod *v1.Pod, status string) error
 	NewService(pod *v1.Service) error
 	UpdateServiceEvents(name string, event EventMessages) error
+	NewContainer(podName, containerName string) error
+	AddContainerLog(podName, containerName string, logMessage string) error
 	GetName() string
 }
 
@@ -56,6 +58,7 @@ type DeploymenPod struct {
 	CreationTimestamp time.Time                  `json:"CreationTimestamp"`
 	Events            *[]EventMessages           `json:"Events"`
 	Pvcs              map[string][]EventMessages `json:"Pvcs"`
+	Containers        map[string]Container       `json:"Containers"`
 }
 
 // EventMessages struct  TODO ::
@@ -101,6 +104,11 @@ type StatefulsetData struct {
 	Pods                    map[string]DeploymenPod  `json:"Pods"`
 	Services                map[string]ServicesData  `json:"Services"`
 	ProgressDeadlineSeconds int64
+}
+
+// Container holds the data of container
+type Container struct {
+	Logs *[]string `json:"Logs"`
 }
 
 // ServicesData holds the data of services

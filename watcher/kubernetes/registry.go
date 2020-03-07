@@ -564,6 +564,29 @@ func (dd *DeploymentData) UpdateReplicasetStatus(name string, status appsV1.Repl
 	return nil
 }
 
+// newContainer creates new container object in pod data
+func newContainer(containers map[string]Container, name string) error {
+	if _, found := containers[name]; found {
+		return errors.New("container already exists in containers list")
+	}
+	containers[name] = Container{
+		Logs: &[]string{},
+	}
+	return nil
+}
+
+// addContainerLog append logs message in container object
+func addContainerLog(containers map[string]Container, name, logMessage string) error {
+	if _, found := containers[name]; !found {
+		log.WithField("container", name).Warn("container does not exist in containers list")
+		return errors.New("container does not exist in containers list")
+	}
+
+	fmt.Println(logMessage)
+	*containers[name].Logs = append(*containers[name].Logs, logMessage)
+	return nil
+}
+
 // NewPodToPods adds a new deploymenpod to pods map if it does not exist.
 func NewPodToPods(pods map[string]DeploymenPod, pod *v1.Pod) error {
 	if _, found := pods[pod.GetName()]; found {
@@ -572,9 +595,10 @@ func NewPodToPods(pods map[string]DeploymenPod, pod *v1.Pod) error {
 	}
 	phase := string(pod.Status.Phase)
 	pods[pod.GetName()] = DeploymenPod{
-		Phase:  &phase,
-		Events: &[]EventMessages{},
-		Pvcs:   map[string][]EventMessages{},
+		Phase:      &phase,
+		Events:     &[]EventMessages{},
+		Pvcs:       map[string][]EventMessages{},
+		Containers: map[string]Container{},
 	}
 	return nil
 }
@@ -674,6 +698,16 @@ func (dd *DeploymentData) UpdateServiceEvents(name string, event EventMessages) 
 	return updateServiceEvents(dd.Services, name, event)
 }
 
+// NewContainer creates new container object in pods data
+func (dd *DeploymentData) NewContainer(podName, containerName string) error {
+	return newContainer(dd.Pods[podName].Containers, containerName)
+}
+
+// AddContainerLog add container log in container data
+func (dd *DeploymentData) AddContainerLog(podName, containerName string, logMessage string) error {
+	return addContainerLog(dd.Pods[podName].Containers, containerName, logMessage)
+}
+
 // ################# END DeploymentData #################
 
 // ################# Start DaemonsetData #################
@@ -718,6 +752,16 @@ func (dsd *DaemonsetData) UpdateServiceEvents(name string, event EventMessages) 
 	return updateServiceEvents(dsd.Services, name, event)
 }
 
+// NewContainer creates new container object in pods data
+func (dsd *DaemonsetData) NewContainer(podName, containerName string) error {
+	return newContainer(dsd.Pods[podName].Containers, containerName)
+}
+
+// AddContainerLog add container log in container data
+func (dsd *DaemonsetData) AddContainerLog(podName, containerName string, logMessage string) error {
+	return addContainerLog(dsd.Pods[podName].Containers, containerName, logMessage)
+}
+
 // ################# END DaemonsetData #################
 
 // ################# START StatefulsetData #################
@@ -760,6 +804,16 @@ func (ssd *StatefulsetData) NewService(service *v1.Service) error {
 // UpdateServiceEvents will set event to statefulset
 func (ssd *StatefulsetData) UpdateServiceEvents(name string, event EventMessages) error {
 	return updateServiceEvents(ssd.Services, name, event)
+}
+
+// NewContainer creates new container object in pods data
+func (ssd *StatefulsetData) NewContainer(podName, containerName string) error {
+	return newContainer(ssd.Pods[podName].Containers, containerName)
+}
+
+// AddContainerLog add container log in container data
+func (ssd *StatefulsetData) AddContainerLog(podName, containerName string, logMessage string) error {
+	return addContainerLog(ssd.Pods[podName].Containers, containerName, logMessage)
 }
 
 // ################# END StatefulsetData #################

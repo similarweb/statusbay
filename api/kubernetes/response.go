@@ -36,6 +36,7 @@ type ResponseDeploymenPod struct {
 	CreationTimestamp time.Time                          `json:"CreationTimestamp"`
 	Events            []ResponseEventMessages            `json:"Events"`
 	PVC               map[string][]ResponseEventMessages `json:"Pvcs"`
+	Containers        map[string]Container               `json:"Containers"`
 }
 
 type ResponseEventMessages struct {
@@ -161,4 +162,9 @@ type DeploymentsResponse struct {
 
 type DeploymentListResponse struct {
 	Job string `json:"Job"`
+}
+
+// Container holds the data of container
+type Container struct {
+	Logs *[]string `json:"Logs"`
 }

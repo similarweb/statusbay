@@ -1,6 +1,7 @@
 package kuberneteswatcher
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"sync"
@@ -119,7 +120,7 @@ func (pm *PodsManager) watch(watchData WatchData) {
 						"involvedObject.kind": "Pod",
 					}).String(),
 					}
-					go pm.watchEvents(watchData.Ctx, *podLog, watchData.RegistryData, eventListOptions, pod.Namespace, pod.GetName())
+					pm.watchEvents(watchData.Ctx, *podLog, watchData.RegistryData, eventListOptions, pod.Namespace, pod.GetName())
 
 					for _, volume := range pod.Spec.Volumes {
 						pvc := volume.VolumeSource.PersistentVolumeClaim
@@ -143,6 +144,13 @@ func (pm *PodsManager) watch(watchData WatchData) {
 				}
 
 				status := string(pod.Status.Phase)
+
+				if status == string(v1.PodRunning) {
+					for _, container := range pod.Spec.Containers {
+						pm.podLogs(watchData.Ctx, *podLog, watchData.RegistryData, watchData.Namespace, pod.Name, container.Name)
+					}
+				}
+
 				podLog.WithFields(log.Fields{
 					"count": len(pod.Status.ContainerStatuses),
 				}).Debug("list of pod status container statuses")
@@ -227,6 +235,53 @@ func (pm *PodsManager) watchEvents(ctx context.Context, lg log.Entry, registryDa
 				return
 			}
 
+		}
+	}()
+
+}
+
+// podLogs open a container logs steam for getting the STDOUT of container
+func (pm *PodsManager) podLogs(ctx context.Context, lg log.Entry, registryData RegistryData, namespace, podName, containerName string) {
+
+	// create new container object in registry,
+	// if error returned, it mean that the object already exists, mean the steam already created
+	err := registryData.NewContainer(podName, containerName)
+	if err != nil {
+		return
+	}
+
+	lgContainer := lg.WithField("container_name", containerName)
+
+	go func() {
+		lgContainer.Info("open log stream")
+		podLogOpts := v1.PodLogOptions{
+			Container:  containerName,
+			Follow:     true,
+			Previous:   false,
+			Timestamps: true,
+		}
+		req := pm.client.CoreV1().Pods(namespace).GetLogs(podName, &podLogOpts)
+		streamIO, err := req.Stream()
+		if err != nil {
+			lgContainer.Error(err)
+			return
+		}
+		defer streamIO.Close()
+		r := bufio.NewReader(streamIO)
+
+		for {
+			select {
+			case <-ctx.Done():
+				lgContainer.Info("close log stream")
+				return
+			default:
+				bytes, err := r.ReadBytes('\n')
+				if err != nil {
+					lgContainer.WithError(err).Info("failed to read stream bytes")
+					continue
+				}
+				registryData.AddContainerLog(podName, containerName, string(bytes))
+			}
 		}
 	}()
 

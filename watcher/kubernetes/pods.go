@@ -249,7 +249,6 @@ func (pm *PodsManager) podLogs(ctx context.Context, lg log.Entry, registryData R
 	if err != nil {
 		return
 	}
-
 	lgContainer := lg.WithField("container_name", containerName)
 
 	go func() {

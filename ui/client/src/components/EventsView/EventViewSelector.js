@@ -5,6 +5,7 @@ import makeStyles from '@material-ui/core/styles/makeStyles';
 import PropTypes from 'prop-types';
 import CellStatus from '../Table/Cells/CellStatus';
 import TableStateless from '../Table/TableStateless';
+import ContainersLogs from './ContainersLogs';
 import Box from '@material-ui/core/Box';
 import ArrowForwardIosIcon from '@material-ui/icons/ArrowForwardIos';
 
@@ -50,6 +51,19 @@ const EventsViewSelector = ({ items, selected, onRowClick }) => {
         name: 'Pod',
         header: (name) => <TableCell>{name}</TableCell>,
         cell: (row) => {return <Box display="flex" alignItems="center"><div className={row.hasError && classes.marker}></div> {row.name}</Box>},
+      },
+      {
+        name: 'logs',
+        header: (name) => <TableCell>{name}</TableCell>,
+        cell: (row) => {
+          let containers = []
+          row.event.forEach((event) => {
+            event.containers.forEach((container) => {
+              containers.push(container)
+            })
+          })
+          return containers.length ? <ContainersLogs containers={containers} />: ""
+        },
       },
       {
         name: 'Status',

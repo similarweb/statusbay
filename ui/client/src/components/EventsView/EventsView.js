@@ -42,6 +42,7 @@ const EventsView = ({ items }) => {
     name,
     status,
     hasError: hasError(events),
+    event: events,
   }));
   return (
 

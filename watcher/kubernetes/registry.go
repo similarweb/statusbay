@@ -582,7 +582,6 @@ func addContainerLog(containers map[string]Container, name, logMessage string) e
 		return errors.New("container does not exist in containers list")
 	}
 
-	fmt.Println(logMessage)
 	*containers[name].Logs = append(*containers[name].Logs, logMessage)
 	return nil
 }

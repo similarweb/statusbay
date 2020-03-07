@@ -108,6 +108,7 @@ const transformers = {
   podEvents: (rawData) => {
 
     return Object.entries(rawData.Pods).map(([name, pod]) => {
+
       return {
         name,
         status: pod.Phase.toLowerCase(),
@@ -122,7 +123,13 @@ const transformers = {
                 content: event.MarkDescriptions && event.MarkDescriptions.length > 0 && event.MarkDescriptions[0],
                 error: event.MarkDescriptions ? event.MarkDescriptions.length > 0 : false,
               }
-            })
+            }),
+            containers: Object.entries(pod.Containers || []).map(([containerName, containerData]) => {
+                return {
+                  name: containerName, 
+                  log: containerData.Logs
+                }
+            }),
           },
           ...Object.entries(pod.Pvcs || {}).map(([pvcName, pvcEvents]) => {
             return {

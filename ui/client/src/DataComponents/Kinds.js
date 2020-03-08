@@ -27,7 +27,7 @@ const Kinds = ({ selectedTab, onTabChange }) => {
     <AppBar position="static" color="primary" classes={{ root: classes.root }}>
       <Tabs value={selectedTab} onChange={onTabChange} classes={{indicator: classes.indicator}}>
         {
-          data.kinds.map((kind, index) => <Tab classes={{root: classes.tab}} label={kind.name} value={index} disableRipple />)
+          data.kinds.map((kind, index) => <Tab key={kind.name} classes={{root: classes.tab}} label={kind.name} value={index} disableRipple />)
       }
       </Tabs>
     </AppBar>

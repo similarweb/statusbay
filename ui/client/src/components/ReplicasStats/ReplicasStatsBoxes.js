@@ -15,15 +15,15 @@ const useStyles = makeStyles((theme) => ({
     textAlign: 'center',
     color: theme.palette.text.secondary,
   },
-  card: {
-    backgroundColor: (props) => (props.error ? theme.palette.error.main : null),
+  cardError: {
+    backgroundColor: theme.palette.error.main,
   },
 }));
 
 const SingleBox = ({ name, data, error }) => {
-  const classes = useStyles({error});
+  const classes = useStyles({ error });
   return (
-    <Card classes={{ root: classes.card }} error={error}>
+    <Card classes={{ root: error ? classes.cardError : undefined }}>
       <Box display="flex" flexDirection="column" alignItems="center">
         <Box m={1}><Typography classes={{ root: classes.typography }} variant="h6">{name}</Typography></Box>
         <Box m={1}><Typography classes={{ root: classes.typography }} variant="h4">{data}</Typography></Box>

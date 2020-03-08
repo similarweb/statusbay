@@ -49,7 +49,7 @@ const EventsViewSelector = ({ items, selected, onRowClick }) => {
       {
         name: 'Pod',
         header: (name) => <TableCell>{name}</TableCell>,
-        cell: (row) => {return <Box display="flex" alignItems="center"><div className={row.hasError && classes.marker}></div> {row.name}</Box>},
+        cell: (row) => {return <Box display="flex" alignItems="center"><div className={row.hasError ? classes.marker : undefined}></div> {row.name}</Box>},
       },
       {
         name: 'Status',
@@ -80,4 +80,4 @@ EventsViewSelector.defaultProps = {
   onRowClick: () => null,
 };
 
-export default React.memo(EventsViewSelector);
+export default EventsViewSelector;

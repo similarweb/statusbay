@@ -90,11 +90,11 @@ EventsViewLogs.propTypes = {
   logs: PropTypes.arrayOf(PropTypes.shape({
     title: PropTypes.string,
     time: PropTypes.number,
-    error: PropTypes.bool,
-    content: PropTypes.string,
+    error: PropTypes.oneOfType([PropTypes.bool, PropTypes.string]),
+    content: PropTypes.oneOfType([PropTypes.bool, PropTypes.string]),
   })),
-  onTabChange: PropTypes.func.isRequired,
-  selectedTab: PropTypes.number.isRequired,
+  onTabChange: PropTypes.func,
+  selectedTab: PropTypes.number,
   tabs: PropTypes.arrayOf(PropTypes.shape({
     name: PropTypes.string,
     error: PropTypes.bool,
@@ -104,6 +104,8 @@ EventsViewLogs.propTypes = {
 EventsViewLogs.defaultProps = {
   logs: [],
   tabs: [],
+  onTabChange: () => null,
+  selectedTab: 0
 };
 
 export default EventsViewLogs;

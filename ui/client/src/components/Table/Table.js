@@ -93,6 +93,7 @@ const Table = ({
     },
     sortBy: {
       transformValue: (value) => value,
+      defaultValue: 'time|desc'
     },
     page: {
       transformValue: paramToNumber,

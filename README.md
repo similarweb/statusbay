@@ -1,6 +1,7 @@
 # StatusBay 
 
 ![Go](https://github.com/similarweb/statusbay/workflows/Go/badge.svg?event=push)
+[![Coverage Status](https://coveralls.io/repos/github/similarweb/statusbay/badge.svg?branch=master)](https://coveralls.io/github/similarweb/statusbay?branch=master)
 
 <img src="https://github.com/similarweb/statusbay/raw/master/docs/images/logo.png" width="400">
 

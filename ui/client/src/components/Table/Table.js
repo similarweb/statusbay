@@ -179,7 +179,7 @@ const Table = ({
         sortable: true,
       },
       {
-        id: 'namepsace',
+        id: 'namespace',
         name: t('table.filters.namespace'),
         cell: (row) => row.namespace,
         sortable: true,

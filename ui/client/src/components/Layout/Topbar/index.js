@@ -7,8 +7,6 @@ import AppBar from '@material-ui/core/AppBar';
 import React from 'react';
 import PropTypes from 'prop-types';
 import GitHubIcon from '@material-ui/icons/GitHub';
-import { makeStyles, SnackbarContent } from '@material-ui/core';
-import Alert from '@material-ui/lab/Alert';
 import logo from '../../../images/logo.png';
 import StatusBayVersion from './StatusBayVersion';
 

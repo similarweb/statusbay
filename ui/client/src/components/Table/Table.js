@@ -135,7 +135,7 @@ const Table = ({
 
   const onSort = useCallback((id, direction) => {
     setTableFilters('sortBy', `${id}|${direction}`);
-  }, []);
+  }, [tableFilters]);
   const onLinkClick = e => {
     e.stopPropagation();
   }

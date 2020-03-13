@@ -79,7 +79,7 @@ func (ssm *StatefulsetManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 			}
 			app.Log().Logger.WithField("name", sData.GetName()).Debug("begining watching loaded running statefulset")
 			go func(app *RegistryRow, sData *StatefulsetData, listOptions metaV1.ListOptions) {
-				ssm.watchStatefulset(app.ctx, app.cancelFn, app.Log(), sData, listOptions, sData.Statefulset.Namespace, sData.ProgressDeadlineSeconds)
+				ssm.watchStatefulset(app.ctx, app.cancelFn, app.Log(), app.GetApplyID(), sData, listOptions, sData.Statefulset.Namespace, sData.ProgressDeadlineSeconds)
 			}(app, sData, staefulsetWatchListOptions)
 		}
 	}
@@ -151,6 +151,7 @@ func (ssm *StatefulsetManager) watchStatefulsets(ctx context.Context) {
 						appRegistry.ctx,
 						appRegistry.cancelFn,
 						appRegistry.Log(),
+						appRegistry.GetApplyID(),
 						registryApply,
 						statefulsetWatchListOptions,
 						statefulset.GetNamespace(),
@@ -172,7 +173,7 @@ func (ssm *StatefulsetManager) watchStatefulsets(ctx context.Context) {
 }
 
 //  watchStatefulset will watch a specific statefulset and its related resources (controller revision + pods)
-func (ssm *StatefulsetManager) watchStatefulset(ctx context.Context, cancelFn context.CancelFunc, lg log.Entry, registryStatefulset *StatefulsetData, listOptions metaV1.ListOptions, namespace string, maxWatchTime int64) {
+func (ssm *StatefulsetManager) watchStatefulset(ctx context.Context, cancelFn context.CancelFunc, lg log.Entry, applyID string, registryStatefulset *StatefulsetData, listOptions metaV1.ListOptions, namespace string, maxWatchTime int64) {
 
 	statefulsetLog := lg.WithField("statefulset_name", registryStatefulset.GetName())
 
@@ -218,7 +219,8 @@ func (ssm *StatefulsetManager) watchStatefulset(ctx context.Context, cancelFn co
 					"controller.kubernetes.io/hash",
 					statefulset.ObjectMeta.Name,
 					namespace,
-					nil)
+					nil,
+					applyID)
 
 				// Start watching services of statefulset
 				ssm.serviceManager.Watch <- WatchData{

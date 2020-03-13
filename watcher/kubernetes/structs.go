@@ -27,6 +27,7 @@ type WatchData struct {
 	RegistryData RegistryData
 	Namespace    string
 	LogEntry     log.Entry
+	ApplyID      string
 }
 
 type MessageDeploy struct {

@@ -79,6 +79,7 @@ func (dsm *DaemonsetManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 					app.ctx,
 					app.cancelFn,
 					app.Log(),
+					app.GetApplyID(),
 					dsData,
 					listOptions,
 					dsData.Metadata.Namespace,
@@ -153,6 +154,7 @@ func (dsm *DaemonsetManager) watchDaemonsets(ctx context.Context) {
 						appRegistry.ctx,
 						appRegistry.cancelFn,
 						daemonsetLog,
+						appRegistry.GetApplyID(),
 						registryApply,
 						daemonsetWatchListOptions,
 						daemonset.GetNamespace(),
@@ -174,7 +176,7 @@ func (dsm *DaemonsetManager) watchDaemonsets(ctx context.Context) {
 }
 
 // watchDaemonset will watch a specific daemonset and its related resources (controller revision + pods)
-func (dsm *DaemonsetManager) watchDaemonset(ctx context.Context, cancelFn context.CancelFunc, lg log.Entry, daemonsetData *DaemonsetData, listOptions metaV1.ListOptions, namespace string, maxWatchTime int64) {
+func (dsm *DaemonsetManager) watchDaemonset(ctx context.Context, cancelFn context.CancelFunc, lg log.Entry, applyID string, daemonsetData *DaemonsetData, listOptions metaV1.ListOptions, namespace string, maxWatchTime int64) {
 
 	daemonsetLog := lg.WithField("daemonset_name", daemonsetData.GetName())
 	daemonsetLog.Info("Starting watch on Daemonset")
@@ -216,7 +218,9 @@ func (dsm *DaemonsetManager) watchDaemonset(ctx context.Context, cancelFn contex
 					appsV1.DefaultDaemonSetUniqueLabelKey,
 					"",
 					namespace,
-					nil)
+					nil,
+					applyID,
+				)
 
 				// start service watch
 				dsm.serviceManager.Watch <- WatchData{

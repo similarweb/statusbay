@@ -130,7 +130,7 @@ func startKubernetesWatcher(ctx context.Context, configPath, kubeconfig, apiserv
 	pvcManager := kuberneteswatcher.NewPvcManager(kubernetesClientset, eventManager)
 
 	//Pods manager
-	podsManager := kuberneteswatcher.NewPodsManager(kubernetesClientset, eventManager, pvcManager)
+	podsManager := kuberneteswatcher.NewPodsManager(kubernetesClientset, eventManager, pvcManager, watcherConfig.AbsoluteLogsPodPath)
 
 	//Replicaset manager
 	replicasetManager := kuberneteswatcher.NewReplicasetManager(kubernetesClientset, eventManager, podsManager)

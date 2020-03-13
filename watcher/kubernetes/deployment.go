@@ -79,7 +79,7 @@ func (dm *DeploymentManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 			deploymentWatchListOptions := metaV1.ListOptions{LabelSelector: labels.SelectorFromSet(deploymentData.Deployment.Labels).String()}
 			app.Log().Logger.WithField("name", depData.GetName()).Debug("begining watching loaded running deployment")
 			go func(app *RegistryRow, depData *DeploymentData, listOptions metaV1.ListOptions) {
-				dm.watchDeployment(app.ctx, app.cancelFn, app.Log(), depData, listOptions, depData.Deployment.Namespace, depData.ProgressDeadlineSeconds)
+				dm.watchDeployment(app.ctx, app.cancelFn, app.Log(), app.GetApplyID(), depData, listOptions, depData.Deployment.Namespace, depData.ProgressDeadlineSeconds)
 			}(app, depData, deploymentWatchListOptions)
 		}
 	}
@@ -156,6 +156,7 @@ func (dm *DeploymentManager) watchDeployments(ctx context.Context) {
 						applicationRegistry.ctx,
 						applicationRegistry.cancelFn,
 						deploymentLog,
+						applicationRegistry.GetApplyID(),
 						registryDeployment,
 						deploymentWatchListOptions,
 						deployment.GetNamespace(),
@@ -182,7 +183,7 @@ func (dm *DeploymentManager) watchDeployments(ctx context.Context) {
 }
 
 //watchDeployment will watch on one running deployment
-func (dm *DeploymentManager) watchDeployment(ctx context.Context, cancelFn context.CancelFunc, lg log.Entry, registryDeployment *DeploymentData, listOptions metaV1.ListOptions, namespace string, maxWatchTime int64) {
+func (dm *DeploymentManager) watchDeployment(ctx context.Context, cancelFn context.CancelFunc, lg log.Entry, applyID string, registryDeployment *DeploymentData, listOptions metaV1.ListOptions, namespace string, maxWatchTime int64) {
 
 	deploymentLog := lg.WithField("deployment_name", registryDeployment.GetName())
 	deploymentLog.Info("initializing deployments watcher")
@@ -230,6 +231,7 @@ func (dm *DeploymentManager) watchDeployment(ctx context.Context, cancelFn conte
 					Namespace:       deployment.Namespace,
 					Ctx:             ctx,
 					LogEntry:        *deploymentLog,
+					ApplyID:         applyID,
 				}
 
 				dm.serviceManager.Watch <- WatchData{

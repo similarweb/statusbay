@@ -33,7 +33,7 @@ func NewControllerRevisionManagerMock(client *fake.Clientset, podsManager *kuber
 	if podManager == nil {
 		eventManager := kuberneteswatcher.NewEventsManager(client)
 		pvcManager := NewPvcManagerMock(client)
-		podManager = kuberneteswatcher.NewPodsManager(client, eventManager, pvcManager)
+		podManager = kuberneteswatcher.NewPodsManager(client, eventManager, pvcManager, "/tmp/path")
 		podManager.Serve(ctx, wg)
 		eventManager.Serve(ctx, wg)
 	}
@@ -55,12 +55,12 @@ func stringInMap(str string, dict map[string]string) bool {
 }
 
 // WatchControllerRevisionPods dummy interface.
-func (mcr *MockControllerRevisionManager) WatchControllerRevisionPods(ctx context.Context, logEntry log.Entry, registryData kuberneteswatcher.RegistryData, resourceGeneration int64, controllerRevisionlabels map[string]string, controllerRevisionHashlabelKey string, controllerRevisionPodLabelValuePerfix string, namespace string) error {
+func (mcr *MockControllerRevisionManager) WatchControllerRevisionPods(ctx context.Context, logEntry log.Entry, registryData kuberneteswatcher.RegistryData, resourceGeneration int64, controllerRevisionlabels map[string]string, controllerRevisionHashlabelKey, controllerRevisionPodLabelValuePerfix, namespace, applyID string) error {
 	return mcr.Error
 }
 
 // WatchControllerRevisionPodsRetry Implement a check in the interface to check whether a  controllerRevisionHashlabelKey is valid.
-func (mcr *MockControllerRevisionManager) WatchControllerRevisionPodsRetry(ctx context.Context, logEntry log.Entry, registryData kuberneteswatcher.RegistryData, resourceGeneration int64, controllerRevisionlabels map[string]string, controllerRevisionHashlabelKey string, controllerRevisionPodLabelValuePerfix string, namespace string, backOffParams *kuberneteswatcher.BackoffParams) error {
+func (mcr *MockControllerRevisionManager) WatchControllerRevisionPodsRetry(ctx context.Context, logEntry log.Entry, registryData kuberneteswatcher.RegistryData, resourceGeneration int64, controllerRevisionlabels map[string]string, controllerRevisionHashlabelKey string, controllerRevisionPodLabelValuePerfix string, namespace string, backOffParams *kuberneteswatcher.BackoffParams, applyID string) error {
 	// expectedOptionsOfControllerRevisionHashlabelKey in a Map
 	crhlk := map[string]string{"daemonset": appsV1.DefaultDaemonSetUniqueLabelKey, "statefulset": "controller.kubernetes.io/hash"}
 	if !stringInMap(controllerRevisionHashlabelKey, crhlk) {

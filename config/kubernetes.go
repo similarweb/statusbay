@@ -42,12 +42,13 @@ type EventMarksConfig struct {
 
 // Kubernetes is holds all application configuration
 type Kubernetes struct {
-	ClusterName     string                      `yaml:"cluster_name"`
-	Log             LogConfig                   `yaml:"log"`
-	MySQL           *state.MySQLConfig          `yaml:"mysql"`
-	NotifierConfigs notifierCommon.ConfigByName `yaml:"notifiers"`
-	UI              *UIConfig                   `yaml:"ui"`
-	Applies         *KubernetesApplies          `yaml:"applies"`
+	ClusterName         string                      `yaml:"cluster_name"`
+	Log                 LogConfig                   `yaml:"log"`
+	MySQL               *state.MySQLConfig          `yaml:"mysql"`
+	NotifierConfigs     notifierCommon.ConfigByName `yaml:"notifiers"`
+	UI                  *UIConfig                   `yaml:"ui"`
+	Applies             *KubernetesApplies          `yaml:"applies"`
+	AbsoluteLogsPodPath string                      `yaml:"absoluteLogsPodPath"`
 
 	Telemetry MetricsConfig `yaml:"telemetry"`
 

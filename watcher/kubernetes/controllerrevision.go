@@ -32,8 +32,8 @@ func NewBackOffParams() *BackoffParams {
 
 //ControllerRevision Main interface
 type ControllerRevision interface {
-	WatchControllerRevisionPods(ctx context.Context, logEntry log.Entry, registryData RegistryData, resourceGeneration int64, controllerRevisionlabels map[string]string, controllerRevisionHashlabelKey string, controllerRevisionPodLabelValuePerfix string, namespace string) error
-	WatchControllerRevisionPodsRetry(ctx context.Context, logEntry log.Entry, registryData RegistryData, resourceGeneration int64, controllerRevisionlabels map[string]string, controllerRevisionHashlabelKey string, controllerRevisionPodLabelValuePerfix string, namespace string, backOffParams *BackoffParams) error
+	WatchControllerRevisionPods(ctx context.Context, logEntry log.Entry, registryData RegistryData, resourceGeneration int64, controllerRevisionlabels map[string]string, controllerRevisionHashlabelKey string, controllerRevisionPodLabelValuePerfix string, namespace string, applyID string) error
+	WatchControllerRevisionPodsRetry(ctx context.Context, logEntry log.Entry, registryData RegistryData, resourceGeneration int64, controllerRevisionlabels map[string]string, controllerRevisionHashlabelKey string, controllerRevisionPodLabelValuePerfix string, namespace string, backOffParams *BackoffParams, applyID string) error
 }
 
 //ControllerRevisionManager Manager to interfact with Kubernetes kind
@@ -54,7 +54,7 @@ func NewControllerRevisionManager(client kubernetes.Interface, podsManager *Pods
 }
 
 // WatchControllerRevisionPodsRetry perform exponential backoff retry on WatchControllerRevisionPods
-func (cr *ControllerRevisionManager) WatchControllerRevisionPodsRetry(ctx context.Context, logEntry log.Entry, registryData RegistryData, resourceGeneration int64, controllerRevisionlabels map[string]string, controllerRevisionHashlabelKey string, controllerRevisionPodLabelValuePerfix string, namespace string, backOff *BackoffParams) error {
+func (cr *ControllerRevisionManager) WatchControllerRevisionPodsRetry(ctx context.Context, logEntry log.Entry, registryData RegistryData, resourceGeneration int64, controllerRevisionlabels map[string]string, controllerRevisionHashlabelKey string, controllerRevisionPodLabelValuePerfix string, namespace string, backOff *BackoffParams, applyID string) error {
 	defaultParams := NewBackOffParams()
 	if backOff != nil {
 		defaultParams = backOff
@@ -66,7 +66,7 @@ func (cr *ControllerRevisionManager) WatchControllerRevisionPodsRetry(ctx contex
 	ticker := backoff.NewTicker(b)
 	var err error
 	for range ticker.C {
-		if err = cr.WatchControllerRevisionPods(ctx, logEntry, registryData, resourceGeneration, controllerRevisionlabels, controllerRevisionHashlabelKey, controllerRevisionPodLabelValuePerfix, namespace); err != nil {
+		if err = cr.WatchControllerRevisionPods(ctx, logEntry, registryData, resourceGeneration, controllerRevisionlabels, controllerRevisionHashlabelKey, controllerRevisionPodLabelValuePerfix, namespace, applyID); err != nil {
 			logEntry.Warn("retrying backoff")
 			continue
 		}
@@ -85,7 +85,7 @@ func (cr *ControllerRevisionManager) WatchControllerRevisionPodsRetry(ctx contex
 // 1. search a controllerrevision resource that is related to (statefulset or daemonset) using the version id and labels.
 // 2. once found, extract the controller-revision-hash value and look for pods with this annotation
 // 3. watch those pods.
-func (cr *ControllerRevisionManager) WatchControllerRevisionPods(ctx context.Context, logEntry log.Entry, registryData RegistryData, resourceGeneration int64, controllerRevisionlabels map[string]string, controllerRevisionHashlabelKey string, controllerRevisionPodLabelValuePerfix string, namespace string) error {
+func (cr *ControllerRevisionManager) WatchControllerRevisionPods(ctx context.Context, logEntry log.Entry, registryData RegistryData, resourceGeneration int64, controllerRevisionlabels map[string]string, controllerRevisionHashlabelKey, controllerRevisionPodLabelValuePerfix, namespace, applyID string) error {
 	// find controller revision that fits the resource version`
 	revisions, err := cr.client.AppsV1().ControllerRevisions(namespace).List(metaV1.ListOptions{
 		LabelSelector: labels.SelectorFromSet(controllerRevisionlabels).String()})
@@ -135,6 +135,7 @@ func (cr *ControllerRevisionManager) WatchControllerRevisionPods(ctx context.Con
 				Namespace:    namespace,
 				Ctx:          ctx,
 				LogEntry:     logEntry,
+				ApplyID:      applyID,
 			}
 			return nil
 		}

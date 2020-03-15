@@ -270,6 +270,7 @@ func (pm *PodsManager) watchEvents(ctx context.Context, lg log.Entry, registryDa
 
 }
 
+// TODO:: change it to one function to concat the variables
 // getFolderLogsPath returns the absolute folder path of the current applyID for pod continers logs
 func (pm *PodsManager) getFolderLogsPath(applyID, podName string) string {
 	return fmt.Sprintf("%s/%s/%s", pm.absoluteLogsPodPath, applyID, podName)

@@ -76,7 +76,7 @@ EventsView.propTypes = {
   items: PropTypes.arrayOf(PropTypes.shape({
     events: PropTypes.arrayOf(PropTypes.shape({
       name: PropTypes.string,
-      logs: PropTypes.arrayOf(PropTypes.shape(EventsViewLogs.propTypes)),
+      logs: EventsViewLogs.propTypes.logs,
     })),
     ...EventsViewSelector.propTypes,
   })),

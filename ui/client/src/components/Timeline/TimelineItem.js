@@ -8,12 +8,14 @@ import StepIcon from '@material-ui/core/StepIcon';
 import makeStyles from '@material-ui/core/styles/makeStyles';
 import Box from '@material-ui/core/Box';
 import moment from 'moment';
+import WarningIcon from '@material-ui/icons/Warning';
+import FiberManualRecord from '@material-ui/icons/FiberManualRecord';
 import TimelineErrorBox from './TimelineErrorBox';
 
 const useStyles = makeStyles((theme) => ({
   root: {
     '& svg': {
-      transform: 'scale(0.6)',
+      transform: 'scale(0.8)',
     },
   },
   label: {
@@ -23,9 +25,9 @@ const useStyles = makeStyles((theme) => ({
   },
   error: {
     color: theme.palette.error.main,
-    '& svg': {
-      transform: 'scale(0.8)',
-    }
+  },
+  completed: {
+    color: theme.palette.primary.main,
   },
   date: {
     marginRight: 20,
@@ -39,10 +41,12 @@ const TimelineItem = ({
     <Step active>
       <StepLabel
         error={error}
-        classes={{ root: classes.root, label: classes.label, error: classes.error }}
+        classes={{
+          root: classes.root, label: classes.label, error: classes.error, completed: classes.completed,
+        }}
         StepIconComponent={StepIcon}
         StepIconProps={{
-          completed: false, error, icon: '',
+          icon: error ? <WarningIcon /> : <FiberManualRecord className={classes.completed} />,
         }}
       >
         <Box display="flex" justifyContent="space-between">
@@ -55,7 +59,7 @@ const TimelineItem = ({
       </StepLabel>
       {
             content && (
-            <StepContent orientation="vertical">
+            <StepContent orientation="vertical" icon="">
               <TimelineErrorBox>{content}</TimelineErrorBox>
             </StepContent>
             )
@@ -66,7 +70,7 @@ const TimelineItem = ({
 
 TimelineItem.propTypes = {
   error: PropTypes.bool,
-  content: PropTypes.string,
+  content: PropTypes.oneOfType([PropTypes.bool, PropTypes.string]),
   title: PropTypes.string.isRequired,
   time: PropTypes.number.isRequired,
 };

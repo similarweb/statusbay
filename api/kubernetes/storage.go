@@ -126,6 +126,11 @@ func (my *MySQLStorage) builderApplications(queryFillter FilterApplications) *go
 
 	if queryFillter.Name != "" {
 		queryBuilder = queryBuilder.Where("name LIKE ?", fmt.Sprintf("%%%s%%", queryFillter.Name))
+
+	}
+
+	if queryFillter.ExactName != "" {
+		queryBuilder = queryBuilder.Where("name = ?", fmt.Sprintf("%s", queryFillter.ExactName))
 	}
 
 	if queryFillter.DeployBy != "" {

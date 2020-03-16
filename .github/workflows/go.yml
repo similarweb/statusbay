@@ -33,8 +33,3 @@ jobs:
     - name: Run tests
       run: |
         make test
-    - name: Convert coverage to lcov
-      uses: jandelgado/gcov2lcov-action@v1.0.0
-      with:
-          infile: cover.out
-          outfile: cover.lcov

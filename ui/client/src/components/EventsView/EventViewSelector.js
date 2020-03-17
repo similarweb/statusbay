@@ -58,6 +58,13 @@ const EventsViewSelector = ({ items, selected, onRowClick }) => {
         },
       },
       {
+        name: 'logs',
+        header: (name) => <TableCell>{name}</TableCell>,
+        cell: (row) => {          
+          return <ContainersLogs podName={row.name} />
+        },
+      },
+      {
         name: 'Status',
         header: (name) => <TableCell>{name}</TableCell>,
         cell: (row) => row.status,

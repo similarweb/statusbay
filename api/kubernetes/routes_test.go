@@ -137,8 +137,8 @@ func TestPodLogs(t *testing.T) {
 			ContainerName string
 			Lines         int
 		}{
-			{"statusbay-deployment-0.log", 13},
-			{"statusbay-deployment-1.log", 5},
+			{"statusbay-deployment-0.log", 12},
+			{"statusbay-deployment-1.log", 2},
 		}
 
 		rr := httptest.NewRecorder()

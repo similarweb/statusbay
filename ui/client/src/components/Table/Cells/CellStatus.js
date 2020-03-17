@@ -56,6 +56,9 @@ const CellStatus = ({ status }) => {
     default:
       break;
   }
+  if (!icon) {
+    return null;
+  }
   return <Box display="flex" alignItems="center"><Tooltip title={status}>{icon}</Tooltip></Box>;
 };
 

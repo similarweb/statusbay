@@ -3,7 +3,6 @@ import TableCell from '@material-ui/core/TableCell';
 import TableRow from '@material-ui/core/TableRow';
 import makeStyles from '@material-ui/core/styles/makeStyles';
 import PropTypes from 'prop-types';
-import CellStatus from '../Table/Cells/CellStatus';
 import TableStateless from '../Table/TableStateless';
 import Box from '@material-ui/core/Box';
 import ArrowForwardIosIcon from '@material-ui/icons/ArrowForwardIos';

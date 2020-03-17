@@ -3,6 +3,8 @@ import TableCell from '@material-ui/core/TableCell';
 import TableRow from '@material-ui/core/TableRow';
 import makeStyles from '@material-ui/core/styles/makeStyles';
 import PropTypes from 'prop-types';
+import TableStateless from '../Table/TableStateless';
+import ContainersLogs from './ContainersLogs';
 import Box from '@material-ui/core/Box';
 import TableStateless from '../Table/TableStateless';
 
@@ -54,6 +56,13 @@ const EventsViewSelector = ({ items, selected, onRowClick }) => {
             {row.name}
           </Box>
         ),
+      },
+      {
+        name: 'logs',
+        header: (name) => <TableCell>{name}</TableCell>,
+        cell: (row) => {
+          return <ContainersLogs podName={row.name} />
+        },
       },
       {
         name: 'Status',

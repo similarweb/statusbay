@@ -130,7 +130,7 @@ func startKubernetesWatcher(ctx context.Context, configPath, kubeconfig, apiserv
 	pvcManager := kuberneteswatcher.NewPvcManager(kubernetesClientset, eventManager)
 
 	//Pods manager
-	podsManager := kuberneteswatcher.NewPodsManager(kubernetesClientset, eventManager, pvcManager)
+	podsManager := kuberneteswatcher.NewPodsManager(kubernetesClientset, eventManager, pvcManager, watcherConfig.AbsoluteLogsPodPath)
 
 	//Replicaset manager
 	replicasetManager := kuberneteswatcher.NewReplicasetManager(kubernetesClientset, eventManager, podsManager)
@@ -193,7 +193,7 @@ func startAPIServer(ctx context.Context, configPath string, eventsPath string) *
 	alertsProviders := alerts.Load(apiConfig.AlertProvider)
 
 	//Start the server
-	server := api.NewServer(kubernetesStorage, "8080", eventsConfig, metricsProviders, alertsProviders, version)
+	server := api.NewServer(kubernetesStorage, "8080", eventsConfig, metricsProviders, alertsProviders, version, apiConfig.AbsoluteLogsPodPath)
 
 	servers := []serverutil.Server{
 		server,

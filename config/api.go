@@ -59,12 +59,13 @@ type KubernetesMarksEvents struct {
 
 // API is holds all application configuration
 type API struct {
-	Log             LogConfig          `yaml:"log"`
-	MySQL           *state.MySQLConfig `yaml:"mysql"`
-	Redis           *cache.RedisConfig `yaml:redis`
-	MetricsProvider *MetricsProvider   `yaml:"metrics"`
-	AlertProvider   *AlertProvider     `yaml:"alerts"`
-	Telemetry       MetricsConfig      `yaml:"telemetry"`
+	Log                 LogConfig          `yaml:"log"`
+	MySQL               *state.MySQLConfig `yaml:"mysql"`
+	Redis               *cache.RedisConfig `yaml:redis`
+	MetricsProvider     *MetricsProvider   `yaml:"metrics"`
+	AlertProvider       *AlertProvider     `yaml:"alerts"`
+	Telemetry           MetricsConfig      `yaml:"telemetry"`
+	AbsoluteLogsPodPath string             `yaml:"absoluteLogsPodPath"`
 }
 
 // LoadConfigAPI will load all yaml configuration file to struct

@@ -1,8 +1,13 @@
 package kuberneteswatcher
 
 import (
+	"bufio"
 	"context"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -16,38 +21,52 @@ import (
 
 // PodsManager defined pods manager struct
 type PodsManager struct {
-	client        kubernetes.Interface
-	eventManager  *EventsManager
-	pvcManager    *PvcManager
-	Watch         chan WatchData
-	podsFirstInit map[string]bool
-	mutex         *sync.RWMutex
+	client                 kubernetes.Interface
+	eventManager           *EventsManager
+	pvcManager             *PvcManager
+	Watch                  chan WatchData
+	podsFirstInit          map[string]bool
+	podsLogsFirstInit      map[string]bool
+	mutexPodsFirstInit     *sync.RWMutex
+	mutexPodsLogsFirstInit *sync.RWMutex
+	absoluteLogsPodPath    string
 }
 
 // NewPodsManager create new pods instance
-func NewPodsManager(kubernetesClientset kubernetes.Interface, eventManager *EventsManager, pvcManager *PvcManager) *PodsManager {
+func NewPodsManager(kubernetesClientset kubernetes.Interface, eventManager *EventsManager, pvcManager *PvcManager, absoluteLogsPodPath string) *PodsManager {
 	return &PodsManager{
-		client:        kubernetesClientset,
-		eventManager:  eventManager,
-		pvcManager:    pvcManager,
-		podsFirstInit: map[string]bool{},
-		mutex:         &sync.RWMutex{},
-		Watch:         make(chan WatchData),
+		client:                 kubernetesClientset,
+		eventManager:           eventManager,
+		pvcManager:             pvcManager,
+		podsFirstInit:          map[string]bool{},
+		podsLogsFirstInit:      map[string]bool{},
+		mutexPodsFirstInit:     &sync.RWMutex{},
+		mutexPodsLogsFirstInit: &sync.RWMutex{},
+		Watch:                  make(chan WatchData),
+		absoluteLogsPodPath:    absoluteLogsPodPath,
 	}
 }
 
 // storePodFirstInit will set if some pod appears for the first time true == first time
 func (pm *PodsManager) storePodFirstInit(key string, val bool) {
-	pm.mutex.Lock()
+	pm.mutexPodsFirstInit.Lock()
 	pm.podsFirstInit[key] = val
-	pm.mutex.Unlock()
+	pm.mutexPodsFirstInit.Unlock()
 }
 
 // loadPodFirstInit will return true if pod exists or false otherwise
 func (pm *PodsManager) loadPodFirstInit(key string) bool {
-	pm.mutex.RLock()
+	pm.mutexPodsFirstInit.RLock()
 	exist := pm.podsFirstInit[key]
-	pm.mutex.RUnlock()
+	pm.mutexPodsFirstInit.RUnlock()
+	return exist
+}
+
+// loadPodLogsFirstInit will return true if pod exists or false otherwise
+func (pm *PodsManager) loadPodLogsFirstInit(key string) bool {
+	pm.mutexPodsLogsFirstInit.RLock()
+	exist := pm.podsLogsFirstInit[key]
+	pm.mutexPodsLogsFirstInit.RUnlock()
 	return exist
 }
 
@@ -143,6 +162,20 @@ func (pm *PodsManager) watch(watchData WatchData) {
 				}
 
 				status := string(pod.Status.Phase)
+
+				if status == string(v1.PodRunning) {
+					for _, container := range pod.Spec.Containers {
+						absoluteFilePath := pm.getPodLogFilePath(watchData.ApplyID, pod.GetName(), container.Name)
+						if found := pm.loadPodLogsFirstInit(absoluteFilePath); !found {
+							pm.mutexPodsLogsFirstInit.Lock()
+							pm.podsLogsFirstInit[absoluteFilePath] = true
+							pm.mutexPodsLogsFirstInit.Unlock()
+							os.MkdirAll(filepath.Dir(absoluteFilePath), os.ModePerm)
+							pm.podLogs(watchData.Ctx, *podLog, absoluteFilePath, watchData.Namespace, pod.Name, container.Name)
+						}
+					}
+				}
+
 				podLog.WithFields(log.Fields{
 					"count": len(pod.Status.ContainerStatuses),
 				}).Debug("list of pod status container statuses")
@@ -229,5 +262,67 @@ func (pm *PodsManager) watchEvents(ctx context.Context, lg log.Entry, registryDa
 
 		}
 	}()
+
+}
+
+// getPodLogFilePath returns the container file path
+func (pm *PodsManager) getPodLogFilePath(applyID, podName string, containerName string) string {
+	return fmt.Sprintf("%s/%s/%s/%s.log", pm.absoluteLogsPodPath, applyID, podName, containerName)
+}
+
+// podLogs open a container logs steam for getting the STDOUT of container
+func (pm *PodsManager) podLogs(ctx context.Context, lg log.Entry, absoluteFilePath, namespace, podName, containerName string) {
+
+	lgContainer := lg.WithFields(log.Fields{
+		"container_name": containerName,
+		"file_path":      absoluteFilePath,
+	})
+
+	go func(ctx context.Context, lg log.Entry, absoluteFilePath, namespace, podName, containerName string) {
+		file, err := os.OpenFile(fmt.Sprintf("%s", absoluteFilePath), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+
+		lgContainer.Info("open log stream")
+		podLogOpts := v1.PodLogOptions{
+			Container:  containerName,
+			Follow:     true,
+			Previous:   false,
+			Timestamps: true,
+		}
+		req := pm.client.CoreV1().Pods(namespace).GetLogs(podName, &podLogOpts)
+		streamIO, err := req.Stream()
+		if err != nil {
+			lgContainer.WithError(err).Error("could not open container log stream")
+			return
+		}
+		defer streamIO.Close()
+		r := bufio.NewReader(streamIO)
+	LogsLoop:
+		for {
+			select {
+			case <-ctx.Done():
+				lgContainer.Info("close log stream")
+				err = file.Close()
+				if err != nil {
+					lgContainer.WithError(err).Error("could not close pod logs file")
+				}
+				break LogsLoop
+			default:
+				bytes, err := r.ReadBytes('\n')
+				if err != nil {
+					if err != io.EOF {
+						lgContainer.WithError(err).Info("failed to read stream bytes")
+						continue
+					}
+				}
+
+				line := strings.NewReader(string(bytes))
+				_, err = io.Copy(file, line)
+				if err != nil {
+					lgContainer.WithError(err).Error(file)
+				}
+
+			}
+		}
+	}(ctx, lg, absoluteFilePath, namespace, podName, containerName)
 
 }

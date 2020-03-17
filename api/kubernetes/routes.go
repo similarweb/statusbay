@@ -3,28 +3,33 @@ package kubernetes
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"statusbay/api/httpresponse"
 	"statusbay/config"
 	"statusbay/state"
+	"strings"
 
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 )
 
 type RouterKubernetesManager struct {
-	storage          Storage
-	router           *mux.Router
-	eventMarksConfig config.KubernetesMarksEvents
+	storage             Storage
+	router              *mux.Router
+	eventMarksConfig    config.KubernetesMarksEvents
+	absoluteLogsPodPath string
 }
 
 //NewKubernetesRoutes sets up the Kubernetes router to handle API endpoints
-func NewKubernetesRoutes(storage Storage, router *mux.Router, eventsConfig config.KubernetesMarksEvents) *RouterKubernetesManager {
+func NewKubernetesRoutes(storage Storage, router *mux.Router, eventsConfig config.KubernetesMarksEvents, absoluteLogsPodPath string) *RouterKubernetesManager {
 	kubernetesRoutes := &RouterKubernetesManager{
-		storage:          storage,
-		router:           router,
-		eventMarksConfig: eventsConfig,
+		storage:             storage,
+		router:              router,
+		eventMarksConfig:    eventsConfig,
+		absoluteLogsPodPath: absoluteLogsPodPath,
 	}
 	kubernetesRoutes.bindEndpoints()
 	return kubernetesRoutes
@@ -35,6 +40,7 @@ func (kr *RouterKubernetesManager) bindEndpoints() {
 	kr.router.HandleFunc("/api/v1/kubernetes/applications", kr.Applications).Methods("GET")
 	kr.router.HandleFunc("/api/v1/kubernetes/applications/values/{column}", kr.ApplicationsColumnValues).Methods("GET")
 	kr.router.HandleFunc("/api/v1/kubernetes/application/{apply_id}", kr.GetDeployment).Methods("GET")
+	kr.router.HandleFunc("/api/v1/kubernetes/application/{apply_id}/logs/pod/{pod}", kr.PodLogs).Methods("GET")
 }
 
 //Applications returns a list of applied application.
@@ -164,5 +170,42 @@ func (route *RouterKubernetesManager) GetDeployment(resp http.ResponseWriter, re
 	}
 
 	httpresponse.JSONWrite(resp, http.StatusOK, response)
+
+}
+
+//PodLogs return pod continaers logs
+func (route *RouterKubernetesManager) PodLogs(resp http.ResponseWriter, req *http.Request) {
+
+	params := mux.Vars(req)
+	applyID := params["apply_id"]
+	podName := params["pod"]
+
+	logsFolder := fmt.Sprintf("%s/%s/%s", route.absoluteLogsPodPath, applyID, podName)
+
+	files, err := ioutil.ReadDir(logsFolder)
+	if err != nil {
+		log.WithField("file", logsFolder).Warn("log file not found")
+		httpresponse.JSONError(resp, http.StatusNotFound, errors.New("logs not found"))
+		return
+	}
+
+	responseContainerLogs := []ResponseContainerLogs{}
+	for _, file := range files {
+		data, err := ioutil.ReadFile(fmt.Sprintf("%s/%s", logsFolder, file.Name()))
+		if err != nil {
+			log.WithFields(log.Fields{
+				"logs_folder": logsFolder,
+				"log_file":    file,
+			}).Warn("log file not found")
+			continue
+		}
+
+		responseContainerLogs = append(responseContainerLogs, ResponseContainerLogs{
+			ContainerName: file.Name(),
+			Lines:         strings.Split(string(data), "\n"),
+		})
+	}
+
+	httpresponse.JSONWrite(resp, http.StatusOK, responseContainerLogs)
 
 }

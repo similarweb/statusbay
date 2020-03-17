@@ -193,7 +193,7 @@ func startAPIServer(ctx context.Context, configPath string, eventsPath string) *
 	alertsProviders := alerts.Load(apiConfig.AlertProvider)
 
 	//Start the server
-	server := api.NewServer(kubernetesStorage, "8080", eventsConfig, metricsProviders, alertsProviders, version)
+	server := api.NewServer(kubernetesStorage, "8080", eventsConfig, metricsProviders, alertsProviders, version, apiConfig.AbsoluteLogsPodPath)
 
 	servers := []serverutil.Server{
 		server,

@@ -162,3 +162,8 @@ type DeploymentsResponse struct {
 type DeploymentListResponse struct {
 	Job string `json:"Job"`
 }
+
+type ResponseContainerLogs struct {
+	ContainerName string
+	Lines         []string `json:"Lines"`
+}

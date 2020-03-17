@@ -25,7 +25,7 @@ func MockServer(t *testing.T, storageMockFile string, metrics map[string]metrics
 	version := testutil.NewMockVersion()
 	storage := testutil.NewMockStorage()
 	return testServer{
-		api: api.NewServer(storage, "8080", config.KubernetesMarksEvents{}, metrics, alertsClient, version),
+		api: api.NewServer(storage, "8080", config.KubernetesMarksEvents{}, metrics, alertsClient, version, ""),
 	}
 }
 

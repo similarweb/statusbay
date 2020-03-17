@@ -36,7 +36,7 @@ export const useMetricsData = (provider, query, deploymentTime) => {
     return () => {
       metrics.emit('close');
     };
-  }, [provider, query, loading]);
+  }, []);
 
   useEffect(() => {
     // setLoading(true);

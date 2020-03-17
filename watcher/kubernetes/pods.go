@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -61,14 +62,7 @@ func (pm *PodsManager) loadPodFirstInit(key string) bool {
 	return exist
 }
 
-// storePodFirstInit will set if some pod appears for the first time true == first time
-func (pm *PodsManager) storePodLogsFirstInit(key string, val bool) {
-	pm.mutexPodsLogsFirstInit.Lock()
-	pm.podsLogsFirstInit[key] = val
-	pm.mutexPodsLogsFirstInit.Unlock()
-}
-
-// loadPodFirstInit will return true if pod exists or false otherwise
+// loadPodLogsFirstInit will return true if pod exists or false otherwise
 func (pm *PodsManager) loadPodLogsFirstInit(key string) bool {
 	pm.mutexPodsLogsFirstInit.RLock()
 	exist := pm.podsLogsFirstInit[key]
@@ -171,12 +165,13 @@ func (pm *PodsManager) watch(watchData WatchData) {
 
 				if status == string(v1.PodRunning) {
 					for _, container := range pod.Spec.Containers {
-						folder := pm.getFolderLogsPath(watchData.ApplyID, pod.GetName())
-						pullLogPathFile := pm.getPodLogFilePath(folder, container.Name)
-						if found := pm.loadPodLogsFirstInit(pullLogPathFile); !found {
-							pm.storePodLogsFirstInit(pullLogPathFile, true)
-							os.MkdirAll(folder, os.ModePerm)
-							pm.podLogs(watchData.Ctx, *podLog, pullLogPathFile, watchData.Namespace, pod.Name, container.Name)
+						absoluteFilePath := pm.getPodLogFilePath(watchData.ApplyID, pod.GetName(), container.Name)
+						if found := pm.loadPodLogsFirstInit(absoluteFilePath); !found {
+							pm.mutexPodsLogsFirstInit.Lock()
+							pm.podsLogsFirstInit[absoluteFilePath] = true
+							pm.mutexPodsLogsFirstInit.Unlock()
+							os.MkdirAll(filepath.Dir(absoluteFilePath), os.ModePerm)
+							pm.podLogs(watchData.Ctx, *podLog, absoluteFilePath, watchData.Namespace, pod.Name, container.Name)
 						}
 					}
 				}
@@ -277,8 +272,8 @@ func (pm *PodsManager) getFolderLogsPath(applyID, podName string) string {
 }
 
 // getPodLogFilePath returns the container file path
-func (pm *PodsManager) getPodLogFilePath(folder, containerName string) string {
-	return fmt.Sprintf("%s/%s.log", folder, containerName)
+func (pm *PodsManager) getPodLogFilePath(applyID, podName string, containerName string) string {
+	return fmt.Sprintf("%s/%s/%s/%s.log", pm.absoluteLogsPodPath, applyID, podName, containerName)
 }
 
 // podLogs open a container logs steam for getting the STDOUT of container
@@ -289,8 +284,9 @@ func (pm *PodsManager) podLogs(ctx context.Context, lg log.Entry, absoluteFilePa
 		"file_path":      absoluteFilePath,
 	})
 
-	go func() {
+	go func(ctx context.Context, lg log.Entry, absoluteFilePath, namespace, podName, containerName string) {
 		file, err := os.OpenFile(fmt.Sprintf("%s", absoluteFilePath), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+
 		lgContainer.Info("open log stream")
 		podLogOpts := v1.PodLogOptions{
 			Container:  containerName,
@@ -306,7 +302,7 @@ func (pm *PodsManager) podLogs(ctx context.Context, lg log.Entry, absoluteFilePa
 		}
 		defer streamIO.Close()
 		r := bufio.NewReader(streamIO)
-
+	LogsLoop:
 		for {
 			select {
 			case <-ctx.Done():
@@ -315,12 +311,14 @@ func (pm *PodsManager) podLogs(ctx context.Context, lg log.Entry, absoluteFilePa
 				if err != nil {
 					lgContainer.WithError(err).Error("could not close pod logs file")
 				}
-				return
+				break LogsLoop
 			default:
 				bytes, err := r.ReadBytes('\n')
 				if err != nil {
-					lgContainer.WithError(err).Info("failed to read stream bytes")
-					continue
+					if err != io.EOF {
+						lgContainer.WithError(err).Info("failed to read stream bytes")
+						continue
+					}
 				}
 
 				line := strings.NewReader(string(bytes))
@@ -331,6 +329,6 @@ func (pm *PodsManager) podLogs(ctx context.Context, lg log.Entry, absoluteFilePa
 
 			}
 		}
-	}()
+	}(ctx, lg, absoluteFilePath, namespace, podName, containerName)
 
 }

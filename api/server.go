@@ -33,10 +33,11 @@ type Server struct {
 	metricClientProviders map[string]metrics.MetricManagerDescriber
 	alertClientProviders  map[string]alerts.AlertsManagerDescriber
 	version               version.VersionDescriptor
+	absoluteLogsPodPath   string
 }
 
 // NewServer returns a new Server
-func NewServer(kubernetesStorage kubernetes.Storage, port string, kubernetesMarkEvents config.KubernetesMarksEvents, metricClientProviders map[string]metrics.MetricManagerDescriber, alertClientProviders map[string]alerts.AlertsManagerDescriber, version version.VersionDescriptor) *Server {
+func NewServer(kubernetesStorage kubernetes.Storage, port string, kubernetesMarkEvents config.KubernetesMarksEvents, metricClientProviders map[string]metrics.MetricManagerDescriber, alertClientProviders map[string]alerts.AlertsManagerDescriber, version version.VersionDescriptor, absoluteLogsPodPath string) *Server {
 
 	router := mux.NewRouter()
 	corsObj := handlers.AllowedOrigins([]string{"*"})
@@ -47,6 +48,7 @@ func NewServer(kubernetesStorage kubernetes.Storage, port string, kubernetesMark
 		metricClientProviders: metricClientProviders,
 		alertClientProviders:  alertClientProviders,
 		version:               version,
+		absoluteLogsPodPath:   absoluteLogsPodPath,
 		httpserver: &http.Server{
 			Handler: handlers.CORS(corsObj)(router),
 			Addr:    fmt.Sprintf("0.0.0.0:%s", port),
@@ -78,7 +80,7 @@ func (server *Server) Serve(ctx context.Context, wg *sync.WaitGroup) {
 func (server *Server) BindEndpoints() {
 
 	// KUBERNETES ROUTES
-	kubernetes.NewKubernetesRoutes(server.kubernetesStorage, server.router, server.kubernetesMarkEvents)
+	kubernetes.NewKubernetesRoutes(server.kubernetesStorage, server.router, server.kubernetesMarkEvents, server.absoluteLogsPodPath)
 
 	// Genetic routes
 	server.router.HandleFunc("/api/v1/health", server.HealthCheckHandler).Methods("GET")

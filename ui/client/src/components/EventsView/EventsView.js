@@ -18,7 +18,7 @@ const hasError = (events) => {
   return errorResult;
 };
 
-const EventsView = ({ items }) => {
+const EventsView = ({ items, deploymentId }) => {
   const [selectedItem, setSelectedItem] = useState(0);
   const [selectedTab, setSelectedTab] = useState(0);
   const handleClick = useCallback((row) => () => {
@@ -54,6 +54,7 @@ const EventsView = ({ items }) => {
                 selected={selectedItem}
                 onRowClick={handleClick}
                 items={eventsViewSelectorItems}
+                deploymentId={deploymentId}
               />
             </Box>
             <Box flexBasis="50%" flexShrink="0" flexGrow="1">
@@ -80,6 +81,7 @@ EventsView.propTypes = {
     })),
     ...EventsViewSelector.propTypes,
   })),
+  deploymentId: PropTypes.string.isRequired
 };
 
 EventsView.defaultProps = {

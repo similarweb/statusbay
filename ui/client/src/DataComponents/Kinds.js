@@ -13,19 +13,20 @@ const useStyles = makeStyles((theme) => ({
     height: 4,
   },
   tab: {
-    padding: '6px 24px'
-  }
+    padding: '6px 24px',
+    maxWidth: 'none',
+  },
 }));
 
 const Kinds = ({ selectedTab, onTabChange }) => {
   const classes = useStyles();
-  const {data} = useDeploymentDetailsContext();
+  const { data } = useDeploymentDetailsContext();
   if (!data) {
     return null;
   }
   return (
     <AppBar position="static" color="primary" classes={{ root: classes.root }}>
-      <Tabs value={selectedTab} onChange={onTabChange} classes={{indicator: classes.indicator}}>
+      <Tabs value={selectedTab} onChange={onTabChange} classes={{ indicator: classes.indicator }}>
         {
           data.kinds.map((kind, index) => <Tab key={kind.name} classes={{root: classes.tab}} label={kind.name} value={index} disableRipple />)
       }

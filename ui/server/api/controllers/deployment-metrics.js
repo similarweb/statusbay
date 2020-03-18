@@ -8,7 +8,7 @@ module.exports = {
   async getAll(params = '') {
     return axios.get(`${config.apiUrl}${urlPath}${params}`)
   },
-  async getSingleMetric(metric, provider, deploymentTime, minutesBefore = 30, minutesAfter = 30) {
+  async getMetric(metric, provider, deploymentTime, minutesBefore, minutesAfter) {
     const params = {
       provider,
       query: `${metric}`,

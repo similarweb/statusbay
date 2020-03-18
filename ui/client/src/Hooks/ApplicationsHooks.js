@@ -9,11 +9,12 @@ const parseSortBy = (sortby = '|') => sortby.split('|');
 
 const prepareFilters = (filters) => {
   const {
-    name, deployBy, cluster, namespace, status, fromDate, toDate, page, rowsPerPage, sortBy, distinct
+    name, exactName, deployBy, cluster, namespace, status, fromDate, toDate, page, rowsPerPage, sortBy, distinct
   } = filters;
   const [sortByFiled, sortDirection] = parseSortBy(sortBy);
   return {
     name,
+    exactName,
     deployBy,
     cluster,
     nameSpace: namespace,

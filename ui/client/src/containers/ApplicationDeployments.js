@@ -17,7 +17,7 @@ const ApplicationDeployments = () => {
   };
   const filters = useMemo(() => ({
     distinct: false,
-    name: appName,
+    exactName: appName,
   }), []);
   return (
     <PageContent>

@@ -11,7 +11,7 @@ const init = (io) => {
     const emitOnce = async (socket, { deploymentId, podName }) => {
       info('sending pod logs data...');
       try {
-        const data = await podLogsController.getAll(deploymentId, podName);
+        const {data} = await podLogsController.getAll(deploymentId, podName);
         const transformedData = podLogsTransformer(data);
         socket.emit('data', {
           data: transformedData, config: {

@@ -1,21 +1,30 @@
 import React, { useState } from 'react';
-import { Dialog, makeStyles } from '@material-ui/core';
-import Link from '@material-ui/core/Link';
+import { makeStyles } from '@material-ui/core';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 import PropTypes from 'prop-types';
 import Toolbar from '@material-ui/core/Toolbar';
-import { LazyLog } from 'react-lazylog';
 import IconButton from '@material-ui/core/IconButton';
 import Typography from '@material-ui/core/Typography';
 import CloseIcon from '@material-ui/icons/Close';
-import { useAlertsData } from '../../Hooks/AlertsHooks';
 import { usePodLogs } from '../../Hooks/PodLogsHooks';
 import Loader from '../Loader/Loader';
 
 const useStyles = makeStyles((theme) => ({
-  dialog: {
-    top: '64px !important;',
+  wrapper: {
+    width: '100%', backgroundColor: '#424242', whiteSpace: 'nowrap', padding: '24px 0',
+  },
+  line: {
+    fontFamily: '"Monaco", monospace',
+    color: '#ffffff',
+    fontSize: '12px',
+    lineHeight: '1.8',
+  },
+  lineNumber: {
+    display: 'inline-block',
+    width: '50px',
+    margin: '0 40px 0 0',
+    direction: 'rtl',
   },
 }));
 
@@ -27,6 +36,7 @@ const ContainersLogsPopup = ({ deploymentId, podName, onClose }) => {
   const handleTabChange = (event, newValue) => {
     setSelectedTab(newValue);
   };
+  const logs = data ? data[selectedTab].logs : [];
   return (
     <>
       <Toolbar>
@@ -55,14 +65,18 @@ const ContainersLogsPopup = ({ deploymentId, podName, onClose }) => {
                 ))
               }
             </Tabs>
-            <div style={{ height: '100%', width: '100%' }}>
-              <LazyLog
-                key={selectedTab}
-                extraLines={1}
-                enableSearch
-                text={data[selectedTab].logs.join('\n')}
-                caseInsensitive
-              />
+            <div className={classes.wrapper}>
+              {
+                logs.map((log, index) => (
+                  <div className={classes.line}>
+                    <span className={classes.lineNumber}>
+                      {index + 1}
+                    </span>
+                    <span>{log}</span>
+                  </div>
+                ))
+              }
+
             </div>
           </>
         ) : null

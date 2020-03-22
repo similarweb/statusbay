@@ -1,6 +1,6 @@
 import {
   useCallback,
-  useContext, useEffect, useState,
+  useContext, useEffect, useRef, useState,
 } from 'react';
 import { SocketIOContext } from '../context/SocketIOContext';
 
@@ -9,10 +9,21 @@ export const usePodLogs = (deploymentId, podName) => {
   const [data, setData] = useState();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState();
+  const lineIndexes = useRef([]);
 
   const onNewData = useCallback(({ data: newData, config }) => {
     // validate we use the relevant data
     if (config.deploymentId === deploymentId && config.podName === podName) {
+      // const newState = newData.map((dataItem, itemIndex) => {
+      //   const currentIndex = lineIndexes.current[itemIndex];
+      //   lineIndexes.current[itemIndex] = dataItem.logs.length;
+      //   return {
+      //     name: dataItem.name,
+      //     logs: dataItem.logs.slice(currentIndex)
+      //   };
+      // });
+      // console.log(newState);
+      // setData(newState);
       setData(newData);
       if (loading) {
         setLoading(false);

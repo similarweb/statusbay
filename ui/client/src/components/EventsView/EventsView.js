@@ -79,7 +79,6 @@ EventsView.propTypes = {
       name: PropTypes.string,
       logs: EventsViewLogs.propTypes.logs,
     })),
-    ...EventsViewSelector.propTypes,
   })),
   deploymentId: PropTypes.string.isRequired
 };

@@ -6,8 +6,10 @@ import PropTypes from 'prop-types';
 import Box from '@material-ui/core/Box';
 import { Dialog } from '@material-ui/core';
 import Link from '@material-ui/core/Link';
+import { useHistory, useLocation } from 'react-router-dom';
 import TableStateless from '../Table/TableStateless';
 import ContainersLogsPopup from './ContainersLogsPopup';
+import querystring from 'query-string';
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -36,14 +38,27 @@ const useStyles = makeStyles((theme) => ({
 const EventsViewSelector = ({
   items, selected, onRowClick, deploymentId,
 }) => {
+  const location = useLocation();
+  const history = useHistory();
+  const params = querystring.parse(location.search);
   const classes = useStyles();
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(params.logs === 'true');
   const handleDialogClose = () => {
     setIsOpen(false);
   };
+  // useEffect(() => {
+  //   setIsOpen(false);
+  // }, [selected]);
+
   useEffect(() => {
-    setIsOpen(false);
-  }, [selected]);
+    history.replace({
+      pathname: location.pathname,
+      search: `?${new URLSearchParams({
+        ...params,
+        logs: isOpen ,
+      })}`,
+    });
+  }, [isOpen, selected]);
 
   const handleLogsClick = () => {
     setTimeout(() => {

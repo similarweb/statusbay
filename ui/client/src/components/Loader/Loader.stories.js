@@ -7,7 +7,5 @@ export default {
 };
 
 
-export const Story = () => {
-  <Loader inline={boolean('inline', false)} />;
-};
+export const Story = () => <Loader inline={boolean('inline', false)} />;
 Story.story = { name: 'Loader' };

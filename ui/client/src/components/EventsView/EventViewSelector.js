@@ -3,9 +3,8 @@ import TableCell from '@material-ui/core/TableCell';
 import TableRow from '@material-ui/core/TableRow';
 import makeStyles from '@material-ui/core/styles/makeStyles';
 import PropTypes from 'prop-types';
-import TableStateless from '../Table/TableStateless';
 import Box from '@material-ui/core/Box';
-import ArrowForwardIosIcon from '@material-ui/icons/ArrowForwardIos';
+import TableStateless from '../Table/TableStateless';
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -22,9 +21,9 @@ const useStyles = makeStyles((theme) => ({
     width: 10,
     height: 10,
     backgroundColor: `${theme.palette.error.main}`,
-    borderRadius: `50%`,
-    marginRight: 12
-  }
+    borderRadius: '50%',
+    marginRight: 12,
+  },
 }));
 
 
@@ -48,7 +47,13 @@ const EventsViewSelector = ({ items, selected, onRowClick }) => {
       {
         name: 'Pod',
         header: (name) => <TableCell>{name}</TableCell>,
-        cell: (row) => {return <Box display="flex" alignItems="center"><div className={row.hasError ? classes.marker : undefined}></div> {row.name}</Box>},
+        cell: (row) => (
+          <Box display="flex" alignItems="center">
+            <div className={row.hasError ? classes.marker : undefined} />
+            {' '}
+            {row.name}
+          </Box>
+        ),
       },
       {
         name: 'Status',
@@ -59,7 +64,7 @@ const EventsViewSelector = ({ items, selected, onRowClick }) => {
   }), [selected]);
   return (
     <div className={classes.container}>
-      <TableStateless data={items} config={tableConfig} tableSize="small" stickyHeader={false}/>
+      <TableStateless data={items} config={tableConfig} tableSize="small" stickyHeader={false} />
     </div>
   );
 };

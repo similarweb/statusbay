@@ -23,6 +23,8 @@ const useStyles = makeStyles((theme) => ({
           return theme.palette.grey[500];
         case 'failed':
           return theme.palette.error.main;
+        case 'cancelled':
+          return theme.palette.grey[500];
       }
     },
     color: theme.palette.primary.contrastText,
@@ -40,6 +42,7 @@ const messages = {
   failed: 'Deployment failed',
   timeout: 'Deployment timeout',
   deleted: 'Deployment deleted',
+  cancelled: 'Deployment cancelled',
 };
 
 const DeploymentStatusBox = ({ status }) => {

@@ -14,6 +14,7 @@ export const CellStatusStory = () => {
     Running: 'running',
     Timeout: 'timeout',
     Deleted: 'deleted',
+    Cancelled: 'cancelled',
   };
   const defaultValue = 'successful';
 

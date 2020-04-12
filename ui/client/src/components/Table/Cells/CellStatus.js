@@ -11,6 +11,7 @@ import Box from '@material-ui/core/Box';
 import { deploymentStatuses } from '../../../constants';
 import { cyan, amber } from '@material-ui/core/colors';
 import CircularProgress from '@material-ui/core/CircularProgress';
+import { HighlightOff } from '@material-ui/icons';
 
 const useStyles = makeStyles((theme) => {
   const { type } = theme.palette;
@@ -53,8 +54,14 @@ const CellStatus = ({ status }) => {
     case 'deleted':
       icon = <DeleteSweepIcon className={classes.deleted} />;
       break;
+    case 'cancelled':
+      icon = <HighlightOff className={classes.deleted} />;
+      break;
     default:
       break;
+  }
+  if (!icon) {
+    return null;
   }
   return <Box display="flex" alignItems="center"><Tooltip title={status}>{icon}</Tooltip></Box>;
 };

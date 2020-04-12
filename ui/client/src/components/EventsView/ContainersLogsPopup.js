@@ -11,23 +11,12 @@ import { useHistory, useLocation } from 'react-router-dom';
 import { usePodLogs } from '../../Hooks/PodLogsHooks';
 import Loader from '../Loader/Loader';
 import querystring from 'query-string';
+import { LazyLog } from 'react-lazylog';
 
 const useStyles = makeStyles((theme) => ({
   wrapper: {
-    width: '100%', backgroundColor: '#424242', whiteSpace: 'nowrap', padding: '24px 0',
-  },
-  line: {
-    fontFamily: '"Monaco", monospace',
-    color: '#ffffff',
-    fontSize: '12px',
-    lineHeight: '1.8',
-  },
-  lineNumber: {
-    display: 'inline-block',
-    width: '50px',
-    margin: '0 40px 0 0',
-    direction: 'rtl',
-  },
+    flexGrow: 1,
+  }
 }));
 
 const ContainersLogsPopup = ({ deploymentId, podName, onClose }) => {
@@ -82,17 +71,13 @@ const ContainersLogsPopup = ({ deploymentId, podName, onClose }) => {
               }
             </Tabs>
             <div className={classes.wrapper}>
-              {
-                logs.map((log, index) => (
-                  <div className={classes.line}>
-                    <span className={classes.lineNumber}>
-                      {index + 1}
-                    </span>
-                    <span>{log}</span>
-                  </div>
-                ))
-              }
-
+              <LazyLog
+                extraLines={1}
+                enableSearch
+                text={logs.join('\n')}
+                caseInsensitive
+                follow
+              />
             </div>
           </>
         ) : null

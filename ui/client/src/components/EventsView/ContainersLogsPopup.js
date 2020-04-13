@@ -8,15 +8,19 @@ import IconButton from '@material-ui/core/IconButton';
 import Typography from '@material-ui/core/Typography';
 import CloseIcon from '@material-ui/icons/Close';
 import { useHistory, useLocation } from 'react-router-dom';
-import { usePodLogs } from '../../Hooks/PodLogsHooks';
-import Loader from '../Loader/Loader';
 import querystring from 'query-string';
 import { LazyLog } from 'react-lazylog';
+import { usePodLogs } from '../../Hooks/PodLogsHooks';
+import Loader from '../Loader/Loader';
+import NoData from '../Table/NoData';
 
 const useStyles = makeStyles((theme) => ({
   wrapper: {
     flexGrow: 1,
-  }
+  },
+  title: {
+    marginLeft: '5px',
+  },
 }));
 
 const ContainersLogsPopup = ({ deploymentId, podName, onClose }) => {
@@ -41,7 +45,7 @@ const ContainersLogsPopup = ({ deploymentId, podName, onClose }) => {
   const handleTabChange = (event, newValue) => {
     setSelectedTab(newValue);
   };
-  const logs = data ? data[selectedTab].logs : [];
+  const logs = data && data[selectedTab].logs.length > 0 ? data[selectedTab].logs.join('\n') : ' ';
   return (
     <>
       <Toolbar>
@@ -56,7 +60,10 @@ const ContainersLogsPopup = ({ deploymentId, podName, onClose }) => {
         loading && <Loader interval={100} />
       }
       {
-        !loading && data ? (
+        error && <NoData message="Error" />
+      }
+      {
+        !loading && !error && data ? (
           <>
             <Tabs value={selectedTab} onChange={handleTabChange}>
               {
@@ -74,7 +81,7 @@ const ContainersLogsPopup = ({ deploymentId, podName, onClose }) => {
               <LazyLog
                 extraLines={1}
                 enableSearch
-                text={logs.join('\n')}
+                text={logs}
                 caseInsensitive
                 follow
               />

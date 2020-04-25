@@ -50,23 +50,23 @@ func NewPodsManager(kubernetesClientset kubernetes.Interface, eventManager *Even
 // storePodFirstInit will set if some pod appears for the first time true == first time
 func (pm *PodsManager) storePodFirstInit(key string, val bool) {
 	pm.mutexPodsFirstInit.Lock()
+	defer pm.mutexPodsFirstInit.Unlock()
 	pm.podsFirstInit[key] = val
-	pm.mutexPodsFirstInit.Unlock()
 }
 
 // loadPodFirstInit will return true if pod exists or false otherwise
 func (pm *PodsManager) loadPodFirstInit(key string) bool {
 	pm.mutexPodsFirstInit.RLock()
+	defer pm.mutexPodsFirstInit.RUnlock()
 	exist := pm.podsFirstInit[key]
-	pm.mutexPodsFirstInit.RUnlock()
 	return exist
 }
 
 // loadPodLogsFirstInit will return true if pod exists or false otherwise
 func (pm *PodsManager) loadPodLogsFirstInit(key string) bool {
 	pm.mutexPodsLogsFirstInit.RLock()
+	defer pm.mutexPodsLogsFirstInit.RUnlock()
 	exist := pm.podsLogsFirstInit[key]
-	pm.mutexPodsLogsFirstInit.RUnlock()
 	return exist
 }
 

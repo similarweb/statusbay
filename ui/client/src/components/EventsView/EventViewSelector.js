@@ -7,9 +7,9 @@ import Box from '@material-ui/core/Box';
 import { Dialog } from '@material-ui/core';
 import Link from '@material-ui/core/Link';
 import { useHistory, useLocation } from 'react-router-dom';
+import querystring from 'query-string';
 import TableStateless from '../Table/TableStateless';
 import ContainersLogsPopup from './ContainersLogsPopup';
-import querystring from 'query-string';
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -46,16 +46,13 @@ const EventsViewSelector = ({
   const handleDialogClose = () => {
     setIsOpen(false);
   };
-  // useEffect(() => {
-  //   setIsOpen(false);
-  // }, [selected]);
 
   useEffect(() => {
     history.replace({
       pathname: location.pathname,
       search: `?${new URLSearchParams({
         ...params,
-        logs: isOpen ,
+        logs: isOpen,
       })}`,
     });
   }, [isOpen, selected]);
@@ -107,9 +104,20 @@ const EventsViewSelector = ({
     <div className={classes.container}>
       <TableStateless data={items} config={tableConfig} tableSize="small" stickyHeader={false} />
       {isOpen && (
-      <Dialog className={classes.dialog} open onClose={handleDialogClose} closeAfterTransition={true} onBackdropClick={handleDialogClose} fullScreen>
-        <ContainersLogsPopup onClose={handleDialogClose} deploymentId={deploymentId} podName={items[selected].name} />
-      </Dialog>
+        <Dialog
+          className={classes.dialog}
+          open
+          onClose={handleDialogClose}
+          closeAfterTransition={true}
+          onBackdropClick={handleDialogClose}
+          fullScreen
+        >
+          <ContainersLogsPopup
+            onClose={handleDialogClose}
+            deploymentId={deploymentId}
+            podName={items[selected].name}
+          />
+        </Dialog>
       )}
     </div>
   );

@@ -124,7 +124,7 @@ const DeploymentDetails = () => {
                 <ReplicasStats kindIndex={parseInt(tab)} />
               </Box>
               <Box mt={3} mb={3}>
-                <PodEvents kindIndex={parseInt(tab)} />
+                <PodEvents kindIndex={parseInt(tab)} deploymentId={deploymentId} />
                 <DeploymentEvents kindIndex={parseInt(tab)} />
                 <ReplicaSetEvents kindIndex={parseInt(tab)} />
                 <ServiceSetEvents kindIndex={parseInt(tab)} />

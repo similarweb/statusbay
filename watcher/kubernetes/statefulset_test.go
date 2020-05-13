@@ -60,7 +60,7 @@ func NewStatefulSetManagerMock(client *fake.Clientset) (*kuberneteswatcher.State
 	registryManager, Mockstorage := NewRegistryMock()
 	serviceManager := NewServiceManagerMockMock(client)
 	pvcManager := NewPvcManagerMock(client)
-	podManager := kuberneteswatcher.NewPodsManager(client, eventManager, pvcManager)
+	podManager := kuberneteswatcher.NewPodsManager(client, eventManager, pvcManager, "/tmp/path")
 	controllerRevisionManager := NewControllerRevisionManagerMock(client, podManager)
 	runningApplies := registryManager.LoadRunningApplies()
 	statefulsetManager := kuberneteswatcher.NewStatefulsetManager(client, eventManager, registryManager, serviceManager, controllerRevisionManager, runningApplies, maxDeploymentTime)

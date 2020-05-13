@@ -1,10 +1,15 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import TableCell from '@material-ui/core/TableCell';
 import TableRow from '@material-ui/core/TableRow';
 import makeStyles from '@material-ui/core/styles/makeStyles';
 import PropTypes from 'prop-types';
 import Box from '@material-ui/core/Box';
+import { Dialog } from '@material-ui/core';
+import Link from '@material-ui/core/Link';
+import { useHistory, useLocation } from 'react-router-dom';
+import querystring from 'query-string';
 import TableStateless from '../Table/TableStateless';
+import ContainersLogsPopup from './ContainersLogsPopup';
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -24,11 +29,39 @@ const useStyles = makeStyles((theme) => ({
     borderRadius: '50%',
     marginRight: 12,
   },
+  dialog: {
+    top: '64px !important;',
+  },
 }));
 
 
-const EventsViewSelector = ({ items, selected, onRowClick }) => {
+const EventsViewSelector = ({
+  items, selected, onRowClick, deploymentId,
+}) => {
+  const location = useLocation();
+  const history = useHistory();
+  const params = querystring.parse(location.search);
   const classes = useStyles();
+  const [isOpen, setIsOpen] = useState(params.logs === 'true');
+  const handleDialogClose = () => {
+    setIsOpen(false);
+  };
+
+  useEffect(() => {
+    history.replace({
+      pathname: location.pathname,
+      search: `?${new URLSearchParams({
+        ...params,
+        logs: isOpen,
+      })}`,
+    });
+  }, [isOpen, selected]);
+
+  const handleLogsClick = () => {
+    setTimeout(() => {
+      setIsOpen(true);
+    });
+  };
   const tableConfig = useMemo(() => ({
     row: {
       render: (row, rowIndex) => ({ children }) => (
@@ -56,6 +89,11 @@ const EventsViewSelector = ({ items, selected, onRowClick }) => {
         ),
       },
       {
+        name: 'logs',
+        header: (name) => <TableCell>{name}</TableCell>,
+        cell: () => <Link onClick={handleLogsClick}>Show</Link>,
+      },
+      {
         name: 'Status',
         header: (name) => <TableCell>{name}</TableCell>,
         cell: (row) => row.status,
@@ -65,6 +103,22 @@ const EventsViewSelector = ({ items, selected, onRowClick }) => {
   return (
     <div className={classes.container}>
       <TableStateless data={items} config={tableConfig} tableSize="small" stickyHeader={false} />
+      {isOpen && (
+        <Dialog
+          className={classes.dialog}
+          open
+          onClose={handleDialogClose}
+          closeAfterTransition={true}
+          onBackdropClick={handleDialogClose}
+          fullScreen
+        >
+          <ContainersLogsPopup
+            onClose={handleDialogClose}
+            deploymentId={deploymentId}
+            podName={items[selected].name}
+          />
+        </Dialog>
+      )}
     </div>
   );
 };
@@ -76,6 +130,7 @@ EventsViewSelector.propTypes = {
   })),
   selected: PropTypes.number,
   onRowClick: PropTypes.func,
+  deploymentId: PropTypes.string.isRequired,
 };
 
 EventsViewSelector.defaultProps = {

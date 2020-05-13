@@ -27,12 +27,17 @@ const SocketIOProvider = ({ children, io }) => {
     ...baseSocketConfig,
   });
 
+  const podLogs = io(`${endpoint}/pod-logs`, {
+    ...baseSocketConfig,
+  });
+
   const value = useMemo(() => ({
     deploymentDetails,
     applications,
     metrics,
-    alerts
-  }), [deploymentDetails, applications, metrics, alerts]);
+    alerts,
+    podLogs
+  }), [deploymentDetails, applications, metrics, alerts, podLogs]);
 
   return (
     <SocketIOContext.Provider value={value}>

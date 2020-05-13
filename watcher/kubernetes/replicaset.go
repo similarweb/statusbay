@@ -19,6 +19,7 @@ type WatchReplica struct {
 	DesiredReplicas int32
 	ListOptions     metaV1.ListOptions
 
+	ApplyID   string
 	Registry  *DeploymentData
 	Namespace string
 	Ctx       context.Context
@@ -118,6 +119,7 @@ func (rm *ReplicaSetManager) watch(replicaData WatchReplica) {
 							Namespace:    replicaData.Namespace,
 							Ctx:          replicaData.Ctx,
 							LogEntry:     *lg,
+							ApplyID:      replicaData.ApplyID,
 						}
 
 					} else {

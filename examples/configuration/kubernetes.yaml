@@ -4,6 +4,8 @@ log:
   level: INFO
   # gelf_address: 127.0.0.1
 
+absoluteLogsPodPath: /tmp/pod-logs
+
 mysql:
   dns: 127.0.0.1
   port: 3306

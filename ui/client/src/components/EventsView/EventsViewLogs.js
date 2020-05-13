@@ -64,7 +64,7 @@ const EventsViewLogs = ({
                     disableRipple
                     classes={{ root: classes.tab, wrapper: classes.tabWrapper }}
                     key={name}
-                    icon={<div className={error && classes.marker} />}
+                    icon={<div className={error ? classes.marker : undefined} />}
                     label={name}
                   />
                 ))

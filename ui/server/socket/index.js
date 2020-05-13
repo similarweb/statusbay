@@ -4,6 +4,7 @@ const initDeploymentDetails = require('./deployment-details');
 const initApplications = require('./applications');
 const initMetrics = require('./metrics');
 const initAlerts = require('./alerts');
+const initPodLogs = require('./pod-logs');
 
 const init = (server) => {
   const io = socketIO(server, {
@@ -12,7 +13,7 @@ const init = (server) => {
   initDeploymentDetails(io);
   initApplications(io);
   initMetrics(io);
-  initAlerts(io);
+  initPodLogs(io);
 }
 
 module.exports = init;

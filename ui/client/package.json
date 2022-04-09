@@ -14,7 +14,7 @@
     "highcharts-react-official": "^2.2.2",
     "history": "^4.10.1",
     "i18next": "^19.0.3",
-    "moment": "^2.24.0",
+    "moment": "^2.29.2",
     "numeral": "^2.0.6",
     "prop-types": "^15.7.2",
     "query-string": "^6.9.0",

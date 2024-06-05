@@ -37,7 +37,7 @@ type DaemonsetManager struct {
 	initialRunningApplies []*RegistryRow
 }
 
-//NewDaemonsetManager  create new instance to manage damonset related things
+// NewDaemonsetManager  create new instance to manage damonset related things
 func NewDaemonsetManager(kubernetesClientset kubernetes.Interface, eventManager *EventsManager, registryManager *RegistryManager, serviceManager *ServiceManager, controllerRevisionManager ControllerRevision, runningApplies []*RegistryRow, maxDeploymentTime time.Duration) *DaemonsetManager {
 	return &DaemonsetManager{
 		client:                kubernetesClientset,
@@ -94,9 +94,9 @@ func (dsm *DaemonsetManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 }
 
 func (dsm *DaemonsetManager) watchDaemonsets(ctx context.Context) {
-	daemonsetsList, _ := dsm.client.AppsV1().DaemonSets("").List(metaV1.ListOptions{})
+	daemonsetsList, _ := dsm.client.AppsV1().DaemonSets("").List(context.TODO(), metaV1.ListOptions{})
 	daemonsetWatchListOptions := metaV1.ListOptions{ResourceVersion: daemonsetsList.GetResourceVersion()}
-	watcher, err := dsm.client.AppsV1().DaemonSets("").Watch(daemonsetWatchListOptions)
+	watcher, err := dsm.client.AppsV1().DaemonSets("").Watch(context.TODO(), daemonsetWatchListOptions)
 	if err != nil {
 		log.WithError(err).WithField("list_option", daemonsetWatchListOptions.String()).Error("could not start a watcher on daemonsets")
 		return
@@ -180,7 +180,7 @@ func (dsm *DaemonsetManager) watchDaemonset(ctx context.Context, cancelFn contex
 	daemonsetLog.Info("Starting watch on Daemonset")
 	daemonsetLog.WithField("list_option", listOptions.String()).Debug("list option for daemonset filtering")
 
-	watcher, err := dsm.client.AppsV1().DaemonSets(namespace).Watch(listOptions)
+	watcher, err := dsm.client.AppsV1().DaemonSets(namespace).Watch(context.TODO(), listOptions)
 	if err != nil {
 		daemonsetLog.WithError(err).Error("could not start watch on daemonset")
 		return

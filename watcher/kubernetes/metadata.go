@@ -61,7 +61,7 @@ func GetMetadata(annotations map[string]string, search string) string {
 	return empty
 }
 
-//GetMetricsDataFromAnnotations return list of metrics from annotations
+// GetMetricsDataFromAnnotations return list of metrics from annotations
 func GetMetricsDataFromAnnotations(annotations map[string]string) []Metrics {
 
 	metrics := []Metrics{}
@@ -91,7 +91,7 @@ func GetMetricsDataFromAnnotations(annotations map[string]string) []Metrics {
 
 }
 
-//GetAlertsDataFromAnnotations return list of alerts from annotations
+// GetAlertsDataFromAnnotations return list of alerts from annotations
 func GetAlertsDataFromAnnotations(annotations map[string]string) []Alerts {
 
 	alerts := []Alerts{}
@@ -113,7 +113,7 @@ func GetAlertsDataFromAnnotations(annotations map[string]string) []Alerts {
 
 }
 
-//GetProgressDeadlineApply returns the maximum apply progress. if the field not exists in annotation list default value will returned
+// GetProgressDeadlineApply returns the maximum apply progress. if the field not exists in annotation list default value will returned
 func GetProgressDeadlineApply(annotations map[string]string, defaultValue int64) int64 {
 
 	progressDeadLineAnnotations := GetMetadata(annotations, fmt.Sprintf("%s/%s", annotationPrefix, annotationProgressDeadlineSeconds))
@@ -125,7 +125,7 @@ func GetProgressDeadlineApply(annotations map[string]string, defaultValue int64)
 	return progressDeadLine
 }
 
-//GetApplicationName return the application name from the given annotation. if the annotation name not found the default value will return
+// GetApplicationName return the application name from the given annotation. if the annotation name not found the default value will return
 func GetApplicationName(annotations map[string]string, defaultValue string) string {
 
 	applicationName := GetMetadata(annotations, fmt.Sprintf("%s/%s", annotationPrefix, annotationApplicationName))

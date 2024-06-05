@@ -91,9 +91,9 @@ func (dm *DeploymentManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 // watchDeployments start watch on all Kubernetes deployments
 func (dm *DeploymentManager) watchDeployments(ctx context.Context) {
 
-	deploymentList, _ := dm.client.AppsV1().Deployments("").List(metaV1.ListOptions{})
+	deploymentList, _ := dm.client.AppsV1().Deployments("").List(context.TODO(), metaV1.ListOptions{})
 	deploymentWatchListOptions := metaV1.ListOptions{ResourceVersion: deploymentList.GetResourceVersion()}
-	watcher, err := dm.client.AppsV1().Deployments("").Watch(deploymentWatchListOptions)
+	watcher, err := dm.client.AppsV1().Deployments("").Watch(context.TODO(), deploymentWatchListOptions)
 
 	if err != nil {
 		log.WithError(err).WithField("list_option", deploymentWatchListOptions.String()).Error("could not start deployments watcher")
@@ -181,14 +181,14 @@ func (dm *DeploymentManager) watchDeployments(ctx context.Context) {
 
 }
 
-//watchDeployment will watch on one running deployment
+// watchDeployment will watch on one running deployment
 func (dm *DeploymentManager) watchDeployment(ctx context.Context, cancelFn context.CancelFunc, lg log.Entry, registryDeployment *DeploymentData, listOptions metaV1.ListOptions, namespace string, maxWatchTime int64) {
 
 	deploymentLog := lg.WithField("deployment_name", registryDeployment.GetName())
 	deploymentLog.Info("initializing deployments watcher")
 	deploymentLog.WithField("list_option", listOptions.String()).Debug("list option for deployment filtering")
 
-	watcher, err := dm.client.AppsV1().Deployments(namespace).Watch(listOptions)
+	watcher, err := dm.client.AppsV1().Deployments(namespace).Watch(context.TODO(), listOptions)
 	if err != nil {
 		deploymentLog.WithError(err).Error("could not start deployments watcher")
 		return

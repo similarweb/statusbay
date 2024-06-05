@@ -14,14 +14,14 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-//BackoffParams parameters
+// BackoffParams parameters
 type BackoffParams struct {
 	InitialInterval time.Duration
 	Multiplier      float64
 	MaxElapsedTime  time.Duration
 }
 
-//NewBackOffParams Parameters init
+// NewBackOffParams Parameters init
 func NewBackOffParams() *BackoffParams {
 	return &BackoffParams{
 		InitialInterval: 0,
@@ -30,13 +30,13 @@ func NewBackOffParams() *BackoffParams {
 	}
 }
 
-//ControllerRevision Main interface
+// ControllerRevision Main interface
 type ControllerRevision interface {
 	WatchControllerRevisionPods(ctx context.Context, logEntry log.Entry, registryData RegistryData, resourceGeneration int64, controllerRevisionlabels map[string]string, controllerRevisionHashlabelKey string, controllerRevisionPodLabelValuePerfix string, namespace string) error
 	WatchControllerRevisionPodsRetry(ctx context.Context, logEntry log.Entry, registryData RegistryData, resourceGeneration int64, controllerRevisionlabels map[string]string, controllerRevisionHashlabelKey string, controllerRevisionPodLabelValuePerfix string, namespace string, backOffParams *BackoffParams) error
 }
 
-//ControllerRevisionManager Manager to interfact with Kubernetes kind
+// ControllerRevisionManager Manager to interfact with Kubernetes kind
 type ControllerRevisionManager struct {
 	// Kubernetes client
 	client kubernetes.Interface
@@ -87,7 +87,7 @@ func (cr *ControllerRevisionManager) WatchControllerRevisionPodsRetry(ctx contex
 // 3. watch those pods.
 func (cr *ControllerRevisionManager) WatchControllerRevisionPods(ctx context.Context, logEntry log.Entry, registryData RegistryData, resourceGeneration int64, controllerRevisionlabels map[string]string, controllerRevisionHashlabelKey string, controllerRevisionPodLabelValuePerfix string, namespace string) error {
 	// find controller revision that fits the resource version`
-	revisions, err := cr.client.AppsV1().ControllerRevisions(namespace).List(metaV1.ListOptions{
+	revisions, err := cr.client.AppsV1().ControllerRevisions(namespace).List(context.TODO(), metaV1.ListOptions{
 		LabelSelector: labels.SelectorFromSet(controllerRevisionlabels).String()})
 
 	if err != nil {

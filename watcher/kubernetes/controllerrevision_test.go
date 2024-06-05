@@ -82,7 +82,7 @@ func createControllerRevisionMock(client *fake.Clientset, name string, namespace
 		},
 	}
 	revision.ObjectMeta.Labels[controllerRevisionHashlabelKey] = controllerRevisionHash
-	client.AppsV1().ControllerRevisions(namespace).Create(revision)
+	client.AppsV1().ControllerRevisions(namespace).Create(context.TODO(), revision, metav1.CreateOptions{})
 	return revision
 }
 
@@ -98,6 +98,6 @@ func createPod(client *fake.Clientset, phase v1.PodPhase, name string, namespace
 		},
 		Status: PodStatus,
 	}
-	client.CoreV1().Pods(namespace).Create(pod)
+	client.CoreV1().Pods(namespace).Create(context.TODO(), pod, metav1.CreateOptions{})
 	return pod
 }

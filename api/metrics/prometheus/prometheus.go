@@ -16,7 +16,7 @@ import (
 
 // ClientDescriber is a interface for using function in DataDog package
 type ClientDescriber interface {
-	QueryRange(ctx context.Context, query string, r v1.Range) (model.Value, v1.Warnings, error)
+	QueryRange(ctx context.Context, query string, r v1.Range, opts ...v1.Option) (model.Value, v1.Warnings, error)
 }
 
 // Prometheus is responsible for communicate with datadog and cache storage save/cleanup

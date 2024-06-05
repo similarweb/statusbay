@@ -81,7 +81,7 @@ func (pm *PvcManager) watch(watchPvcData WatchPvcData) {
 		watchPvcData.LogEntry.Info("started pvc watcher")
 		watchPvcData.LogEntry.WithField("list_options", watchPvcData.ListOptions).Debug("started pvc watcher with the following list options")
 
-		watcher, err := pm.client.CoreV1().PersistentVolumeClaims(watchPvcData.Namespace).Watch(watchPvcData.ListOptions)
+		watcher, err := pm.client.CoreV1().PersistentVolumeClaims(watchPvcData.Namespace).Watch(context.TODO(), watchPvcData.ListOptions)
 		if err != nil {
 			watchPvcData.LogEntry.WithError(err).WithField("list_options", watchPvcData.ListOptions.String()).Error("an error occurred while trying to start the pvc watcher")
 			return

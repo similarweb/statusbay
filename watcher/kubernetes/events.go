@@ -65,7 +65,7 @@ func (em *EventsManager) Watch(watchData WatchEvents) <-chan EventMessages {
 	watchData.LogEntry.WithField("list_option", watchData.ListOptions.String()).Debug("events watcher started")
 
 	go func() {
-		watcher, err := em.client.CoreV1().Events("").Watch(watchData.ListOptions)
+		watcher, err := em.client.CoreV1().Events("").Watch(context.TODO(), watchData.ListOptions)
 		if err != nil {
 			watchData.LogEntry.WithError(err).Error("failed to watch on events")
 			return

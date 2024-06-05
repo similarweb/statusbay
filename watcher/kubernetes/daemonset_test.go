@@ -22,7 +22,7 @@ import (
 func updateDaemonsetMock(client *fake.Clientset, namespace string, daemonset *appsV1.DaemonSet) {
 
 	daemonset.Status.DesiredNumberScheduled = 2
-	client.AppsV1().DaemonSets(namespace).Update(daemonset)
+	client.AppsV1().DaemonSets(namespace).Update(context.TODO(), daemonset, metav1.UpdateOptions{})
 }
 
 const DesiredNumberScheduled = 1
@@ -53,7 +53,7 @@ func createDaemonSetMock(client *fake.Clientset, name string, labels map[string]
 		},
 	}
 	daemonset.Status.DesiredNumberScheduled = DesiredNumberScheduled
-	client.AppsV1().DaemonSets("pe").Create(daemonset)
+	client.AppsV1().DaemonSets("pe").Create(context.TODO(), daemonset, metav1.CreateOptions{})
 	return daemonset
 }
 func NewDaemonSetManagerMock(client *fake.Clientset) (*kuberneteswatcher.DaemonsetManager, *testutil.MockStorage, *MockControllerRevisionManager) {
@@ -108,7 +108,7 @@ func TestDaemonsetWatch(t *testing.T) {
 		labels)
 	time.Sleep(time.Second)
 
-	client.CoreV1().Services(namespace).Create(svc)
+	client.CoreV1().Services(namespace).Create(context.TODO(), svc, metav1.CreateOptions{})
 
 	pod.ObjectMeta.Labels[appsV1.ControllerRevisionHashLabelKey] = controllerRevisionHash
 
@@ -128,7 +128,7 @@ func TestDaemonsetWatch(t *testing.T) {
 		deamonsetLabels)
 
 	revision.Revision = daemonsetObj.ObjectMeta.Generation
-	client.AppsV1().ControllerRevisions(namespace).Create(revision)
+	client.AppsV1().ControllerRevisions(namespace).Create(context.TODO(), revision, metav1.CreateOptions{})
 
 	time.Sleep(time.Second)
 	// create matchin pods to the revision hash

@@ -145,7 +145,7 @@ type PeriodsResponse struct {
 	Description string
 }
 
-//DeploymentDatadogLink represents datadog section in html
+// DeploymentDatadogLink represents datadog section in html
 type DeploymentDatadogLink struct {
 	Group   string `json:"Group"`
 	Task    string `json:"Task"`

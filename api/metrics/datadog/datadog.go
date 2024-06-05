@@ -124,7 +124,7 @@ func (dd *Datadog) GetMetric(query string, from, to time.Time) ([]httpresponse.M
 	return response, nil
 }
 
-//generateMetricHash return md5 of metric
+// generateMetricHash return md5 of metric
 func (dd *Datadog) generateMetricHash(query string, from, to time.Time) string {
 
 	hasher := md5.New()

@@ -52,7 +52,7 @@ func NewStatefulsetManager(k8sClient kubernetes.Interface, eventManager *EventsM
 	}
 }
 
-//Serve Will serve the watch channels of statefulset
+// Serve Will serve the watch channels of statefulset
 func (ssm *StatefulsetManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 	wg.Add(1)
 
@@ -90,9 +90,9 @@ func (ssm *StatefulsetManager) Serve(ctx context.Context, wg *sync.WaitGroup) {
 }
 
 func (ssm *StatefulsetManager) watchStatefulsets(ctx context.Context) {
-	statefulsetsList, _ := ssm.client.AppsV1().StatefulSets("").List(metaV1.ListOptions{})
+	statefulsetsList, _ := ssm.client.AppsV1().StatefulSets("").List(context.TODO(), metaV1.ListOptions{})
 	statefulsetWatchListOptions := metaV1.ListOptions{ResourceVersion: statefulsetsList.GetResourceVersion()}
-	watcher, err := ssm.client.AppsV1().StatefulSets("").Watch(statefulsetWatchListOptions)
+	watcher, err := ssm.client.AppsV1().StatefulSets("").Watch(context.TODO(), statefulsetWatchListOptions)
 	if err != nil {
 		log.WithError(err).WithField("list_option", statefulsetWatchListOptions.String()).Error("could not start watching statefulset")
 		return
@@ -171,7 +171,7 @@ func (ssm *StatefulsetManager) watchStatefulsets(ctx context.Context) {
 	}()
 }
 
-//  watchStatefulset will watch a specific statefulset and its related resources (controller revision + pods)
+// watchStatefulset will watch a specific statefulset and its related resources (controller revision + pods)
 func (ssm *StatefulsetManager) watchStatefulset(ctx context.Context, cancelFn context.CancelFunc, lg log.Entry, registryStatefulset *StatefulsetData, listOptions metaV1.ListOptions, namespace string, maxWatchTime int64) {
 
 	statefulsetLog := lg.WithField("statefulset_name", registryStatefulset.GetName())
@@ -179,7 +179,7 @@ func (ssm *StatefulsetManager) watchStatefulset(ctx context.Context, cancelFn co
 	statefulsetLog.Info("start watching statefulset")
 	statefulsetLog.WithField("list_option", listOptions.String()).Debug("list option for statefulset filtering")
 
-	watcher, err := ssm.client.AppsV1().StatefulSets(namespace).Watch(listOptions)
+	watcher, err := ssm.client.AppsV1().StatefulSets(namespace).Watch(context.TODO(), listOptions)
 	if err != nil {
 		statefulsetLog.WithError(err).Error("could not start statefulset watcher")
 		return

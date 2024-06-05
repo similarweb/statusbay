@@ -48,6 +48,6 @@ func NewMockPrometheus() *MockPrometheus {
 	return &MockPrometheus{}
 }
 
-func (m *MockPrometheus) QueryRange(ctx context.Context, query string, r v1.Range) (model.Value, v1.Warnings, error) {
+func (m *MockPrometheus) QueryRange(ctx context.Context, query string, r v1.Range, opts ...v1.Option) (model.Value, v1.Warnings, error) {
 	return MockQueryRange(ctx, query, r)
 }

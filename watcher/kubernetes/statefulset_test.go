@@ -20,7 +20,7 @@ import (
 func updateStatefulsetMock(client *fake.Clientset, namespace string, statefulset *appsV1.StatefulSet) {
 
 	statefulset.Status.Replicas = 2
-	client.AppsV1().StatefulSets(namespace).Update(statefulset)
+	client.AppsV1().StatefulSets(namespace).Update(context.TODO(), statefulset, metaV1.UpdateOptions{})
 }
 
 func createStatefulSetMock(client *fake.Clientset, name string, namespace string, labels map[string]string) *appsV1.StatefulSet {
@@ -50,7 +50,7 @@ func createStatefulSetMock(client *fake.Clientset, name string, namespace string
 		},
 	}
 	statefulset.Spec.Replicas = &StatefulSetReplicas
-	statefulset, _ = client.AppsV1().StatefulSets(namespace).Create(statefulset)
+	statefulset, _ = client.AppsV1().StatefulSets(namespace).Create(context.TODO(), statefulset, metav1.CreateOptions{})
 	return statefulset
 }
 
@@ -107,7 +107,7 @@ func TestStatefulsetWatch(t *testing.T) {
 		labels)
 	time.Sleep(time.Second)
 
-	client.CoreV1().Services(namespace).Create(svc)
+	client.CoreV1().Services(namespace).Create(context.TODO(), svc, metav1.CreateOptions{})
 
 	// Add the expected pod label for Statefulset ControllerRevision
 	pod.ObjectMeta.Labels[appsV1.ControllerRevisionHashLabelKey] = fmt.Sprintf("%s-%s",
@@ -127,7 +127,7 @@ func TestStatefulsetWatch(t *testing.T) {
 	time.Sleep(time.Second * 3)
 
 	event1 := &v1.Event{Message: "message for statefulset", ObjectMeta: metaV1.ObjectMeta{Name: "a", CreationTimestamp: metaV1.Time{Time: time.Now()}}}
-	client.CoreV1().Events(namespace).Create(event1)
+	client.CoreV1().Events(namespace).Create(context.TODO(), event1, metav1.CreateOptions{})
 
 	NotValidControllerRevisionHashlabelKey := controllerRevisionManager.Error
 	application := Mockstorage.MockWriteDeployment["1"]

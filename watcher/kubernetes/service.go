@@ -58,7 +58,7 @@ func (sm *ServiceManager) watch(watchData WatchData) {
 		watchData.LogEntry.Info("start watching service")
 		watchData.LogEntry.WithField("list_option", watchData.ListOptions).Debug("start watch on service with list options")
 
-		watcher, err := sm.client.CoreV1().Services(watchData.Namespace).Watch(watchData.ListOptions)
+		watcher, err := sm.client.CoreV1().Services(watchData.Namespace).Watch(context.TODO(), watchData.ListOptions)
 
 		if err != nil {
 			watchData.LogEntry.WithError(err).Error("could not start watch on service")

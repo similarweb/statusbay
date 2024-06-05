@@ -23,7 +23,7 @@ func createPodMock(client *fake.Clientset, name string, status v1.PodStatus, del
 		Status: status,
 	}
 
-	client.CoreV1().Pods("pe").Create(event1)
+	client.CoreV1().Pods("pe").Create(context.TODO(), event1, metav1.CreateOptions{})
 }
 
 func NewPodManagerMock() (*fake.Clientset, *kuberneteswatcher.PodsManager) {
@@ -184,8 +184,8 @@ func TestPodWatchEvent(t *testing.T) {
 	time.Sleep(time.Second)
 	event1 := &v1.Event{Message: "message", ObjectMeta: metav1.ObjectMeta{Name: "a", CreationTimestamp: metav1.Time{Time: time.Now()}}}
 	event2 := &v1.Event{Message: "message", ObjectMeta: metav1.ObjectMeta{Name: "b", CreationTimestamp: metav1.Time{Time: time.Now()}}}
-	client.CoreV1().Events("pe").Create(event1)
-	client.CoreV1().Events("pe").Create(event2)
+	client.CoreV1().Events("pe").Create(context.TODO(), event1, metav1.CreateOptions{})
+	client.CoreV1().Events("pe").Create(context.TODO(), event2, metav1.CreateOptions{})
 
 	time.Sleep(time.Second)
 	pods := storageMock.MockWriteDeployment["1"].Schema.Resources.Deployments["resourceName"].Pods

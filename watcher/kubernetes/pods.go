@@ -82,7 +82,7 @@ func (pm *PodsManager) watch(watchData WatchData) {
 
 		lg.WithField("list_option", watchData.ListOptions).Debug("pod list options")
 
-		watcher, err := pm.client.CoreV1().Pods(watchData.Namespace).Watch(watchData.ListOptions)
+		watcher, err := pm.client.CoreV1().Pods(watchData.Namespace).Watch(context.TODO(), watchData.ListOptions)
 		if err != nil {
 			lg.WithError(err).WithField("list_option", watchData.ListOptions.String()).Error("error when trying to start watch on pods")
 			return

@@ -59,6 +59,7 @@ require (
 	github.com/onsi/ginkgo v1.16.4 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
+	github.com/sethvargo/go-envconfig v1.0.3 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
 	golang.org/x/net v0.26.0 // indirect

@@ -1,7 +1,7 @@
 package config
 
 import (
-	"io/ioutil"
+	"os"
 	"statusbay/cache"
 	"statusbay/state"
 	"time"
@@ -61,7 +61,7 @@ type KubernetesMarksEvents struct {
 type API struct {
 	Log             LogConfig          `yaml:"log"`
 	MySQL           *state.MySQLConfig `yaml:"mysql"`
-	Redis           *cache.RedisConfig `yaml:redis`
+	Redis           *cache.RedisConfig `yaml:"redis"`
 	MetricsProvider *MetricsProvider   `yaml:"metrics"`
 	AlertProvider   *AlertProvider     `yaml:"alerts"`
 	Telemetry       MetricsConfig      `yaml:"telemetry"`
@@ -70,7 +70,7 @@ type API struct {
 // LoadConfigAPI will load all yaml configuration file to struct
 func LoadConfigAPI(location string) (API, error) {
 	config := API{}
-	data, err := ioutil.ReadFile(location)
+	data, err := os.ReadFile(location)
 	if err != nil {
 		return config, err
 	}
@@ -84,7 +84,7 @@ func LoadConfigAPI(location string) (API, error) {
 
 func LoadEvents(location string) (KubernetesMarksEvents, error) {
 	config := KubernetesMarksEvents{}
-	data, err := ioutil.ReadFile(location)
+	data, err := os.ReadFile(location)
 	if err != nil {
 		return config, err
 	}

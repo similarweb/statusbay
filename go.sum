@@ -212,6 +212,8 @@ github.com/prometheus/procfs v0.15.1 h1:YagwOFzUgYfKKHX6Dr+sHT7km/hxC76UB0leargg
 github.com/prometheus/procfs v0.15.1/go.mod h1:fB45yRUv8NstnjriLhBQLuOUt+WW4BsoGhij/e3PBqk=
 github.com/rogpeppe/go-internal v1.11.0 h1:cWPaGQEPrBb5/AsnsZesgZZ9yb1OQ+GOISoDNXVBh4M=
 github.com/rogpeppe/go-internal v1.11.0/go.mod h1:ddIwULY96R17DhadqLgMfk9H9tvdUzkipdSkR5nkCZA=
+github.com/sethvargo/go-envconfig v1.0.3 h1:ZDxFGT1M7RPX0wgDOCdZMidrEB+NrayYr6fL0/+pk4I=
+github.com/sethvargo/go-envconfig v1.0.3/go.mod h1:JLd0KFWQYzyENqnEPWWZ49i4vzZo/6nRidxI8YvGiHw=
 github.com/similarweb/client-notifier v0.1.4 h1:4YcdLOBsxhNPyI50Ow4PBINVGQz9XUQwOCLorHPQ2dA=
 github.com/similarweb/client-notifier v0.1.4/go.mod h1:bQ06kbS0djjHVn4TraMJ6ZnHusfaaM6a/rj+ULnEdBw=
 github.com/sirupsen/logrus v1.2.0/go.mod h1:LxeOpSwHxABJmUn/MG1IvRgCAasNZTLOkJPxbbu5VWo=

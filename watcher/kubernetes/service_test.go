@@ -23,7 +23,7 @@ func createServiceMock(client *fake.Clientset, name, namespace string) {
 		},
 	}
 
-	client.CoreV1().Services(namespace).Create(service)
+	client.CoreV1().Services(namespace).Create(context.TODO(), service, metav1.CreateOptions{})
 }
 
 func NewServiceManagerMockMock(client *fake.Clientset) *kuberneteswatcher.ServiceManager {
@@ -76,7 +76,7 @@ func TestServiceWatch(t *testing.T) {
 	time.Sleep(time.Second)
 
 	event1 := &v1.Event{Message: "message", InvolvedObject: v1.ObjectReference{Kind: "Service", Name: "service-1"}, ObjectMeta: metav1.ObjectMeta{CreationTimestamp: metav1.Time{Time: time.Now()}}}
-	client.CoreV1().Events(namespace).Create(event1)
+	client.CoreV1().Events(namespace).Create(context.TODO(), event1, metav1.CreateOptions{})
 
 	time.Sleep(time.Second * 2)
 

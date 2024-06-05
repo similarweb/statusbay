@@ -5,7 +5,7 @@ import (
 	eventwatch "k8s.io/apimachinery/pkg/watch"
 )
 
-//DeploymentStatus defined the status of the deployment
+// DeploymentStatus defined the status of the deployment
 type DeploymentStatus string
 
 const (

@@ -33,7 +33,7 @@ func createMockDeploymentData(registryManager *kuberneteswatcher.RegistryManager
 func updateDeploymentMock(client *fake.Clientset, deployment *appsV1.Deployment) {
 
 	deployment.Status.Replicas = 2
-	client.AppsV1().Deployments("pe").Update(deployment)
+	client.AppsV1().Deployments("pe").Update(context.TODO(), deployment, metaV1.UpdateOptions{})
 
 }
 
@@ -64,7 +64,7 @@ func createDeploymentMock(client *fake.Clientset, name string, labels map[string
 		},
 	}
 
-	client.AppsV1().Deployments("pe").Create(deployment)
+	client.AppsV1().Deployments("pe").Create(context.TODO(), deployment, metaV1.CreateOptions{})
 
 	return deployment
 }
@@ -149,13 +149,13 @@ func TestDeploymentsWatch(t *testing.T) {
 	}
 
 	createServiceMock(client, "service", namespace)
-	client.AppsV1().ReplicaSets(namespace).Create(replicaset)
+	client.AppsV1().ReplicaSets(namespace).Create(context.TODO(), replicaset, metaV1.CreateOptions{})
 	time.Sleep(time.Second)
 	replicaset.Status.Replicas = 2
-	client.AppsV1().ReplicaSets(namespace).Update(replicaset)
-	client.CoreV1().Services(namespace).Create(svc)
+	client.AppsV1().ReplicaSets(namespace).Update(context.TODO(), replicaset, metaV1.UpdateOptions{})
+	client.CoreV1().Services(namespace).Create(context.TODO(), svc, metaV1.CreateOptions{})
 	event1 := &v1.Event{Message: "message", ObjectMeta: metaV1.ObjectMeta{Name: "a", CreationTimestamp: metaV1.Time{Time: time.Now()}}}
-	client.CoreV1().Events(namespace).Create(event1)
+	client.CoreV1().Events(namespace).Create(context.TODO(), event1, metaV1.CreateOptions{})
 
 	time.Sleep(time.Second)
 

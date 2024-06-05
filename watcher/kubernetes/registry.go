@@ -28,7 +28,7 @@ type Resources struct {
 	Statefulsets map[string]*StatefulsetData `json:"Statefulsets"`
 }
 
-//DBSchema is a struct that save as json in given storage
+// DBSchema is a struct that save as json in given storage
 type DBSchema struct {
 	Application           string                             `json:"Application"`
 	Cluster               string                             `json:"Cluster"`
@@ -373,7 +373,7 @@ func (wbr *RegistryRow) isDeploymentFinish() (bool, error) {
 	return isFinished, nil
 }
 
-//isDaemonSetFinish  a DaemonSet is finished if: DesiredNumberScheduled == CurrentNumberScheduled AND DesiredNumberScheduled == UpdatedNumberScheduled
+// isDaemonSetFinish  a DaemonSet is finished if: DesiredNumberScheduled == CurrentNumberScheduled AND DesiredNumberScheduled == UpdatedNumberScheduled
 func (wbr *RegistryRow) isDaemonSetFinish() (bool, error) {
 	lg := wbr.Log()
 	isFinished := false

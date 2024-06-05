@@ -1,11 +1,11 @@
 ##########################################
 # Build golang container
 ##########################################
-FROM golang:1.13.4-alpine AS go-builder
+FROM golang:1.22.4-alpine AS go-builder
 
 # Install OS level dependencies
 RUN apk add --update alpine-sdk git && \
-	git config --global http.https://gopkg.in.followRedirects true 
+	git config --global http.https://gopkg.in.followRedirects true
 
 # Set workdir for the rest of the commands
 WORKDIR /app
@@ -19,7 +19,7 @@ RUN go install -v ./...
 ##########################################
 # Runtime container
 ##########################################
-FROM alpine:3.8
+FROM alpine:3.20
 COPY --from=go-builder /go/bin/statusbay /bin/statusbay
 
 RUN mkdir -p /etc/statusbay/

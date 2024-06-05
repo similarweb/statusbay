@@ -55,9 +55,9 @@ func TestWatchReceivedCount(t *testing.T) {
 	}()
 
 	time.Sleep(time.Second)
-	client.CoreV1().Events("default").Create(event1)
-	client.CoreV1().Events("default").Create(event2)
-	client.CoreV1().Events("default").Create(event3)
+	client.CoreV1().Events("default").Create(context.TODO(), event1, metav1.CreateOptions{})
+	client.CoreV1().Events("default").Create(context.TODO(), event2, metav1.CreateOptions{})
+	client.CoreV1().Events("default").Create(context.TODO(), event3, metav1.CreateOptions{})
 	time.Sleep(time.Second)
 
 	if messageCount != 2 {
@@ -87,7 +87,7 @@ func TestWatchMark(t *testing.T) {
 	eventChan := eventManager.Watch(watchData)
 
 	time.Sleep(time.Second)
-	client.CoreV1().Events("default").Create(event1)
+	client.CoreV1().Events("default").Create(context.TODO(), event1, metav1.CreateOptions{})
 
 	event := <-eventChan
 

@@ -73,7 +73,7 @@ func (rm *ReplicaSetManager) watch(replicaData WatchReplica) {
 		//List of replicaset changes events
 		firstInit := map[string]bool{}
 
-		watcher, err := rm.client.AppsV1().ReplicaSets(replicaData.Namespace).Watch(replicaData.ListOptions)
+		watcher, err := rm.client.AppsV1().ReplicaSets(replicaData.Namespace).Watch(context.TODO(), replicaData.ListOptions)
 
 		if err != nil {
 			replicaData.LogEntry.WithField("list_option", replicaData.ListOptions).WithError(err).Error("error occured trying to start watch on replicasets")

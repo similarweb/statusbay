@@ -108,7 +108,7 @@ type ServicesData struct {
 	Events *[]EventMessages `json:"Events"`
 }
 
-//Metrics describe the metrics data integration
+// Metrics describe the metrics data integration
 type Metrics struct {
 	Name     string `json:"Name"`
 	Provider string `json:"Provider"`

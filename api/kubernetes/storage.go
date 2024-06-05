@@ -20,7 +20,7 @@ type MySQLStorage struct {
 	logger *log.Entry
 }
 
-//NewMysql create new MyySQL client
+// NewMysql create new MyySQL client
 func NewMysql(db *state.MySQLManager) *MySQLStorage {
 
 	return &MySQLStorage{
@@ -56,7 +56,7 @@ func (my *MySQLStorage) Applications(queryFillter FilterApplications) (*[]state.
 
 }
 
-//GetUniqueFieldValues return list of unique values by given table name and column name
+// GetUniqueFieldValues return list of unique values by given table name and column name
 func (my *MySQLStorage) GetUniqueFieldValues(tableName, columnName string) ([]string, error) {
 
 	var values []string

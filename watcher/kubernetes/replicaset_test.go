@@ -29,7 +29,7 @@ func createReplicasetMock(client *fake.Clientset, name string, specSelector *met
 		},
 	}
 
-	client.AppsV1().ReplicaSets("pe").Create(replicaset)
+	client.AppsV1().ReplicaSets("pe").Create(context.TODO(), replicaset, metav1.CreateOptions{})
 }
 
 func NewReplicasetMock(client *fake.Clientset) *kuberneteswatcher.ReplicaSetManager {

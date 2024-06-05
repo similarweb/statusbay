@@ -55,7 +55,7 @@ func createPvcMock(client *fake.Clientset, namespace, volumeName, pvcName string
 		Spec: v1.PersistentVolumeClaimSpec{VolumeName: volumeName},
 	}
 
-	pvc, _ = client.CoreV1().PersistentVolumeClaims(namespace).Create(pvc)
+	pvc, _ = client.CoreV1().PersistentVolumeClaims(namespace).Create(context.TODO(), pvc, metav1.CreateOptions{})
 	return pvc
 }
 
@@ -98,9 +98,9 @@ func TestPvcWatch(t *testing.T) {
 	event1 := &v1.Event{Message: "message number 1", ObjectMeta: metaV1.ObjectMeta{Name: "www", CreationTimestamp: metaV1.Time{Time: time.Now()}}}
 	event2 := &v1.Event{Message: "message number 2", ObjectMeta: metaV1.ObjectMeta{Name: "www2", CreationTimestamp: metaV1.Time{Time: time.Now()}}}
 	event3 := &v1.Event{Message: "message number 3", ObjectMeta: metaV1.ObjectMeta{Name: "www3", CreationTimestamp: metaV1.Time{Time: time.Now()}}}
-	client.CoreV1().Events(namespace).Create(event1)
-	client.CoreV1().Events(namespace).Create(event2)
-	client.CoreV1().Events(namespace).Create(event3)
+	client.CoreV1().Events(namespace).Create(context.TODO(), event1, metav1.CreateOptions{})
+	client.CoreV1().Events(namespace).Create(context.TODO(), event2, metav1.CreateOptions{})
+	client.CoreV1().Events(namespace).Create(context.TODO(), event3, metav1.CreateOptions{})
 	time.Sleep(time.Second)
 
 	expectedEvents := 3

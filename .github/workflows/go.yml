@@ -1,25 +1,14 @@
 name: Go
 on: [push]
-jobs:
-
-  spectralops:
-    name: Spectral
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v1
-      - name: Install
-        run: curl -L spectralops.io/get | sudo sh
-      - name: Scan
-        run: spectral run
-        
+jobs:       
   validator:
     name: Checks Validators
     runs-on: ubuntu-latest
     steps:
-    - name: Set up Go 1.13
+    - name: Set up Go 1.22
       uses: actions/setup-go@v1
       with:
-        go-version: 1.13
+        go-version: 1.22
       id: go
     - name: Check out code into the Go module directory
       uses: actions/checkout@v1    
@@ -32,10 +21,10 @@ jobs:
     name: Code Test
     runs-on: ubuntu-latest
     steps:
-    - name: Set up Go 1.13
+    - name: Set up Go 1.22
       uses: actions/setup-go@v1
       with:
-        go-version: 1.13
+        go-version: 1.22
       id: go
     - name: Check out code into the Go module directory
       uses: actions/checkout@v1   

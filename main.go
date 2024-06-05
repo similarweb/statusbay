@@ -20,6 +20,7 @@ import (
 	"statusbay/watcher/kubernetes/client"
 	"time"
 
+	"github.com/sethvargo/go-envconfig"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -83,6 +84,10 @@ func startKubernetesWatcher(ctx context.Context, configPath, kubeconfig, apiserv
 	watcherConfig, err := config.LoadKubernetesConfig(configPath)
 	if err != nil {
 		log.WithError(err).Panic("could not load Kubernetes configuration file")
+		os.Exit(1)
+	}
+	if err := envconfig.Process(ctx, &watcherConfig); err != nil {
+		log.WithError(err).Panic("could not parse environment variables")
 		os.Exit(1)
 	}
 
@@ -162,6 +167,10 @@ func startAPIServer(ctx context.Context, configPath string, eventsPath string) *
 	apiConfig, err := config.LoadConfigAPI(configPath)
 	if err != nil {
 		log.WithError(err).Panic("could not load API configuration file")
+		os.Exit(1)
+	}
+	if err := envconfig.Process(ctx, &apiConfig); err != nil {
+		log.WithError(err).Panic("could not parse environment variables")
 		os.Exit(1)
 	}
 

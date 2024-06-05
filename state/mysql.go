@@ -91,9 +91,9 @@ func (my *MySQLManager) Migration() {
 
 // MySQLConfig client configuration
 type MySQLConfig struct {
-	DNS      string `yaml:"dns"`
-	Port     int    `yaml:"port"`
-	Username string `yaml:"username"`
-	Password string `yaml:"password"`
-	Schema   string `yaml:"schema"`
+	DNS      string `yaml:"dns" env:"STATUSBAY_MYSQL_HOST, overwrite"`
+	Port     int    `yaml:"port" env:"STATUSBAY_MYSQL_PORT, overwrite"`
+	Username string `yaml:"username" env:"STATUSBAY_MYSQL_USERNAME, overwrite"`
+	Password string `yaml:"password" env:"STATUSBAY_MYSQL_PASSWORD, overwrite"`
+	Schema   string `yaml:"schema"  env:"STATUSBAY_MYSQL_SCHEMA, overwrite"`
 }

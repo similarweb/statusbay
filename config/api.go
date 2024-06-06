@@ -60,7 +60,7 @@ type KubernetesMarksEvents struct {
 // API is holds all application configuration
 type API struct {
 	Log             LogConfig          `yaml:"log"`
-	MySQL           *state.MySQLConfig `yaml:"mysql"`
+	MySQL           *state.MySQLConfig `yaml:"mysql" env:", prefix=MYSQL_"`
 	Redis           *cache.RedisConfig `yaml:"redis"`
 	MetricsProvider *MetricsProvider   `yaml:"metrics"`
 	AlertProvider   *AlertProvider     `yaml:"alerts"`

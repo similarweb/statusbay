@@ -44,7 +44,7 @@ type EventMarksConfig struct {
 type Kubernetes struct {
 	ClusterName     string                      `yaml:"cluster_name"`
 	Log             LogConfig                   `yaml:"log"`
-	MySQL           *state.MySQLConfig          `yaml:"mysql"`
+	MySQL           *state.MySQLConfig          `yaml:"mysql" env:", prefix=MYSQL_"`
 	NotifierConfigs notifierCommon.ConfigByName `yaml:"notifiers"`
 	UI              *UIConfig                   `yaml:"ui"`
 	Applies         *KubernetesApplies          `yaml:"applies"`

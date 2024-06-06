@@ -86,7 +86,10 @@ func startKubernetesWatcher(ctx context.Context, configPath, kubeconfig, apiserv
 		log.WithError(err).Panic("could not load Kubernetes configuration file")
 		os.Exit(1)
 	}
-	if err := envconfig.Process(ctx, &watcherConfig); err != nil {
+	if err := envconfig.ProcessWith(ctx, &envconfig.Config{
+		Target:   &watcherConfig,
+		Lookuper: envconfig.PrefixLookuper("STATUSBAY_", envconfig.OsLookuper()),
+	}); err != nil {
 		log.WithError(err).Panic("could not parse environment variables")
 		os.Exit(1)
 	}
@@ -169,7 +172,10 @@ func startAPIServer(ctx context.Context, configPath string, eventsPath string) *
 		log.WithError(err).Panic("could not load API configuration file")
 		os.Exit(1)
 	}
-	if err := envconfig.Process(ctx, &apiConfig); err != nil {
+	if err := envconfig.ProcessWith(ctx, &envconfig.Config{
+		Target:   &apiConfig,
+		Lookuper: envconfig.PrefixLookuper("STATUSBAY_", envconfig.OsLookuper()),
+	}); err != nil {
 		log.WithError(err).Panic("could not parse environment variables")
 		os.Exit(1)
 	}

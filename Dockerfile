@@ -2,6 +2,8 @@
 # Build golang container
 ##########################################
 FROM golang:1.22.4-alpine AS go-builder
+ARG GOFLAGS=""
+ENV GOFLAGS="$GOFLAGS"
 
 # Install OS level dependencies
 RUN apk add --update alpine-sdk git && \

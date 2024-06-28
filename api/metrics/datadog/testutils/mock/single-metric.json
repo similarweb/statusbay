@@ -1,18 +1,20 @@
-[
-  {
-    "metric": "foo.metric.response.2xx",
-    "display_name": "foo.metric.response.2xx",
-    "pointlist": [
-      [
-        1557941880000,
-        1
+{
+  "series": [
+    {
+      "metric": "foo.metric.response.2xx",
+      "display_name": "foo.metric.response.2xx",
+      "pointlist": [
+        [
+          1557941880000,
+          1
+        ],
+        [
+          1557941910000,
+          2
+        ]
       ],
-      [
-        1557941910000,
-        2
-      ]
-    ],
-    "scope": "service:foo-production",
-    "expression": "sum:sw.foo.metric.response.2xx{service:foo-production}"
-  }
-]
+      "scope": "service:foo-production",
+      "expression": "sum:sw.foo.metric.response.2xx{service:foo-production}"
+    }
+  ]
+}

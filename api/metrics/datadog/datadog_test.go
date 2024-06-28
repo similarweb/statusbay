@@ -2,7 +2,7 @@ package datadog
 
 import (
 	"context"
-	testutil "statusbay/api/metrics/datadog/testutils"
+	testutils "statusbay/api/metrics/datadog/testutils"
 	"statusbay/cache"
 	"sync"
 	"testing"
@@ -10,12 +10,13 @@ import (
 )
 
 func MockDatadog(cacheExpiration, cacheCleanupInterval time.Duration) *Datadog {
-	ddMockClient := testutil.NewMockDatadog()
+	metricsApi := testutils.NewMockMockMetricsApi()
 	cache := &cache.CacheManager{
 		Client: &cache.NoOpCache{},
 	}
 
-	dd := NewDatadogManager(cache, cacheExpiration, "", "", ddMockClient)
+	dd := NewDatadogManager(cache, cacheExpiration, "", "")
+	dd.metricsApi = metricsApi
 
 	return dd
 }

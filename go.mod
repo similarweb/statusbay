@@ -1,6 +1,7 @@
 module statusbay
 
 require (
+	github.com/DataDog/datadog-api-client-go/v2 v2.26.0
 	github.com/armon/go-metrics v0.4.1
 	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/go-redis/redis/v7 v7.4.1
@@ -16,7 +17,6 @@ require (
 	github.com/sethvargo/go-envconfig v1.0.3
 	github.com/similarweb/client-notifier v0.1.4
 	github.com/sirupsen/logrus v1.9.3
-	github.com/zorkian/go-datadog-api v2.30.0+incompatible
 	gopkg.in/gemnasium/logrus-graylog-hook.v2 v2.0.7
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.30.1
@@ -27,9 +27,9 @@ require (
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/DataDog/datadog-go v4.8.3+incompatible // indirect
+	github.com/DataDog/zstd v1.5.2 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
-	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/emicklei/go-restful/v3 v3.12.1 // indirect
@@ -40,6 +40,7 @@ require (
 	github.com/go-openapi/jsonreference v0.21.0 // indirect
 	github.com/go-openapi/swag v0.23.0 // indirect
 	github.com/go-sql-driver/mysql v1.8.1 // indirect
+	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/gnostic-models v0.6.8 // indirect

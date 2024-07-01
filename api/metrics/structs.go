@@ -26,7 +26,7 @@ func Load(metricsProviders *config.MetricsProvider, cache *cache.CacheManager) m
 		return providers
 	}
 	if metricsProviders.DataDog != nil {
-		providers["datadog"] = datadog.NewDatadogManager(cache, metricsProviders.DataDog.CacheExpiration, metricsProviders.DataDog.APIKey, metricsProviders.DataDog.AppKey, nil)
+		providers["datadog"] = datadog.NewDatadogManager(cache, metricsProviders.DataDog.CacheExpiration, metricsProviders.DataDog.APIKey, metricsProviders.DataDog.AppKey)
 	}
 
 	if metricsProviders.Prometheus != nil {

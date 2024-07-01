@@ -6,10 +6,12 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	_nethttp "net/http"
 	"sync"
 	"time"
 
-	"github.com/zorkian/go-datadog-api"
+	"github.com/DataDog/datadog-api-client-go/v2/api/datadog"
+	"github.com/DataDog/datadog-api-client-go/v2/api/datadogV1"
 
 	"statusbay/api/httpresponse"
 	"statusbay/cache"
@@ -17,14 +19,14 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// ClientDescriber is a interface for using function in DataDog package
-type ClientDescriber interface {
-	QueryMetrics(from int64, to int64, query string) ([]datadog.Series, error)
+type MetricsApiDescriber interface {
+	QueryMetrics(ctx context.Context, from int64, to int64, query string) (datadogV1.MetricsQueryResponse, *_nethttp.Response, error)
 }
 
 // Datadog is responsible for communicate with datadog and cache storage save/cleanup
 type Datadog struct {
-	client          ClientDescriber
+	apiClient       *datadog.APIClient
+	metricsApi      MetricsApiDescriber
 	cache           *cache.CacheManager
 	cacheExpiration time.Duration
 	mu              *sync.RWMutex
@@ -32,20 +34,22 @@ type Datadog struct {
 }
 
 // NewDatadogManager creates a new NewDatadog
-func NewDatadogManager(cache *cache.CacheManager, cacheExpiration time.Duration, apiKey, appKey string, client ClientDescriber) *Datadog {
+func NewDatadogManager(cache *cache.CacheManager, cacheExpiration time.Duration, apiKey, appKey string) *Datadog {
+	log.Info("initializing Datadog client")
+	configuration := datadog.NewConfiguration()
+	configuration.AddDefaultHeader("DD-API-KEY", apiKey)
+	configuration.AddDefaultHeader("DD-APPLICATION-KEY", appKey)
+	apiClient := datadog.NewAPIClient(configuration)
+	metricsApi := datadogV1.NewMetricsApi(apiClient)
 
-	if client == nil {
-		log.Info("initializing Datadog client")
-		client = datadog.NewClient(apiKey, appKey)
-	}
 	return &Datadog{
-		client:          client,
+		apiClient:       apiClient,
+		metricsApi:      metricsApi,
 		cache:           cache,
 		cacheExpiration: cacheExpiration,
 		mu:              &sync.RWMutex{},
 		logger:          log.WithField("metric_engine", "datadog"),
 	}
-
 }
 
 // Serve will start listening metric request
@@ -86,7 +90,7 @@ func (dd *Datadog) GetMetric(query string, from, to time.Time) ([]httpresponse.M
 		}).Error("cache Unmarshal failed")
 	}
 
-	metrics, err := dd.client.QueryMetrics(from.Unix(), to.Unix(), query)
+	metrics, _, err := dd.metricsApi.QueryMetrics(context.Background(), from.Unix(), to.Unix(), query)
 
 	if err != nil {
 		dd.logger.WithError(err).WithFields(log.Fields{
@@ -98,11 +102,11 @@ func (dd *Datadog) GetMetric(query string, from, to time.Time) ([]httpresponse.M
 	}
 
 	var response []httpresponse.MetricsQuery
-	for _, metric := range metrics {
+	for _, metric := range metrics.Series {
 		metricData := httpresponse.MetricsQuery{}
-		metricData.Metric = metric.GetDisplayName()
+		metricData.Metric = *metric.DisplayName
 		var points []httpresponse.DataPoint
-		for _, point := range metric.Points {
+		for _, point := range metric.Pointlist {
 			points = append(points, [2]float64{*point[0], *point[1]})
 		}
 		metricData.Points = points

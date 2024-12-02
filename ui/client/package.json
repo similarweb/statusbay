@@ -10,7 +10,7 @@
     "@material-ui/pickers": "^3.2.8",
     "@material-ui/styles": "^4.8.2",
     "@welldone-software/why-did-you-render": "^4.0.4",
-    "highcharts": "^8.0.0",
+    "highcharts": "^9.0.0",
     "highcharts-react-official": "^2.2.2",
     "history": "^4.10.1",
     "i18next": "^19.0.3",

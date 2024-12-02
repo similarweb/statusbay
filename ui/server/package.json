@@ -33,7 +33,7 @@
     "axios-mock-adapter": "^1.17.0",
     "chai": "^4.2.0",
     "faker": "^4.1.0",
-    "mocha": "^6.2.2",
+    "mocha": "^10.2.0",
     "nodemon": "^2.0.2"
   }
 }
